@@ -1,0 +1,66 @@
+name: Laravel CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wconnect_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, bcmath, pdo_mysql, curl
+        ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=2G
+        coverage: xdebug
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+
+    - name: Copy .env
+      run: cp .env.example .env
+
+    - name: Generate app key
+      run: php artisan key:generate
+
+    - name: Run migrations
+      run: php artisan migrate --env=testing --force
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Build assets
+      run: npm run build
+
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit --colors=always
