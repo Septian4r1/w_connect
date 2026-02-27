@@ -1,23 +1,64 @@
-/.phpunit.cache
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
+# ========================
+# Laravel / PHP
+# ========================
+
+/vendor/
+/node_modules/
 .env
-.env.backup
+/.idea/
+/.env.local
+/.vscode/
+/homestead.yaml
+/.phpunit.result.cache
+/storage/*.key
+/public/storage
+/storage/debugbar
+/storage/framework/cache/data
+/storage/logs
+/storage/framework/sessions
+/storage/framework/views
+
+# ========================
+# Node / npm / Yarn
+# ========================
+
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/package-lock.json
+/yarn.lock
+
+# ========================
+# OS & Editor
+# ========================
+
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# ========================
+# Composer
+# ========================
+
+composer.lock
+
+# ========================
+# IDE
+# ========================
+
+.idea/
+*.sublime-project
+*.sublime-workspace
+.vscode/
+
+# ========================
+# Misc
+# ========================
+
+.env.*
+.env.testing
 .env.production
-.phpactor.json
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-/auth.json
-/.fleet
-/.idea
-/.nova
-/.vscode
-/.zed
+.env.backup
