@@ -1,6 +1,10 @@
 # w_connect
 
-**w_connect** adalah aplikasi untuk **manajemen warga tingkat RW**, dibangun dengan Laravel. Aplikasi ini memudahkan RT/RW dan warga untuk:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
+</p>
+
+**w_connect** adalah aplikasi untuk **manajemen warga tingkat RW**, dibangun menggunakan **Klaravel 11**. Aplikasi ini memudahkan RT/RW dan warga untuk:
 
 - Mengelola data warga, rumah, dan keluarga.
 - Menyimpan dokumen penting (KK, KTP, Surat-surat).
@@ -8,7 +12,9 @@
 - Menyediakan dashboard informasi lengkap untuk pengurus RW.
 - Integrasi dengan notifikasi dan laporan digital.
 
-## Fitur Utama
+---
+
+## 🎯 Fitur Utama
 
 1. **Manajemen Warga**
    - Tambah, edit, hapus data warga.
@@ -32,13 +38,22 @@
    - File disimpan di storage Laravel.
    - `.gitignore` melindungi file sensitif agar tidak ikut commit.
 
-## Teknologi
+---
 
-- Backend: **Laravel 10**
-- Frontend: Blade + Tailwind CSS + Alpine.js
-- Database: MySQL / MariaDB
-- DevOps: Docker + GitHub CI/CD (workflow Laravel)
-- Testing: PHPUnit
+## 🛠 Teknologi & Tools
 
+- **Backend:** Klaravel 11 (Laravel 11)
+- **Frontend:** Blade + Tailwind CSS + Alpine.js + Bootstrap + JavaScript (AJAX)
+- **Database:** MySQL / MariaDB
+- **DevOps:** Docker + GitHub Actions CI/CD
+- **Testing:** PHPUnit
+- **Version Control:** Git + GitHub
+- **Deployment:** VPS / Cloud / Docker Compose
 
+---
 
+📄 Lisensi
+
+Project ini open-source di bawah MIT License.
+Kamu bebas menggunakan, menyalin, memodifikasi, dan mendistribusikan kode ini sesuai ketentuan MIT License
+.
