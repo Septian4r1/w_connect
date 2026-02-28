@@ -54,11 +54,20 @@
 <body>
 
     <div class="flex flex-col items-center justify-center space-y-6">
+
         <!-- LOGO (DIAM) -->
-        <img src="{{ asset('images/logo_w_connect_web.gif') }}" alt="Logo W_Connect" class="logo-img"  loading="eager">
+        <img src="{{ asset('images/logo_w_connect_web.gif') }}" alt="Logo W_Connect" class="logo-img" loading="eager">
 
         <!-- TEXT (BOUNCE) -->
-        <img src="{{ asset('images/text_w_connect.png') }}" alt="Text W_Connect" class="text-logo bounce-text"  loading="eager">
+        <img src="{{ asset('images/text_w_connect.png') }}" alt="Text W_Connect" class="text-logo bounce-text"
+            loading="eager">
+
+        <!-- CREDIT -->
+        <div class="text-center text-gray-600 text-sm mt-4">
+            <p class="font-semibold">By Astha Production</p>
+            <p class="text-xs tracking-widest">Version 0.0.1</p>
+        </div>
+
     </div>
 
     <script>

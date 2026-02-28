@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v3
 
       # ================================
-      # 2️⃣ Deploy via SSH
+      # 2️⃣ Deploy via SSH dengan symlink zero downtime
       # ================================
       - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
@@ -31,7 +31,6 @@ jobs:
           script: |
 
             set -e
-
             echo "🚀 Starting Deployment..."
 
             # ================================
@@ -40,7 +39,7 @@ jobs:
             cd /home/u595038546/domains/csr.majubersamaadp.com
 
             # ================================
-            # Clone jika pertama kali
+            # Clone repository jika pertama kali
             # ================================
             if [ ! -d "w_connect/.git" ]; then
               echo "📦 First time setup - Cloning repository..."
@@ -50,54 +49,67 @@ jobs:
             cd w_connect
 
             # ================================
-            # Update source code
+            # Pull latest changes
             # ================================
             echo "🔄 Pull latest changes..."
             git fetch origin
             git reset --hard origin/main
 
             # ================================
-            # Install dependency
+            # Setup release baru
             # ================================
+            timestamp=$(date +%Y%m%d%H%M%S)
+            release_folder="releases/release_$timestamp"
+            echo "📂 Creating release folder: $release_folder"
+            mkdir -p $release_folder
+
+            echo "📦 Copying source code to release folder..."
+            rsync -av --exclude='.git' --exclude='vendor' ./ $release_folder/
+            cp -r public/. $release_folder/public/
+
+            # ================================
+            # Install dependencies di release
+            # ================================
+            cd $release_folder
             echo "📦 Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader
 
             # ================================
-            # Pastikan folder storage aman
+            # Run database migration
+            # ================================
+            echo "🗄 Running migrations..."
+            php artisan migrate --force
+
+            # ================================
+            # Prepare storage & permissions
             # ================================
             echo "📁 Preparing storage folders..."
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/framework/cache
+            mkdir -p storage/framework/{sessions,views,cache}
             mkdir -p bootstrap/cache
-
-            chmod -R 775 storage || true
-            chmod -R 775 bootstrap/cache || true
+            chmod -R 775 storage bootstrap/cache || true
 
             # ================================
-            # Storage link (tidak error kalau sudah ada)
+            # Link storage (idempotent)
             # ================================
             echo "🔗 Linking storage..."
             php artisan storage:link || true
 
             # ================================
-            # Migration
+            # Swap release live via symlink (zero downtime)
             # ================================
-            echo "🗄 Running migration..."
-            php artisan migrate --force
+            echo "🔀 Updating current symlink to new release..."
+            ln -sfn $release_folder current
 
             # ================================
-            # Sync public ke public_html
+            # Link public_html ke current/public
             # ================================
-            echo "📂 Syncing public folder..."
-            rm -rf ../public_html/*
-            cp -r public/* ../public_html/
+            echo "📂 Linking public_html to current/public..."
+            ln -sfn current/public ../public_html
 
             # ================================
-            # Clear & Optimize
+            # Clear & optimize Laravel
             # ================================
-            echo "⚡ Optimizing Laravel..."
-
+            echo "⚡ Clearing cache & optimizing..."
             php artisan config:clear || true
             php artisan cache:clear || true
             php artisan route:clear || true
@@ -105,5 +117,11 @@ jobs:
 
             php artisan config:cache
             php artisan route:cache
+
+            # ================================
+            # Cleanup old releases (keep last 4)
+            # ================================
+            echo "🧹 Cleaning up old releases..."
+            ls -1dt releases/release_* | tail -n +5 | xargs rm -rf || true
 
             echo "✅ Deployment Finished Successfully!"
