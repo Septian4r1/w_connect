@@ -2,25 +2,13 @@ name: Laravel CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      APP_ENV: testing
-      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
-      DB_CONNECTION: mysql
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: wconnect_test
-      DB_USERNAME: root
-      DB_PASSWORD: root
 
     services:
       mysql:
@@ -37,33 +25,52 @@ jobs:
           --health-retries=3
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: 8.2
           extensions: mbstring, bcmath, pdo_mysql, curl
-          ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=2G
-          coverage: xdebug
 
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --optimize-autoloader
+      - name: Install Composer
+        run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Run migrations
-        run: php artisan migrate --force
+      - name: Copy .env
+        run: cp .env.example .env
 
-      - name: Setup Node.js
+      - name: Generate Key
+        run: php artisan key:generate
+
+      - name: Set Testing Environment
+        run: |
+          echo "DB_CONNECTION=mysql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_DATABASE=wconnect_test" >> .env
+          echo "DB_USERNAME=root" >> .env
+          echo "DB_PASSWORD=root" >> .env
+
+      - name: Wait for MySQL
+        run: |
+          sudo apt-get install mysql-client -y
+          until mysqladmin ping -h "127.0.0.1" --silent; do
+            sleep 1
+          done
+
+      - name: Run Migrations
+        run: php artisan migrate:fresh --force
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Install Node.js dependencies
-        run: npm install
+      - name: Install NPM
+        run: npm ci
 
-      - name: Build assets
+      - name: Build Assets
         run: npm run build
 
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit --colors=always
+      - name: Run Tests
+        run: php artisan test
