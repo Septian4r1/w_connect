@@ -280,7 +280,7 @@
 
     </div>
     <div class="version-block">
-        by : astha production &nbsp; | &nbsp; versi 0.0.1
+        by : AsthA production &nbsp; | &nbsp; versi 0.0.1
     </div>
 
     <script>
