@@ -11,15 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ================================
-      # 1️⃣ Checkout Repository
-      # ================================
       - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
-      # ================================
-      # 2️⃣ Deploy via SSH (Zero Downtime)
-      # ================================
       - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -38,79 +32,56 @@ jobs:
             cd /home/u595038546/domains/csr.majubersamaadp.com
             mkdir -p w_connect/releases
 
-            # ================================
-            # Pull latest code
-            # ================================
+            # Clone repo jika pertama kali
             if [ ! -d "w_connect/.git" ]; then
               echo "📦 First time setup - Cloning repository..."
               git clone https://github.com/Septian4r1/w_connect.git w_connect
             fi
             cd w_connect
+
+            # Pull latest code
             git fetch origin
             git reset --hard origin/main
 
-            # ================================
-            # Setup new release (timestamp)
-            # ================================
+            # Timestamp release baru
             timestamp=$(date +%Y%m%d%H%M%S)
             release_folder="releases/release_$timestamp"
             echo "📂 Creating release folder: $release_folder"
-            mkdir -p $release_folder
+            mkdir -p $release_folder/public
 
-            # ================================
-            # Rsync incremental (hanya update file berubah)
-            # ================================
+            # Rsync incremental + hapus file yang sudah tidak ada di repo
             echo "📦 Syncing changed files to release..."
-            rsync -a --exclude='.git' --exclude='vendor' ./ $release_folder/
+            rsync -a --exclude='.git' --exclude='vendor' --delete ./ $release_folder/
             cp -r public/. $release_folder/public/
 
-            # ================================
-            # Install composer dependencies (di release)
-            # ================================
+            # Composer install (pasti dijalankan di release baru)
             cd $release_folder
-            if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
-              echo "📦 Installing composer dependencies..."
-              composer install --no-dev --optimize-autoloader
-            else
-              echo "⚡ Composer dependencies already exist, skipping..."
-            fi
+            echo "📦 Installing composer dependencies..."
+            composer install --no-dev --optimize-autoloader
 
-            # ================================
             # Migrate database
-            # ================================
             echo "🗄 Running migrations..."
             php artisan migrate --force
 
-            # ================================
             # Prepare storage & permissions
-            # ================================
             echo "📁 Preparing storage folders..."
             mkdir -p storage/framework/{sessions,views,cache}
             mkdir -p bootstrap/cache
             chmod -R 775 storage bootstrap/cache || true
 
-            # ================================
             # Link storage (idempotent)
-            # ================================
             echo "🔗 Linking storage..."
             php artisan storage:link || true
 
-            # ================================
             # Swap release live (zero downtime)
-            # ================================
             echo "🔀 Updating current symlink to new release..."
             ln -sfn $release_folder current
 
-            # ================================
             # Link public_html -> current/public
-            # ================================
-            mkdir -p current/public
             ln -sfn current/public ../public_html
             echo "✅ public_html symlink ready."
 
-            # ================================
             # Clear & optimize Laravel
-            # ================================
             echo "⚡ Clearing cache & optimizing..."
             php artisan config:clear || true
             php artisan cache:clear || true
@@ -119,9 +90,7 @@ jobs:
             php artisan config:cache
             php artisan route:cache
 
-            # ================================
             # Cleanup old releases (keep last 4)
-            # ================================
             echo "🧹 Cleaning up old releases..."
             ls -1dt releases/release_* | tail -n +5 | xargs rm -rf || true
 
