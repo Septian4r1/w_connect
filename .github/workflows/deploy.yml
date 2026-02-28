@@ -18,16 +18,18 @@ jobs:
         uses: actions/checkout@v3
 
       # ================================
-      # 2️⃣ Deploy via SSH dengan symlink zero downtime
+      # 2️⃣ Deploy via SSH (Zero Downtime)
       # ================================
       - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST_NAME }}
-          username: ${{ secrets.HOST_USER }}
-          key: ${{ secrets.HOST_SSH_KEY }}
+          host: ${{ secrets.HOST_NAME }} # IP server: 145.79.14.6
+          username: ${{ secrets.HOST_USER }} # User SSH: u595038546
+          key: ${{ secrets.HOST_SSH_KEY }} # Private key SSH
           port: 65002
           script_stop: true
+          timeout: 120 # Memberi waktu 2 menit untuk SSH
+          debug: true # Menampilkan log debug jika gagal
           script: |
 
             set -e
@@ -49,9 +51,28 @@ jobs:
             cd w_connect
 
             # ================================
+            # Pastikan folder releases ada
+            # ================================
+            mkdir -p releases
+
+            # ================================
+            # Pastikan public_html symlink atau kosong
+            # ================================
+            if [ ! -L ../public_html ]; then
+              echo "📂 Creating symlink public_html..."
+              rm -rf ../public_html
+              # Buat symlink sementara jika current sudah ada
+              if [ -d current/public ]; then
+                ln -s current/public ../public_html || true
+              else
+                mkdir -p ../public_html
+              fi
+            fi
+
+            # ================================
             # Pull latest changes
             # ================================
-            echo "🔄 Pull latest changes..."
+            echo "🔄 Pulling latest code..."
             git fetch origin
             git reset --hard origin/main
 
