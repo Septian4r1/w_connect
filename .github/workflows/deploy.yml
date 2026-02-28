@@ -58,16 +58,18 @@ jobs:
             # ================================
             # Pastikan public_html symlink atau kosong
             # ================================
-            if [ ! -L ../public_html ]; then
-              echo "📂 Creating symlink public_html..."
-              rm -rf ../public_html
-              # Buat symlink sementara jika current sudah ada
-              if [ -d current/public ]; then
-                ln -s current/public ../public_html || true
-              else
-                mkdir -p ../public_html
-              fi
+            echo "📂 Preparing public_html..."
+            if [ -d ../public_html ] && [ ! -L ../public_html ]; then
+                echo "⚠️ ../public_html exists but is not a symlink. Removing..."
+                rm -rf ../public_html || true
             fi
+
+            # pastikan folder current/public ada
+            mkdir -p current/public
+
+            # buat symlink public_html -> current/public
+            ln -sfn current/public ../public_html
+            echo "✅ public_html symlink ready."
 
             # ================================
             # Pull latest changes
