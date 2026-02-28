@@ -1,6 +1,5 @@
 name: Deploy to Hostinger
 
-# Workflow akan berjalan setiap ada push ke branch main
 on:
   push:
     branches:
@@ -12,23 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # ================================
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout Repository
       # ================================
       - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
       # ================================
-      # 2️⃣ Deploy ke server via SSH
+      # 2️⃣ Deploy via SSH
       # ================================
       - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST_NAME }}      # IP server (145.79.14.6)
-          username: ${{ secrets.HOST_USER }}  # u595038546
-          key: ${{ secrets.HOST_SSH_KEY }}    # Private SSH key (FULL, tanpa diubah)
-          port: 65002                         # ⚠️ WAJIB 65002 (bukan 22!)
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.HOST_USER }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          port: 65002
           script_stop: true
           script: |
 
@@ -37,12 +35,12 @@ jobs:
             echo "🚀 Starting Deployment..."
 
             # ================================
-            # 3️⃣ Masuk ke folder domain
+            # Masuk ke folder domain
             # ================================
             cd /home/u595038546/domains/csr.majubersamaadp.com
 
             # ================================
-            # 4️⃣ Clone jika belum ada
+            # Clone jika pertama kali
             # ================================
             if [ ! -d "w_connect/.git" ]; then
               echo "📦 First time setup - Cloning repository..."
@@ -52,37 +50,60 @@ jobs:
             cd w_connect
 
             # ================================
-            # 5️⃣ Pull update terbaru
+            # Update source code
             # ================================
             echo "🔄 Pull latest changes..."
             git fetch origin
             git reset --hard origin/main
 
             # ================================
-            # 6️⃣ Install dependency Laravel
+            # Install dependency
             # ================================
             echo "📦 Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader
 
             # ================================
-            # 7️⃣ Jalankan migration (jika ada)
+            # Pastikan folder storage aman
+            # ================================
+            echo "📁 Preparing storage folders..."
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/framework/cache
+            mkdir -p bootstrap/cache
+
+            chmod -R 775 storage || true
+            chmod -R 775 bootstrap/cache || true
+
+            # ================================
+            # Storage link (tidak error kalau sudah ada)
+            # ================================
+            echo "🔗 Linking storage..."
+            php artisan storage:link || true
+
+            # ================================
+            # Migration
             # ================================
             echo "🗄 Running migration..."
             php artisan migrate --force
 
             # ================================
-            # 8️⃣ Copy public folder ke public_html
+            # Sync public ke public_html
             # ================================
             echo "📂 Syncing public folder..."
             rm -rf ../public_html/*
             cp -r public/* ../public_html/
 
             # ================================
-            # 9️⃣ Optimize Laravel
+            # Clear & Optimize
             # ================================
             echo "⚡ Optimizing Laravel..."
+
+            php artisan config:clear || true
+            php artisan cache:clear || true
+            php artisan route:clear || true
+            php artisan view:clear || true
+
             php artisan config:cache
             php artisan route:cache
-            php artisan view:cache
 
             echo "✅ Deployment Finished Successfully!"
