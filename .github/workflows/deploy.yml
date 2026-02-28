@@ -28,7 +28,7 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY }} # Private key SSH
           port: 65002
           script_stop: true
-          timeout: 120 # Memberi waktu 2 menit untuk SSH
+          timeout: 120s # Memberi waktu 2 menit untuk SSH
           debug: true # Menampilkan log debug jika gagal
           script: |
 
