@@ -10,8 +10,17 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: wconnect_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
 
     services:
       mysql:
@@ -28,39 +37,33 @@ jobs:
           --health-retries=3
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, bcmath, pdo_mysql, curl
-        ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=2G
-        coverage: xdebug
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, pdo_mysql, curl
+          ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=2G
+          coverage: xdebug
 
-    - name: Install Composer dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --optimize-autoloader
 
-    - name: Copy .env
-      run: cp .env.example .env
+      - name: Run migrations
+        run: php artisan migrate --force
 
-    - name: Generate app key
-      run: php artisan key:generate
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-    - name: Run migrations
-      run: php artisan migrate --env=testing --force
+      - name: Install Node.js dependencies
+        run: npm install
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      - name: Build assets
+        run: npm run build
 
-    - name: Install Node.js dependencies
-      run: npm install
-
-    - name: Build assets
-      run: npm run build
-
-    - name: Run PHPUnit tests
-      run: vendor/bin/phpunit --colors=always
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --colors=always
