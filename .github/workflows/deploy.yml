@@ -23,82 +23,60 @@ jobs:
       - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST_NAME }} # IP server: 145.79.14.6
-          username: ${{ secrets.HOST_USER }} # User SSH: u595038546
-          key: ${{ secrets.HOST_SSH_KEY }} # Private key SSH
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.HOST_USER }}
+          key: ${{ secrets.HOST_SSH_KEY }}
           port: 65002
           script_stop: true
-          timeout: 120s # Memberi waktu 2 menit untuk SSH
-          debug: true # Menampilkan log debug jika gagal
+          timeout: 300s
+          debug: true
           script: |
-
             set -e
             echo "🚀 Starting Deployment..."
 
-            # ================================
             # Masuk ke folder domain
-            # ================================
             cd /home/u595038546/domains/csr.majubersamaadp.com
+            mkdir -p w_connect/releases
 
             # ================================
-            # Clone repository jika pertama kali
+            # Pull latest code
             # ================================
             if [ ! -d "w_connect/.git" ]; then
               echo "📦 First time setup - Cloning repository..."
               git clone https://github.com/Septian4r1/w_connect.git w_connect
             fi
-
             cd w_connect
-
-            # ================================
-            # Pastikan folder releases ada
-            # ================================
-            mkdir -p releases
-
-            # ================================
-            # Pastikan public_html symlink atau kosong
-            # ================================
-            echo "📂 Preparing public_html..."
-            if [ -d ../public_html ] && [ ! -L ../public_html ]; then
-                echo "⚠️ ../public_html exists but is not a symlink. Removing..."
-                rm -rf ../public_html || true
-            fi
-
-            # pastikan folder current/public ada
-            mkdir -p current/public
-
-            # buat symlink public_html -> current/public
-            ln -sfn current/public ../public_html
-            echo "✅ public_html symlink ready."
-
-            # ================================
-            # Pull latest changes
-            # ================================
-            echo "🔄 Pulling latest code..."
             git fetch origin
             git reset --hard origin/main
 
             # ================================
-            # Setup release baru
+            # Setup new release (timestamp)
             # ================================
             timestamp=$(date +%Y%m%d%H%M%S)
             release_folder="releases/release_$timestamp"
             echo "📂 Creating release folder: $release_folder"
             mkdir -p $release_folder
 
-            echo "📦 Copying source code to release folder..."
-            rsync -av --exclude='.git' --exclude='vendor' ./ $release_folder/
+            # ================================
+            # Rsync incremental (hanya update file berubah)
+            # ================================
+            echo "📦 Syncing changed files to release..."
+            rsync -a --exclude='.git' --exclude='vendor' ./ $release_folder/
             cp -r public/. $release_folder/public/
 
             # ================================
-            # Install dependencies di release
+            # Install composer dependencies (di release)
             # ================================
             cd $release_folder
-            echo "📦 Installing composer dependencies..."
-            composer install --no-dev --optimize-autoloader
+            if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
+              echo "📦 Installing composer dependencies..."
+              composer install --no-dev --optimize-autoloader
+            else
+              echo "⚡ Composer dependencies already exist, skipping..."
+            fi
 
             # ================================
-            # Run database migration
+            # Migrate database
             # ================================
             echo "🗄 Running migrations..."
             php artisan migrate --force
@@ -118,16 +96,17 @@ jobs:
             php artisan storage:link || true
 
             # ================================
-            # Swap release live via symlink (zero downtime)
+            # Swap release live (zero downtime)
             # ================================
             echo "🔀 Updating current symlink to new release..."
             ln -sfn $release_folder current
 
             # ================================
-            # Link public_html ke current/public
+            # Link public_html -> current/public
             # ================================
-            echo "📂 Linking public_html to current/public..."
+            mkdir -p current/public
             ln -sfn current/public ../public_html
+            echo "✅ public_html symlink ready."
 
             # ================================
             # Clear & optimize Laravel
@@ -137,7 +116,6 @@ jobs:
             php artisan cache:clear || true
             php artisan route:clear || true
             php artisan view:clear || true
-
             php artisan config:cache
             php artisan route:cache
 

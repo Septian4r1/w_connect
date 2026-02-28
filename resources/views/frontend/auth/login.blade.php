@@ -13,6 +13,27 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+        /* ================================
+       VERSION / FOOTER BLOCK
+    ================================ */
+        .version-block {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d1f2eb;
+            /* warna soft teal/abu muda */
+            color: #1abc9c;
+            /* teks hijau sesuai header/button */
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
         /* =============================
            GLOBAL
         ============================= */
@@ -257,6 +278,9 @@
 
         </div>
 
+    </div>
+    <div class="version-block">
+        by : astha production &nbsp; | &nbsp; versi 0.0.1
     </div>
 
     <script>
