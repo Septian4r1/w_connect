@@ -2,9 +2,10 @@ name: Laravel CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,24 +26,53 @@ jobs:
           --health-retries=3
 
     steps:
-      - uses: actions/checkout@v3
+      # ==============================
+      # 1. Checkout Repository
+      # ==============================
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
+      # ==============================
+      # 2. Setup PHP Environment
+      # ==============================
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
           extensions: mbstring, bcmath, pdo_mysql, curl
+          coverage: none
 
-      - name: Install Composer
+      # ==============================
+      # 3. Install Composer Dependencies
+      # ==============================
+      - name: Install Composer Dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      # ==============================
+      # 4. Setup Laravel Environment
+      # ==============================
       - name: Copy .env
         run: cp .env.example .env
 
-      - name: Generate Key
+      - name: Generate APP Key
         run: php artisan key:generate
 
-      - name: Set Testing Environment
+      # ==============================
+      # 5. Fix Storage & Cache Path
+      # (Mengatasi error: Please provide a valid cache path)
+      # ==============================
+      - name: Create Storage & Cache Folders
+        run: |
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p bootstrap/cache
+          chmod -R 777 storage bootstrap/cache
+
+      # ==============================
+      # 6. Set Database Testing Config
+      # ==============================
+      - name: Configure Database
         run: |
           echo "DB_CONNECTION=mysql" >> .env
           echo "DB_HOST=127.0.0.1" >> .env
@@ -51,6 +81,9 @@ jobs:
           echo "DB_USERNAME=root" >> .env
           echo "DB_PASSWORD=root" >> .env
 
+      # ==============================
+      # 7. Wait Until MySQL Ready
+      # ==============================
       - name: Wait for MySQL
         run: |
           sudo apt-get install mysql-client -y
@@ -58,19 +91,34 @@ jobs:
             sleep 1
           done
 
+      # ==============================
+      # 8. Run Fresh Migration
+      # ==============================
       - name: Run Migrations
         run: php artisan migrate:fresh --force
 
+      # ==============================
+      # 9. Setup Node
+      # ==============================
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      # ==============================
+      # 10. Install NPM Dependencies
+      # ==============================
       - name: Install NPM
         run: npm install
 
+      # ==============================
+      # 11. Build Frontend Assets
+      # ==============================
       - name: Build Assets
         run: npm run build
 
+      # ==============================
+      # 12. Run PHPUnit Tests
+      # ==============================
       - name: Run Tests
         run: php artisan test
