@@ -1,5 +1,6 @@
 name: Deploy to Hostinger
 
+# Workflow akan berjalan setiap ada push ke branch main
 on:
   push:
     branches:
@@ -7,42 +8,81 @@ on:
 
 jobs:
   deploy:
+    name: 🚀 Deploy Laravel App
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+
+      # ================================
+      # 1️⃣ Checkout repository
+      # ================================
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Deploy via SSH
+      # ================================
+      # 2️⃣ Deploy ke server via SSH
+      # ================================
+      - name: 🔐 Deploy via SSH (Port 65002)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST_NAME }}
-          username: ${{ secrets.HOST_USER }}
-          key: ${{ secrets.HOST_SSH_KEY }}
-          port: 22
+          host: ${{ secrets.HOST_NAME }}      # IP server (145.79.14.6)
+          username: ${{ secrets.HOST_USER }}  # u595038546
+          key: ${{ secrets.HOST_SSH_KEY }}    # Private SSH key (FULL, tanpa diubah)
+          port: 65002                         # ⚠️ WAJIB 65002 (bukan 22!)
+          script_stop: true
           script: |
+
             set -e
+
             echo "🚀 Starting Deployment..."
 
+            # ================================
+            # 3️⃣ Masuk ke folder domain
+            # ================================
             cd /home/u595038546/domains/csr.majubersamaadp.com
 
+            # ================================
+            # 4️⃣ Clone jika belum ada
+            # ================================
             if [ ! -d "w_connect/.git" ]; then
+              echo "📦 First time setup - Cloning repository..."
               git clone https://github.com/Septian4r1/w_connect.git w_connect
             fi
 
             cd w_connect
 
+            # ================================
+            # 5️⃣ Pull update terbaru
+            # ================================
+            echo "🔄 Pull latest changes..."
             git fetch origin
             git reset --hard origin/main
 
+            # ================================
+            # 6️⃣ Install dependency Laravel
+            # ================================
+            echo "📦 Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader
+
+            # ================================
+            # 7️⃣ Jalankan migration (jika ada)
+            # ================================
+            echo "🗄 Running migration..."
             php artisan migrate --force
 
+            # ================================
+            # 8️⃣ Copy public folder ke public_html
+            # ================================
+            echo "📂 Syncing public folder..."
             rm -rf ../public_html/*
             cp -r public/* ../public_html/
 
+            # ================================
+            # 9️⃣ Optimize Laravel
+            # ================================
+            echo "⚡ Optimizing Laravel..."
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            echo "✅ Deployment Finished!"
+            echo "✅ Deployment Finished Successfully!"
