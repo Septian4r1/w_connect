@@ -11,9 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ================================
+      # 1️⃣ Checkout Repository
+      # ================================
       - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
+      # ================================
+      # 2️⃣ Deploy via SSH
+      # ================================
       - name: 🔐 Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -27,9 +33,11 @@ jobs:
           debug: false
           script: |
             set -e
-
             echo "🚀 Starting Zero Downtime Deployment..."
 
+            # ================================
+            # 2.1 Paths
+            # ================================
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
             RELEASES_PATH=$DOMAIN_PATH/releases
             SHARED_PATH=$DOMAIN_PATH/shared
@@ -38,30 +46,32 @@ jobs:
             TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
-            # ==========================================
+            # ================================
             # 1️⃣ Prepare Directory Structure
-            # ==========================================
+            # ================================
             mkdir -p $RELEASES_PATH
             mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
             mkdir -p $SHARED_PATH/storage/app/public
             mkdir -p $SHARED_PATH/bootstrap/cache
+            mkdir -p $SHARED_PATH/frontend/data_warga/kk
+            mkdir -p $SHARED_PATH/frontend/data_warga/ktp
 
-            # ==========================================
+            # ================================
             # 2️⃣ Clone Repository (Lightweight)
-            # ==========================================
+            # ================================
             git clone --depth 1 https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
             cd $NEW_RELEASE
 
-            # ==========================================
+            # ================================
             # 3️⃣ Install Dependencies (Optimized)
-            # ==========================================
+            # ================================
             if [ -f composer.json ]; then
               composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
             fi
 
-            # ==========================================
+            # ================================
             # 4️⃣ Shared .env & Storage Symlink
-            # ==========================================
+            # ================================
             if [ ! -f $SHARED_PATH/.env ]; then
               echo "⚠️ .env not found. Creating from example..."
               cp .env.example $SHARED_PATH/.env
@@ -70,45 +80,53 @@ jobs:
             rm -rf storage
             ln -sfn $SHARED_PATH/storage storage
             ln -sfn $SHARED_PATH/.env .env
-
             chmod -R 775 storage bootstrap/cache || true
 
-            # ==========================================
+            # ================================
             # 5️⃣ Force Clear Old Cached Config (ANTI BUG)
-            # ==========================================
+            # ================================
             rm -f bootstrap/cache/*.php || true
-
             php artisan config:clear || true
             php artisan route:clear || true
             php artisan view:clear || true
 
-            # ==========================================
+            # ================================
             # 6️⃣ Database Migration
-            # ==========================================
+            # ================================
             php artisan migrate --force || echo "⚠️ Migration skipped"
 
-            # ==========================================
+            # ================================
             # 7️⃣ Rebuild Optimized Cache
-            # ==========================================
+            # ================================
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
 
-            # ==========================================
+            # ================================
             # 8️⃣ Storage Link (Public Storage)
-            # ==========================================
+            # ================================
             php artisan storage:link || true
 
-            # ==========================================
+            # ================================
+            # 8.5️⃣ Shared Data Warga Symlink
+            # ================================
+            # Pastikan setiap release baru menggunakan shared folder untuk KK/KTP
+            rm -rf frontend/data_warga
+            ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
+            echo "🔗 Symlink frontend/data_warga → shared folder dibuat"
+
+            # ================================
             # 9️⃣ Zero Downtime Symlink Switch
-            # ==========================================
+            # ================================
             ln -sfn $NEW_RELEASE $CURRENT_PATH
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+            echo "🟢 Symlink current/public → public_html sudah diupdate"
 
-            # ==========================================
+            # ================================
             # 🔟 Keep Only 2 Latest Releases
-            # ==========================================
+            # ================================
             cd $RELEASES_PATH
             ls -dt release_* | tail -n +3 | xargs rm -rf || true
+            echo "🗑️ Old releases cleanup done"
 
             echo "✅ Deployment Completed Successfully!"
