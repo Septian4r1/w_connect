@@ -1,4 +1,4 @@
-name: Deploy to Hostinger (Zero Downtime - Optimized)
+name: Deploy to Hostinger (Zero Downtime - Production Ready)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: 🚀 Deploy Laravel Zero Downtime (Shared Optimized)
+    name: 🚀 Deploy Laravel Zero Downtime (Production)
     runs-on: ubuntu-latest
 
     steps:
@@ -28,6 +28,8 @@ jobs:
           script: |
             set -e
 
+            echo "🚀 Starting Zero Downtime Deployment..."
+
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
             RELEASES_PATH=$DOMAIN_PATH/releases
             SHARED_PATH=$DOMAIN_PATH/shared
@@ -36,31 +38,32 @@ jobs:
             TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
-            echo "🚀 Starting Optimized Deployment..."
-
+            # ==========================================
+            # 1️⃣ Prepare Directory Structure
+            # ==========================================
             mkdir -p $RELEASES_PATH
-            mkdir -p $SHARED_PATH/storage
             mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
+            mkdir -p $SHARED_PATH/storage/app/public
             mkdir -p $SHARED_PATH/bootstrap/cache
 
-            # ==============================
-            # 1️⃣ Clone ringan (lebih cepat & hemat resource)
-            # ==============================
+            # ==========================================
+            # 2️⃣ Clone Repository (Lightweight)
+            # ==========================================
             git clone --depth 1 https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
             cd $NEW_RELEASE
 
-            # ==============================
-            # 2️⃣ Install dependency (lebih aman)
-            # ==============================
+            # ==========================================
+            # 3️⃣ Install Dependencies (Optimized)
+            # ==========================================
             if [ -f composer.json ]; then
-              composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || true
+              composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
             fi
 
-            # ==============================
-            # 3️⃣ Shared ENV & Storage
-            # ==============================
+            # ==========================================
+            # 4️⃣ Shared .env & Storage Symlink
+            # ==========================================
             if [ ! -f $SHARED_PATH/.env ]; then
-              echo "⚠️ .env not found, copying from example..."
+              echo "⚠️ .env not found. Creating from example..."
               cp .env.example $SHARED_PATH/.env
             fi
 
@@ -70,29 +73,41 @@ jobs:
 
             chmod -R 775 storage bootstrap/cache || true
 
-            # ==============================
-            # 4️⃣ Laravel Optimization
-            # ==============================
+            # ==========================================
+            # 5️⃣ Force Clear Old Cached Config (ANTI BUG)
+            # ==========================================
+            rm -f bootstrap/cache/*.php || true
+
             php artisan config:clear || true
-            php artisan cache:clear || true
             php artisan route:clear || true
             php artisan view:clear || true
 
+            # ==========================================
+            # 6️⃣ Database Migration
+            # ==========================================
             php artisan migrate --force || echo "⚠️ Migration skipped"
 
+            # ==========================================
+            # 7️⃣ Rebuild Optimized Cache
+            # ==========================================
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
 
-            # ==============================
-            # 5️⃣ Zero Downtime Switch
-            # ==============================
+            # ==========================================
+            # 8️⃣ Storage Link (Public Storage)
+            # ==========================================
+            php artisan storage:link || true
+
+            # ==========================================
+            # 9️⃣ Zero Downtime Symlink Switch
+            # ==========================================
             ln -sfn $NEW_RELEASE $CURRENT_PATH
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
 
-            # ==============================
-            # 6️⃣ Simpan hanya 2 release terbaru
-            # ==============================
+            # ==========================================
+            # 🔟 Keep Only 2 Latest Releases
+            # ==========================================
             cd $RELEASES_PATH
             ls -dt release_* | tail -n +3 | xargs rm -rf || true
 
