@@ -111,6 +111,9 @@ jobs:
             # 8.5️⃣ Shared Data Warga Symlink
             # ================================
             # Pastikan setiap release baru menggunakan shared folder untuk KK/KTP
+            mkdir -p frontend
+
+            # Hapus folder lama jika ada dan buat symlink
             rm -rf frontend/data_warga
             ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
             echo "🔗 Symlink frontend/data_warga → shared folder dibuat"
