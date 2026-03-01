@@ -11,16 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ================================
-      # 1️⃣ Checkout Repository
-      # ================================
       - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
-      # ================================
-      # 2️⃣ Deploy via SSH (Port 65002)
-      # ================================
-      - name: 🔐 Deploy via SSH (Port 65002)
+      - name: 🔐 Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_NAME }}
@@ -28,91 +22,45 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY }}
           port: 65002
           script_stop: true
-          timeout: 300s
-          debug: true
           script: |
             set -e
-            echo "🚀 Starting Deployment..."
 
-            # Masuk ke folder domain
-            cd /home/u595038546/domains/csr.majubersamaadp.com
-            mkdir -p w_connect/releases
+            DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
+            APP_PATH=$DOMAIN_PATH/w_connect
+
+            echo "🚀 Starting Fresh Deployment..."
+
+            cd $DOMAIN_PATH
 
             # ================================
-            # Clone repo jika pertama kali
+            # 1️⃣ Hapus total folder lama (fresh start)
             # ================================
-            if [ ! -d "w_connect/.git" ]; then
-              echo "📦 First time setup - Cloning repository..."
-              git clone https://github.com/Septian4r1/w_connect.git w_connect
-            fi
+            rm -rf w_connect
+            rm -rf public_html
+
+            # ================================
+            # 2️⃣ Clone ulang repository
+            # ================================
+            git clone https://github.com/Septian4r1/w_connect.git w_connect
             cd w_connect
 
             # ================================
-            # Pull Git terbaru & bersihkan file lama
+            # 3️⃣ Install composer
             # ================================
-            echo "🔄 Updating source code..."
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd  # hapus file yang tidak ada di Git
-
-            # ================================
-            # Setup release baru
-            # ================================
-            timestamp=$(date +%Y%m%d%H%M%S)
-            release_folder="releases/release_$timestamp"
-            echo "📂 Creating release folder: $release_folder"
-            mkdir -p $release_folder/public
-
-            # ================================
-            # Copy seluruh source code ke release baru
-            # ================================
-            echo "📦 Syncing files to release..."
-            rsync -a --exclude='.git' --exclude='vendor' --delete ./ $release_folder/
-            cp -r public/. $release_folder/public/
-
-            # ================================
-            # Install composer dependencies
-            # ================================
-            cd $release_folder
-            echo "📦 Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader
 
             # ================================
-            # Migrate database
+            # 4️⃣ Setup Laravel
             # ================================
-            echo "🗄 Running migrations..."
-            php artisan migrate --force
+            php artisan key:generate || true
+            php artisan migrate --force || true
 
-            # ================================
-            # Prepare storage & permissions
-            # ================================
-            echo "📁 Preparing storage folders..."
             mkdir -p storage/framework/{sessions,views,cache}
             mkdir -p bootstrap/cache
             chmod -R 775 storage bootstrap/cache || true
 
-            # ================================
-            # Link storage (idempotent)
-            # ================================
-            echo "🔗 Linking storage..."
             php artisan storage:link || true
 
-            # ================================
-            # Swap release live (zero downtime)
-            # ================================
-            echo "🔀 Updating current symlink to new release..."
-            ln -sfn $release_folder current
-
-            # ================================
-            # Link public_html -> current/public
-            # ================================
-            ln -sfn current/public ../public_html
-            echo "✅ public_html symlink ready."
-
-            # ================================
-            # Clear & optimize Laravel
-            # ================================
-            echo "⚡ Clearing cache & optimizing..."
             php artisan config:clear || true
             php artisan cache:clear || true
             php artisan route:clear || true
@@ -121,9 +69,9 @@ jobs:
             php artisan route:cache
 
             # ================================
-            # Cleanup old releases (keep last 4)
+            # 5️⃣ Set public_html ke public Laravel
             # ================================
-            echo "🧹 Cleaning up old releases..."
-            ls -1dt releases/release_* | tail -n +5 | xargs rm -rf || true
+            cd $DOMAIN_PATH
+            ln -s w_connect/public public_html
 
-            echo "✅ Deployment Finished Successfully!"
+            echo "✅ Fresh Deployment Completed!"
