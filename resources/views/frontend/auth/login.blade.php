@@ -14,23 +14,28 @@
 
     <style>
         /* ================================
-       VERSION / FOOTER BLOCK
-    ================================ */
+        VERSION / FOOTER BLOCK - MINI
+        =============================== */
         .version-block {
             position: fixed;
-            bottom: 10px;
+            bottom: 6px;
+            /* sedikit naik dari bawah */
             left: 50%;
             transform: translateX(-50%);
             background: #d1f2eb;
             /* warna soft teal/abu muda */
             color: #1abc9c;
             /* teks hijau sesuai header/button */
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 3px 8px;
+            /* lebih kecil */
+            border-radius: 8px;
+            /* lebih ramping */
+            font-size: 10px;
+            /* lebih kecil */
             font-weight: 600;
             text-align: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            /* lebih subtle */
             z-index: 1000;
         }
 
@@ -280,7 +285,7 @@
 
     </div>
     <div class="version-block">
-        by:AsthA production &nbsp; | &nbsp; versi 0.0.1
+        by : AsthA production &nbsp;|&nbsp; versi 0.0.1
     </div>
 
     <script>
