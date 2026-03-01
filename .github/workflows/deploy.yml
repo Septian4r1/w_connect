@@ -1,4 +1,4 @@
-name: Deploy to Hostinger (Zero Downtime)
+name: Deploy to Hostinger (Zero Downtime - Optimized)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: 🚀 Deploy Laravel Zero Downtime
+    name: 🚀 Deploy Laravel Zero Downtime (Shared Optimized)
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,10 @@ jobs:
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.HOST_SSH_KEY }}
           port: 65002
+          timeout: 60s
+          command_timeout: 20m
           script_stop: true
+          debug: false
           script: |
             set -e
 
@@ -33,61 +36,64 @@ jobs:
             TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
-            echo "🚀 Starting Zero Downtime Deployment..."
+            echo "🚀 Starting Optimized Deployment..."
 
             mkdir -p $RELEASES_PATH
             mkdir -p $SHARED_PATH/storage
+            mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
+            mkdir -p $SHARED_PATH/bootstrap/cache
 
             # ==============================
-            # 1️⃣ Clone ke folder release baru
+            # 1️⃣ Clone ringan (lebih cepat & hemat resource)
             # ==============================
-            git clone https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
+            git clone --depth 1 https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
             cd $NEW_RELEASE
 
             # ==============================
-            # 2️⃣ Install dependency
+            # 2️⃣ Install dependency (lebih aman)
             # ==============================
-            composer install --no-dev --optimize-autoloader
+            if [ -f composer.json ]; then
+              composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || true
+            fi
 
             # ==============================
-            # 3️⃣ Shared File (.env & storage)
+            # 3️⃣ Shared ENV & Storage
             # ==============================
             if [ ! -f $SHARED_PATH/.env ]; then
               echo "⚠️ .env not found, copying from example..."
               cp .env.example $SHARED_PATH/.env
-            else
-              echo "✅ Using existing .env"
             fi
 
             rm -rf storage
             ln -sfn $SHARED_PATH/storage storage
             ln -sfn $SHARED_PATH/.env .env
 
-            # ==============================
-            # 4️⃣ Laravel Setup (FIXED VERSION)
-            # ==============================
+            chmod -R 775 storage bootstrap/cache || true
 
+            # ==============================
+            # 4️⃣ Laravel Optimization
+            # ==============================
             php artisan config:clear || true
-
-            php artisan migrate --force || echo "⚠️ Migration skipped"
-
             php artisan cache:clear || true
             php artisan route:clear || true
             php artisan view:clear || true
 
+            php artisan migrate --force || echo "⚠️ Migration skipped"
+
             php artisan config:cache || true
             php artisan route:cache || true
+            php artisan view:cache || true
 
             # ==============================
-            # 5️⃣ Switch Symlink (ZERO DOWNTIME)
+            # 5️⃣ Zero Downtime Switch
             # ==============================
             ln -sfn $NEW_RELEASE $CURRENT_PATH
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
 
             # ==============================
-            # 6️⃣ Hapus release lama (simpan 5 versi)
+            # 6️⃣ Simpan hanya 2 release terbaru
             # ==============================
             cd $RELEASES_PATH
-            ls -dt release_* | tail -n +6 | xargs rm -rf || true
+            ls -dt release_* | tail -n +3 | xargs rm -rf || true
 
             echo "✅ Deployment Completed Successfully!"
