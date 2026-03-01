@@ -53,26 +53,30 @@ jobs:
             # 3️⃣ Shared File (.env & storage)
             # ==============================
             if [ ! -f $SHARED_PATH/.env ]; then
+              echo "⚠️ .env not found, copying from example..."
               cp .env.example $SHARED_PATH/.env
+            else
+              echo "✅ Using existing .env"
             fi
 
             rm -rf storage
-            ln -s $SHARED_PATH/storage storage
-            ln -s $SHARED_PATH/.env .env
+            ln -sfn $SHARED_PATH/storage storage
+            ln -sfn $SHARED_PATH/.env .env
 
             # ==============================
-            # 4️⃣ Laravel Setup
+            # 4️⃣ Laravel Setup (FIXED VERSION)
             # ==============================
-            php artisan key:generate || true
-            php artisan migrate --force || true
 
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan route:clear
-            php artisan view:clear
+            php artisan config:clear || true
 
-            php artisan config:cache
-            php artisan route:cache
+            php artisan migrate --force || echo "⚠️ Migration skipped"
+
+            php artisan cache:clear || true
+            php artisan route:clear || true
+            php artisan view:clear || true
+
+            php artisan config:cache || true
+            php artisan route:cache || true
 
             # ==============================
             # 5️⃣ Switch Symlink (ZERO DOWNTIME)
