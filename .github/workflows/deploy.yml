@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Deploy to Hostinger (Zero Downtime)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: 🚀 Deploy Laravel App
+    name: 🚀 Deploy Laravel Zero Downtime
     runs-on: ubuntu-latest
 
     steps:
@@ -26,52 +26,64 @@ jobs:
             set -e
 
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
-            APP_PATH=$DOMAIN_PATH/w_connect
+            RELEASES_PATH=$DOMAIN_PATH/releases
+            SHARED_PATH=$DOMAIN_PATH/shared
+            CURRENT_PATH=$DOMAIN_PATH/current
 
-            echo "🚀 Starting Fresh Deployment..."
+            TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+            NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
-            cd $DOMAIN_PATH
+            echo "🚀 Starting Zero Downtime Deployment..."
 
-            # ================================
-            # 1️⃣ Hapus total folder lama (fresh start)
-            # ================================
-            rm -rf w_connect
-            rm -rf public_html
+            mkdir -p $RELEASES_PATH
+            mkdir -p $SHARED_PATH/storage
 
-            # ================================
-            # 2️⃣ Clone ulang repository
-            # ================================
-            git clone https://github.com/Septian4r1/w_connect.git w_connect
-            cd w_connect
+            # ==============================
+            # 1️⃣ Clone ke folder release baru
+            # ==============================
+            git clone https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
+            cd $NEW_RELEASE
 
-            # ================================
-            # 3️⃣ Install composer
-            # ================================
+            # ==============================
+            # 2️⃣ Install dependency
+            # ==============================
             composer install --no-dev --optimize-autoloader
 
-            # ================================
-            # 4️⃣ Setup Laravel
-            # ================================
+            # ==============================
+            # 3️⃣ Shared File (.env & storage)
+            # ==============================
+            if [ ! -f $SHARED_PATH/.env ]; then
+              cp .env.example $SHARED_PATH/.env
+            fi
+
+            rm -rf storage
+            ln -s $SHARED_PATH/storage storage
+            ln -s $SHARED_PATH/.env .env
+
+            # ==============================
+            # 4️⃣ Laravel Setup
+            # ==============================
             php artisan key:generate || true
             php artisan migrate --force || true
 
-            mkdir -p storage/framework/{sessions,views,cache}
-            mkdir -p bootstrap/cache
-            chmod -R 775 storage bootstrap/cache || true
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
 
-            php artisan storage:link || true
-
-            php artisan config:clear || true
-            php artisan cache:clear || true
-            php artisan route:clear || true
-            php artisan view:clear || true
             php artisan config:cache
             php artisan route:cache
 
-            # ================================
-            # 5️⃣ Set public_html ke public Laravel
-            # ================================
-            cd $DOMAIN_PATH
-            ln -s w_connect/public public_html
+            # ==============================
+            # 5️⃣ Switch Symlink (ZERO DOWNTIME)
+            # ==============================
+            ln -sfn $NEW_RELEASE $CURRENT_PATH
+            ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
 
-            echo "✅ Fresh Deployment Completed!"
+            # ==============================
+            # 6️⃣ Hapus release lama (simpan 5 versi)
+            # ==============================
+            cd $RELEASES_PATH
+            ls -dt release_* | tail -n +6 | xargs rm -rf || true
+
+            echo "✅ Deployment Completed Successfully!"
