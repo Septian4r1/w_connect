@@ -46,12 +46,10 @@ class DataPribadiController extends Controller
                 'rumahs.status_hunian'
             ])
             ->with([
-                /*
-                |------------------------------------------------------------------
-                | Relasi Keluarga
-                |------------------------------------------------------------------
-                | Memuat data keluarga dan nested relasi anggota keluarga (wargas)
-                */
+                // 🔹 Eager load RT/RW melalui block
+                'block.rt.rw',
+
+                // Keluarga + anggota
                 'keluarga' => function ($q) {
                     $q->select([
                         'keluargas.id',
@@ -66,35 +64,34 @@ class DataPribadiController extends Controller
                         'keluargas.kecamatan',
                         'keluargas.kota_kabupaten',
                         'keluargas.provinsi'
-                    ])
-                        ->with(['wargas' => function ($q) {
-                            $q->select([
-                                'wargas.id',
-                                'wargas.keluarga_id',
-                                'wargas.nama',
-                                'wargas.nik',
-                                'wargas.hubungan',
-                                'wargas.jenis_kelamin',
-                                'wargas.status_perkawinan',
-                                'wargas.agama',
-                                'wargas.pendidikan',
-                                'wargas.tanggal_lahir',
-                                'wargas.tempat_lahir',
-                                'wargas.pekerjaan',
-                                'wargas.no_hp',
-                                'wargas.email',
-                                'wargas.status'
-                            ])
-                                ->where('wargas.status', 'aktif'); // hanya anggota aktif
-                        }]);
+                    ])->with(['wargas' => function ($q) {
+                        $q->select([
+                            'wargas.id',
+                            'wargas.keluarga_id',
+                            'wargas.nik',
+                            'wargas.nama',
+                            'wargas.jenis_kelamin',
+                            'wargas.hubungan',
+                            'wargas.status_perkawinan',
+                            'wargas.agama',
+                            'wargas.pendidikan',
+                            'wargas.tanggal_lahir',
+                            'wargas.tempat_lahir',
+                            'wargas.province',       // tambahkan
+                            'wargas.pekerjaan',
+                            'wargas.no_hp',
+                            'wargas.email',
+                            'wargas.golongan_darah', // tambahkan
+                            'wargas.foto_ktp',       // tambahkan
+                            'wargas.foto',           // tambahkan
+                            'wargas.status',
+                            'wargas.created_at',     // tambahkan
+                            'wargas.updated_at'      // tambahkan
+                        ])->where('wargas.status', 'aktif');
+                    }]);
                 },
 
-                /*
-                |------------------------------------------------------------------
-                | Kepala Keluarga
-                |------------------------------------------------------------------
-                | Memuat data kepala keluarga (hasOneThrough), prefix wajib wargas.*
-                */
+                // Kepala keluarga (hasOneThrough)
                 'kepalaKeluarga' => function ($q) {
                     $q->select([
                         'wargas.id',
@@ -119,7 +116,7 @@ class DataPribadiController extends Controller
                     ]);
                 }
             ])
-            ->find($rumahId); // Ambil data berdasarkan session rumah_id
+            ->findOrFail($rumahId); // pakai findOrFail biar langsung 404 kalau tidak ada
 
         /*
         |--------------------------------------------------------------------------

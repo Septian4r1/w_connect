@@ -87,4 +87,22 @@ class Rumah extends Authenticatable
     {
         return $query->whereIn('status_hunian', ['huni, milik sendiri', 'sewa', 'belum huni']);
     }
+
+    public function fullAddress(): string
+    {
+        $block = $this->block;
+        $rt = $block->rt ?? null;
+        $rw = $rt->rw ?? null;
+
+        return sprintf(
+            '%s, %s, RT %s, RW %s, %s, %s, %s',
+            $this->alamat_lengkap,
+            $block->nama_blok ?? '-',
+            $rt->nama_rt ?? '-',
+            $rw->nama_rw ?? '-',
+            $this->desa,
+            $this->kelurahan,
+            $this->kode_pos
+        );
+    }
 }

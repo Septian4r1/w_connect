@@ -306,21 +306,31 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            const apiProvinsi = "{{ config('wilayah.provinsi') }}";
-            const apiKotaBase = "{{ config('wilayah.kota') }}";
+            // =========================
+            // 1️⃣ Konfigurasi API Provinsi & Kota
+            // =========================
+            const apiProvinsi = "{{ config('wilayah.provinsi') }}"; // JSON provinsi
+            const apiKotaBase = "{{ config('wilayah.kota') }}"; // base URL JSON kota per provinsi
 
             const selectProvinsi = document.getElementById('provinsi');
             const selectKota = document.getElementById('tempat_lahir');
 
-            // --- Load Provinsi ---
+            const provinsiMap = {}; // mapping nama provinsi → id untuk fetch kota
+
+            // =========================
+            // 2️⃣ Load Provinsi dari API
+            // =========================
             if (selectProvinsi) {
                 fetch(apiProvinsi)
                     .then(res => res.ok ? res.json() : Promise.reject('Server provinsi tidak merespon'))
                     .then(data => {
                         const fragment = document.createDocumentFragment();
                         data.forEach(prov => {
+                            // Simpan mapping nama → id untuk fetch kota nanti
+                            provinsiMap[prov.name] = prov.id;
+
                             const option = document.createElement('option');
-                            option.value = prov.id;
+                            option.value = prov.name; // value tetap nama (sesuai permintaan)
                             option.text = prov.name;
                             fragment.appendChild(option);
                         });
@@ -342,11 +352,16 @@
                     });
             }
 
-            // --- Load Kota saat Provinsi dipilih ---
+            // =========================
+            // 3️⃣ Load Kota saat Provinsi dipilih
+            // =========================
             if (selectProvinsi && selectKota) {
                 selectProvinsi.addEventListener('change', function() {
-                    const provId = this.value;
+                    const provName = this.value;
                     selectKota.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>'; // reset
+                    if (!provName) return;
+
+                    const provId = provinsiMap[provName]; // ambil ID dari nama provinsi
                     if (!provId) return;
 
                     fetch(`${apiKotaBase}/${provId}.json`)
@@ -355,7 +370,7 @@
                             const fragment = document.createDocumentFragment();
                             data.forEach(kota => {
                                 const option = document.createElement('option');
-                                option.value = kota.name;
+                                option.value = kota.name; // simpan nama kota
                                 option.text = kota.name;
                                 fragment.appendChild(option);
                             });
@@ -378,7 +393,9 @@
                 });
             }
 
-            // --- Preview gambar sebelum upload ---
+            // =========================
+            // 4️⃣ Preview Gambar sebelum Upload
+            // =========================
             function previewImage(fileInput, previewId) {
                 const file = fileInput.files[0];
                 if (!file) return;
@@ -393,6 +410,7 @@
                 reader.readAsDataURL(file);
             }
 
+            // Auto-preview setiap file input yang berubah
             document.addEventListener('change', function(e) {
                 const target = e.target;
                 if (target.tagName === 'INPUT' && target.type === 'file') {
@@ -403,11 +421,14 @@
                 }
             });
 
-            // --- AJAX Submit Form untuk SweetAlert ---
+            // =========================
+            // 5️⃣ AJAX Submit Form dengan SweetAlert
+            // =========================
             window.submitForm = function(action) {
                 const form = document.querySelector('form');
                 if (!form) return;
 
+                // Tambahkan input action_type jika belum ada
                 let hiddenInput = form.querySelector('input[name="action_type"]');
                 if (!hiddenInput) {
                     hiddenInput = document.createElement('input');
@@ -440,7 +461,6 @@
                     .then(res => res.json())
                     .then(res => {
                         Swal.close();
-
                         if (res.status === 'success') {
                             Swal.fire({
                                 icon: 'success',
@@ -491,7 +511,9 @@
                     });
             }
 
-            // --- SweetAlert session lama ---
+            // =========================
+            // 6️⃣ SweetAlert dari session Laravel
+            // =========================
             @if (session('status'))
                 Swal.fire({
                     icon: "{{ session('status') }}",
@@ -504,6 +526,7 @@
                     }
                 });
             @endif
+
         });
     </script>
 

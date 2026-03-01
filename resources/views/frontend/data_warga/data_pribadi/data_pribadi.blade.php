@@ -4,6 +4,7 @@
 @section('header-title', 'Data Diri')
 
 @section('content')
+    {{-- @dd($rumah) --}}
 
     <!-- ================= INFORMASI RUMAH ================= -->
     <div class="card border-0 shadow-sm p-3 mb-3" style="font-size: 0.75rem;">
@@ -24,7 +25,7 @@
                 </tr>
                 <tr>
                     <th>RT / RW</th>
-                    <td>{{ $rumah->keluarga->alamat_kk ?? '-' }}</td>
+                    <td>{{ $rumah->block->rt->nama_rt ?? '-' }} / {{ $rumah->block->rt->rw->nama_rw ?? '-' }}</td>
                 </tr>
                 <tr>
                     <th>Nama Jalan / Alamat Lengkap</th>
@@ -104,17 +105,21 @@
     <!-- ================= ANGGOTA KELUARGA ================= -->
     @foreach ($rumah->keluarga->wargas as $index => $warga)
         <div class="card border-0 shadow-sm p-3 mb-3" style="font-size: 0.75rem;">
-            <h6 class="mb-3 text-center" style="font-size: 0.8rem;">Anggota Keluarga : {{ $index + 1 }} - {{ $warga->nama }}</h6>
+            <h6 class="mb-3 text-center" style="font-size: 0.8rem;">
+                Anggota Keluarga : {{ $index + 1 }} - {{ $warga->nama }}
+            </h6>
             <table class="table table-striped table-bordered mb-0 table-sm" style="font-size: 0.75rem;">
                 <tbody>
-                    <tr>
-                        <th>ID</th>
-                        <td>{{ $warga->id }}</td>
-                    </tr>
-                    <tr>
-                        <th>Keluarga ID</th>
-                        <td>{{ $warga->keluarga_id }}</td>
-                    </tr>
+                    {{-- ID dan Keluarga ID disembunyikan --}}
+                    {{-- <tr>
+                    <th>ID</th>
+                    <td>{{ $warga->id }}</td>
+                </tr>
+                <tr>
+                    <th>Keluarga ID</th>
+                    <td>{{ $warga->keluarga_id }}</td>
+                </tr> --}}
+
                     <tr>
                         <th>NIK</th>
                         <td>{{ $warga->nik }}</td>
@@ -132,7 +137,7 @@
                         <td>{{ $warga->hubungan }}</td>
                     </tr>
                     <tr>
-                        <th>Status Perkawinan</th>
+                        <th>Status</th>
                         <td>{{ $warga->status_perkawinan }}</td>
                     </tr>
                     <tr>
@@ -144,8 +149,20 @@
                         <td>{{ $warga->pendidikan ?? '-' }}</td>
                     </tr>
                     <tr>
-                        <th>Tempat / Tanggal Lahir</th>
-                        <td>{{ $warga->tempat_lahir ?? '-' }} / {{ $warga->tanggal_lahir ?? '-' }}</td>
+                        <th>Tempat Lahir </th>
+                        <td>{{ $warga->tempat_lahir ?? '-' }} </td>
+                    </tr>
+                    <tr>
+                        <th>Tanggal Lahir</th>
+                        <td>{{ $warga->tanggal_lahir_formatted }}</td>
+                    </tr>
+                    <tr>
+                        <th>Usia</th>
+                        <td>{{ $warga->umur }}</td>
+                    </tr>
+                    <tr>
+                        <th>Kategori Usia</th>
+                        <td>{{ $warga->kategori_umur['nama'] }} - {{ $warga->kategori_umur['keterangan'] }}</td>
                     </tr>
                     <tr>
                         <th>Province</th>
@@ -188,7 +205,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>Status</th>
+                        <th>Status Warga</th>
                         <td>{{ $warga->status }}</td>
                     </tr>
                     <tr>
