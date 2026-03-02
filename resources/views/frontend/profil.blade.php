@@ -61,14 +61,6 @@
             <a href="{{ route('profil.dataPribadi') }}"
                 class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                    <i class="bi bi-person me-2 text-success"></i>
-                    Data Pribadi
-                </div>
-                <i class="bi bi-chevron-right"></i>
-            </a>
-
-            <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
                     <i class="bi bi-card-checklist me-2 text-primary"></i>
                     Data Keluarga
                 </div>
@@ -95,6 +87,15 @@
                 <div>
                     <i class="bi bi-info-circle me-2 text-info"></i>
                     Tentang Aplikasi
+                </div>
+                <i class="bi bi-chevron-right"></i>
+            </a>
+
+
+            <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-file-earmark-text me-2 text-success"></i>
+                    Persetujuan Layanan
                 </div>
                 <i class="bi bi-chevron-right"></i>
             </a>

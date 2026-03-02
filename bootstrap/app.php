@@ -5,6 +5,7 @@ use App\Http\Middleware\AuthRumah;
 use App\Http\Middleware\CheckLayananApproval;
 use \App\Http\Middleware\CheckDataWarga;
 use App\Http\Middleware\GuestRumah;
+use App\Http\Middleware\RateLimiter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.rumah' => GuestRumah::class,
             'check.approval' => CheckLayananApproval::class,
             'check.data' => CheckDataWarga::class,
+            'rate.limiter' => RateLimiter::class,
         ]);
 
     })

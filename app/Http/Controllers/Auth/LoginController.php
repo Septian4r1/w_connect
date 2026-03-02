@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Rumah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Middleware\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -85,6 +86,8 @@ class LoginController extends Controller
                 route('logoutAllDevices', ['id' => $rumah->id])
             );
         }
+        // ===== RESET RATE LIMITER =====
+        RateLimiter::reset($request->ip());  // <-- LETAKKAN DI SINI, setelah login sukses
 
         // LOGIN BERHASIL
         $request->session()->put('rumah_id', $rumah->id);

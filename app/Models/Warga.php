@@ -113,7 +113,7 @@ class Warga extends Model
     // =========================
     public function getKategoriUmurAttribute(): array|string
     {
-        if (!$this->tanggal_lahir) {
+        if ($this->status !== 'aktif' || !$this->tanggal_lahir) {
             return '-';
         }
 

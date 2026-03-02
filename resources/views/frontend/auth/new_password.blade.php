@@ -4,16 +4,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Warga</title>
+    <title>Create Password</title>
     <link rel="icon" type="image/gif" href="{{ asset('images/logo_w_connect_web.gif') }}">
+
 
     <!-- FONT -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- SWEETALERT -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
     <style>
+        /* =============================
+   SWEETALERT PREMIUM STYLE
+============================= */
+
+        .swal2-popup {
+            width: 300px !important;
+            border-radius: 20px !important;
+            padding: 20px 16px !important;
+            font-size: 14px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .swal2-title {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+        }
+
+        .swal2-html-container {
+            font-size: 13px !important;
+        }
+
+        .swal2-icon {
+            transform: scale(0.8);
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .swal2-confirm {
+            background-color: #1abc9c !important;
+            border-radius: 25px !important;
+            padding: 8px 22px !important;
+            font-size: 13px !important;
+            box-shadow: none !important;
+        }
+
+        .swal2-timer-progress-bar {
+            background: #1abc9c !important;
+        }
+
+
+
+        /* =============================
+   LOADING OVERLAY
+============================= */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            /* background redup */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
         /* ================================
         VERSION / FOOTER BLOCK - MINI
         =============================== */
@@ -243,70 +308,60 @@
         <!-- HEADER -->
         <div class="header">
             <img src="{{ asset('images/logo_w_connect_web.gif') }}">
-            <h2>Warga Login</h2>
+            <h2>Buat Password Baru</h2>
         </div>
 
         <!-- CONTENT -->
         <div class="content">
 
-            <form id="loginForm" method="POST" action="{{ route('login') }}">
+            <form id="newPasswordForm" method="POST" action="{{ route('forgotPassword.savePassword') }}">
                 @csrf
-
                 <div class="form-group">
-                    <label>No Rumah</label>
-                    <input type="text" name="nomor_rumah" placeholder="Contoh: A12" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Password</label>
-
+                    <label>Password Baru</label>
                     <div class="password-wrapper">
-                        <input type="password" name="password" id="password" placeholder="********" required>
-                        <span class="toggle-password" onclick="togglePassword()">👁</span>
-                    </div>
-
-                    <!-- REMEMBER & FORGOT -->
-                    <div class="remember-row">
-                        <label>
-                            <input type="checkbox" name="remember">
-                            Ingat saya
-                        </label>
-                        <a href="{{ route('forgotPassword') }}">Lupa password?</a>
+                        <input type="password" id="password" name="password" required>
+                        <span class="toggle-password" data-target="password">👁</span>
                     </div>
                 </div>
 
-                <button class="btn-login" type="submit">Masuk</button>
+                <div class="form-group">
+                    <label>Konfirmasi Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password_confirmation" name="password_confirmation" required>
+                        <span class="toggle-password" data-target="password_confirmation">👁</span>
+                    </div>
+                </div>
+
+                <button class="btn-login" type="submit">Simpan Password</button>
             </form>
-
-            <div class="footer">
-                Belum punya akun? <a href="{{ route('showregister') }}">Daftar</a>
-            </div>
-
         </div>
-
     </div>
+
+    <!-- VERSION -->
     <div class="version-block">
-        by : AsthA production &nbsp;|&nbsp; versi 0.0.2
+        by : AsthA production | versi 0.0.1
     </div>
 
+    <!-- LOADER OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- ALERT SESSION HANDLER -->
     @if (session('error') || session('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) overlay.classList.remove('active');
 
                 @if (session('error'))
                     Swal.fire({
-                        icon: 'error', // atau 'warning' kalau mau rate limiter tampil beda
+                        icon: 'error',
                         title: 'Gagal',
-                        text: @json(session('error')),
-                        width: 280,
-                        padding: '1rem',
+                        text: "{{ session('error') }}",
                         timer: 2500,
                         showConfirmButton: false,
-                        timerProgressBar: true,
-                        customClass: {
-                            title: 'swal2-title-small',
-                            content: 'swal2-content-small'
-                        }
+                        timerProgressBar: true
                     });
                 @endif
 
@@ -314,118 +369,47 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
-                        text: @json(session('success')),
-                        width: 280,
-                        padding: '1rem',
-                        timer: 2500,
+                        text: "{{ session('success') }}",
+                        timer: 2000,
                         showConfirmButton: false,
-                        timerProgressBar: true,
-                        customClass: {
-                            title: 'swal2-title-small',
-                            content: 'swal2-content-small'
-                        }
+                        timerProgressBar: true
+                    }).then(() => {
+                        // window.location.href = "{{ route('showlogin') }}";
                     });
                 @endif
-
             });
         </script>
-
-        <style>
-            /* CUSTOM SWEETALERT UNTUK LAYAR HP */
-            .swal2-title-small {
-                font-size: 16px !important;
-            }
-
-            .swal2-content-small {
-                font-size: 13px !important;
-            }
-        </style>
     @endif
 
-
-
-
     <script>
-        function togglePassword() {
-            const pass = document.getElementById('password');
-            pass.type = pass.type === "password" ? "text" : "password";
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('newPasswordForm');
+            const overlay = document.getElementById('loadingOverlay');
 
-        const form = document.getElementById('loginForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault(); // stop submit dulu
 
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const result = await Swal.fire({
-                title: 'Login?',
-                text: 'Pastikan data sudah benar',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#1abc9c',
-                cancelButtonText: 'Batal'
-            });
-
-            if (!result.isConfirmed) return;
-
-            Swal.fire({
-                html: '<div class="spinner"></div>',
-                showConfirmButton: false,
-                allowOutsideClick: false
-            });
-
-            const formData = new FormData(form);
-
-            try {
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': formData.get('_token'),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
-                });
-
-                // ==== CEK RATE LIMIT ====
-                if (res.status === 429) { // <-- ini tambahan
-                    const data = await res.json();
-                    Swal.close();
-                    Swal.fire('Gagal', data.message, 'error');
-                    return; // hentikan eksekusi lebih lanjut
-                }
-
-                const data = await res.json().catch(() => ({}));
-                Swal.close();
-
-                // =========================
-                // CEK STATUS RESPONSE
-                // =========================
-                if (data.status === 'success' && data.redirect) {
-                    Swal.fire('Sukses', data.message || 'Login berhasil', 'success')
-                        .then(() => window.location.href = data.redirect);
-                } else if (data.status === 'warning' && data.redirect) {
                     Swal.fire({
-                        title: 'Akun Sedang Login',
-                        icon: 'warning',
-                        html: `${data.message.replace(/\n/g, '<br>')}`,
+                        icon: 'question',
+                        title: 'Konfirmasi',
+                        text: 'Apakah anda yakin ingin merubah password?',
                         showCancelButton: true,
-                        confirmButtonText: 'Logout Semua Perangkat',
+                        confirmButtonText: 'Ya, Ubah',
                         cancelButtonText: 'Batal',
-                        confirmButtonColor: '#e74c3c'
-                    }).then(result => {
+                        confirmButtonColor: '#1abc9c',
+                        cancelButtonColor: '#aaa'
+                    }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = data.redirect;
+                            if (overlay) overlay.classList.add('active');
+                            form.submit(); // submit ke controller
                         }
                     });
-                } else {
-                    Swal.fire('Gagal', data.message || 'Login gagal', 'error');
-                }
-            } catch (error) {
-                Swal.close();
-                Swal.fire('Error', 'Terjadi kesalahan, silakan coba lagi.', 'error');
+                });
             }
+
         });
     </script>
-
 </body>
 
 </html>

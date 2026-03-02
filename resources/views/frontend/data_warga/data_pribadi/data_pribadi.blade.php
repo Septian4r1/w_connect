@@ -162,7 +162,7 @@
                     </tr>
                     <tr>
                         <th>Kategori Usia</th>
-                        <td>{{ $warga->kategori_umur['nama'] }} - {{ $warga->kategori_umur['keterangan'] }}</td>
+                       <td>{{ $warga->kategori_umur['nama'] ?? $warga->kategori_umur }} - {{ $warga->kategori_umur['keterangan'] ?? '' }}</td>
                     </tr>
                     <tr>
                         <th>Province</th>
