@@ -333,7 +333,7 @@
 
     <!-- VERSION -->
     <div class="version-block">
-        by : AsthA production | versi 0.0.1
+        by : AsthA production | versi 0.0.2
     </div>
 
     <!-- LOADER OVERLAY -->
