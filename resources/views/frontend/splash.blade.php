@@ -65,7 +65,7 @@
         <!-- CREDIT -->
         <div class="text-center text-gray-600 text-sm mt-4">
             <p class="font-semibold">By:AsthA Production</p>
-            <p class="text-xs tracking-widest">Version 0.0.2</p>
+            <p class="text-xs tracking-widest">Version {{ config('app.version') }}</p>
         </div>
 
     </div>

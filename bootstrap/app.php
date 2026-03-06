@@ -4,8 +4,11 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\AuthRumah;
 use App\Http\Middleware\CheckLayananApproval;
 use \App\Http\Middleware\CheckDataWarga;
+use App\Http\Middleware\CheckDeviceLogin;
 use App\Http\Middleware\GuestRumah;
+use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RateLimiter;
+use App\Http\Middleware\RedirectIfManagementLoggedIn;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -29,6 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.approval' => CheckLayananApproval::class,
             'check.data' => CheckDataWarga::class,
             'rate.limiter' => RateLimiter::class,
+            'check.device' => CheckDeviceLogin::class,
+            'prevent.back' => PreventBackHistory::class,
+            'redirect.management' => RedirectIfManagementLoggedIn::class,
         ]);
 
     })

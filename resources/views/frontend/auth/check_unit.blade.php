@@ -336,7 +336,7 @@
 
     <!-- VERSION -->
     <div class="version-block">
-        by : AsthA production | versi 0.0.2
+        by : AsthA production | Versi {{ config('app.version') }}
     </div>
 
     <!-- LOADER OVERLAY -->

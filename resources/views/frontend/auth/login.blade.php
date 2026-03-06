@@ -286,7 +286,7 @@
 
     </div>
     <div class="version-block">
-        by : AsthA production &nbsp;|&nbsp; versi 0.0.2
+        By : AsthA production &nbsp;|&nbsp; Versi {{ config('app.version') }}
     </div>
 
     @if (session('error') || session('success'))
