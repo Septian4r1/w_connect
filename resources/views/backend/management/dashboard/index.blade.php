@@ -14,7 +14,7 @@
             <p class="text-muted">
                 Selamat datang di sistem management <strong>W-Connect</strong>.
                 Silakan gunakan menu di sebelah kiri untuk mengelola data warga,
-                keuangan, dan surat menyurat baik RT / RW.
+                keuangan, Approval dan surat menyurat baik RT / RW.
             </p>
 
         </div>
