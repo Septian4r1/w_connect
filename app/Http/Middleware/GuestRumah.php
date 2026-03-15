@@ -11,22 +11,49 @@ class GuestRumah
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Ambil session rumah_id
+        /*
+        ==========================================
+        Ambil session rumah_id
+        ==========================================
+        */
+
         $rumahId = $request->session()->get('rumah_id');
 
         if ($rumahId) {
 
-            // 2. Ambil status_login saja, tanpa load object Eloquent penuh
+            /*
+            ==========================================
+            Ambil status login saja (query ringan)
+            ==========================================
+            */
+
             $statusLogin = Rumah::where('id', $rumahId)
                 ->value('status_login');
 
-            // 3. Jika online, redirect ke home
+
+            /*
+            ==========================================
+            Jika user sudah login
+            ==========================================
+            */
+
             if ($statusLogin === 'online') {
-                return redirect()->route('homeWarga');
+
+                // hindari redirect loop
+                if (!$request->routeIs('homeWarga')) {
+                    return redirect()->route('homeWarga');
+                }
             }
 
-            // Optional: session masih ada tapi status_login offline → hapus session
-            if ($statusLogin === null || $statusLogin !== 'online') {
+
+            /*
+            ==========================================
+            Jika session ada tapi status offline
+            ==========================================
+            */
+
+            if ($statusLogin !== 'online') {
+
                 $request->session()->forget('rumah_id');
             }
         }

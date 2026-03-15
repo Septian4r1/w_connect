@@ -116,22 +116,31 @@
             Isi Data Keluarga
         </div>
 
-        <form method="POST" action="{{ route('warga.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('store.DataAnak') }}" enctype="multipart/form-data">
 
             @csrf
 
             <input type="hidden" name="keluarga_id" value="{{ $keluarga->id }}">
 
-            <!-- NIK -->
-            <label class="label">
-                NIK <small style="font-weight:400;font-size:11px;color:#ff0000;">
-                    (17th Keatas Wajib Di isi ) </small>
-            </label>
-            <input type="number" name="nik" class="input" id="nik">
-
             <!-- Nama -->
             <label class="label">Nama</label>
             <input type="text" name="nama" class="input" required>
+
+            <!-- Tanggal Lahir -->
+            <label class="label">Tanggal Lahir</label>
+            <input type="date" name="tanggal_lahir" class="input">
+
+            <!-- Provinsi -->
+            <label class="label">Provinsi</label>
+            <select name="provinsi" id="provinsi" class="select" required>
+                <option value="">Pilih Provinsi</option>
+            </select>
+
+            <!-- Tempat Lahir -->
+            <label class="label">Tempat Lahir</label>
+            <select name="tempat_lahir" id="tempat_lahir" class="select" required>
+                <option value="">Pilih Kota/Kabupaten</option>
+            </select>
 
             <!-- Jenis Kelamin -->
             <label class="label">Jenis Kelamin</label>
@@ -141,15 +150,21 @@
                 <option value="Perempuan">Perempuan</option>
             </select>
 
+            <!-- NIK -->
+            <label class="label">
+                NIK <br>
+                <small style="font-weight:400;font-size:11px;color:#ff0000;">
+                    Jika umur dibawah 16 tahun, boleh dikosongkan</small>
+            </label>
+            <input type="number" name="nik" class="input" id="nik">
+
             <!-- Hubungan -->
             <label class="label">Hubungan</label>
-            <select name="hubungan" class="select" required>
-                <option value="">Pilih Hubungan</option>
-                <option value="kepala_keluarga">Kepala Keluarga</option>
-                <option value="istri">Istri</option>
-                {{-- <option value="anak">Anak</option> --}}
-                <option value="keluarga_lain">Keluarga Lain</option>
+            <select class="select" disabled>
+                <option value="anak" selected>Anak</option>
             </select>
+            <!-- Hidden input tetap dikirim ke backend -->
+            <input type="hidden" name="hubungan" value="anak">
 
             <!-- Status Perkawinan -->
             <label class="label">Status Perkawinan</label>
@@ -178,7 +193,7 @@
             <label class="label">Pendidikan</label>
             <select name="pendidikan" class="select" required>
                 <option value="">Pilih Pendidikan</option>
-                <option value="Belum/Tidak Sekolah">Belum/Tidak Sekolah</option>
+                <option value="Tidak Sekolah">Tidak Sekolah</option>
                 <option value="SD">SD</option>
                 <option value="SMP">SMP</option>
                 <option value="SMA/SMK">SMA/SMK</option>
@@ -187,21 +202,6 @@
                 <option value="Pasca Sarjana">Pasca Sarjana</option>
             </select>
 
-            <!-- Tanggal Lahir -->
-            <label class="label">Tanggal Lahir</label>
-            <input type="date" name="tanggal_lahir" class="input">
-
-            <!-- Provinsi -->
-            <label class="label">Provinsi</label>
-            <select name="provinsi" id="provinsi" class="select" required>
-                <option value="">Pilih Provinsi</option>
-            </select>
-
-            <!-- Tempat Lahir -->
-            <label class="label">Tempat Lahir</label>
-            <select name="tempat_lahir" id="tempat_lahir" class="select" required>
-                <option value="">Pilih Kota/Kabupaten</option>
-            </select>
 
             <!-- Pekerjaan -->
             <label class="label">Pekerjaan</label>
@@ -230,10 +230,17 @@
                 <option value="Lainnya">Lainnya</option>
             </select>
 
-            <label class="label">No HP</label>
-            <input type="number" name="no_hp" class="input" >
+            <label class="label">No HP<br>
+                <small style="font-weight:400;font-size:11px;color:#ff0000;">
+                    Jika umur dibawah 16 tahun, boleh dikosongkan </small>
+            </label>
 
-            <label class="label">Email</label>
+            <input type="number" name="no_hp" class="input">
+
+            <label class="label">Email <br>
+                <small style="font-weight:400;font-size:11px;color:#ff0000;">
+                    Jika umur dibawah 16 tahun, boleh dikosongkan </small>
+            </label>
             <input type="email" name="email" class="input" placeholder="Optional, Sebaiknya Di isi">
 
             <label class="label">Golongan Darah</label>
@@ -245,7 +252,10 @@
                 <option value="O">O</option>
             </select>
 
-            <label class="label">Foto KTP</label>
+            <label class="label">Foto KTP <br>
+                <small style="font-weight:400;font-size:11px;color:#ff0000;">
+                    Jika umur dibawah 16 tahun, boleh dikosongkan </small>
+            </label>
             <div class="filebox">
                 <input type="file" name="foto_ktp" accept="image/*" capture="environment"
                     onchange="previewImage(this,'preview_ktp')" required>
@@ -280,30 +290,78 @@
         document.addEventListener('DOMContentLoaded', function() {
 
             // =========================
+            // 0️⃣ Validasi umur untuk NIK, No HP, Foto KTP, Email
+            // =========================
+            const inputTanggalLahir = document.querySelector('input[name="tanggal_lahir"]');
+            const inputNik = document.querySelector('input[name="nik"]');
+            const inputNoHp = document.querySelector('input[name="no_hp"]');
+            const inputFotoKtp = document.querySelector('input[name="foto_ktp"]');
+            const inputEmail = document.querySelector('input[name="email"]');
+
+            function hitungUmur(tglLahir) {
+                if (!tglLahir) return 0;
+                const today = new Date();
+                const lahir = new Date(tglLahir);
+                let umur = today.getFullYear() - lahir.getFullYear();
+                const m = today.getMonth() - lahir.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < lahir.getDate())) {
+                    umur--;
+                }
+                return umur;
+            }
+
+            function cekUmur() {
+                const tgl = inputTanggalLahir.value;
+                if (!tgl) return;
+
+                const umur = hitungUmur(tgl);
+
+                if (umur >= 17) {
+                    inputNik.removeAttribute('disabled');
+                    inputNik.required = true;
+                    inputNoHp.removeAttribute('disabled');
+                    inputNoHp.required = true;
+                    inputFotoKtp.removeAttribute('disabled');
+                    inputFotoKtp.required = true;
+                    inputEmail.removeAttribute('disabled');
+                } else {
+                    inputNik.value = '';
+                    inputNik.setAttribute('disabled', true);
+                    inputNik.required = false;
+                    inputNoHp.value = '';
+                    inputNoHp.setAttribute('disabled', true);
+                    inputNoHp.required = false;
+                    inputFotoKtp.value = '';
+                    inputFotoKtp.setAttribute('disabled', true);
+                    inputFotoKtp.required = false;
+                    inputEmail.value = '';
+                    inputEmail.setAttribute('disabled', true);
+                }
+            }
+
+            cekUmur();
+            if (inputTanggalLahir) inputTanggalLahir.addEventListener('change', cekUmur);
+
+            // =========================
             // 1️⃣ Konfigurasi API Provinsi & Kota
             // =========================
-            const apiProvinsi = "{{ config('wilayah.provinsi') }}"; // JSON provinsi
-            const apiKotaBase = "{{ config('wilayah.kota') }}"; // base URL JSON kota per provinsi
+            const apiProvinsi = "{{ config('wilayah.provinsi') }}";
+            const apiKotaBase = "{{ config('wilayah.kota') }}";
 
             const selectProvinsi = document.getElementById('provinsi');
             const selectKota = document.getElementById('tempat_lahir');
 
-            const provinsiMap = {}; // mapping nama provinsi → id untuk fetch kota
+            const provinsiMap = {};
 
-            // =========================
-            // 2️⃣ Load Provinsi dari API
-            // =========================
             if (selectProvinsi) {
                 fetch(apiProvinsi)
                     .then(res => res.ok ? res.json() : Promise.reject('Server provinsi tidak merespon'))
                     .then(data => {
                         const fragment = document.createDocumentFragment();
                         data.forEach(prov => {
-                            // Simpan mapping nama → id untuk fetch kota nanti
                             provinsiMap[prov.name] = prov.id;
-
                             const option = document.createElement('option');
-                            option.value = prov.name; // value tetap nama (sesuai permintaan)
+                            option.value = prov.name;
                             option.text = prov.name;
                             fragment.appendChild(option);
                         });
@@ -325,16 +383,13 @@
                     });
             }
 
-            // =========================
-            // 3️⃣ Load Kota saat Provinsi dipilih
-            // =========================
             if (selectProvinsi && selectKota) {
                 selectProvinsi.addEventListener('change', function() {
                     const provName = this.value;
-                    selectKota.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>'; // reset
+                    selectKota.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
                     if (!provName) return;
 
-                    const provId = provinsiMap[provName]; // ambil ID dari nama provinsi
+                    const provId = provinsiMap[provName];
                     if (!provId) return;
 
                     fetch(`${apiKotaBase}/${provId}.json`)
@@ -343,7 +398,7 @@
                             const fragment = document.createDocumentFragment();
                             data.forEach(kota => {
                                 const option = document.createElement('option');
-                                option.value = kota.name; // simpan nama kota
+                                option.value = kota.name;
                                 option.text = kota.name;
                                 fragment.appendChild(option);
                             });
@@ -367,14 +422,13 @@
             }
 
             // =========================
-            // 4️⃣ Preview Gambar sebelum Upload
+            // 4️⃣ Preview Gambar sebelum Upload (global, aman)
             // =========================
-            function previewImage(fileInput, previewId) {
+            window.previewImage = function(fileInput, previewId) {
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
                 const file = fileInput.files[0];
-                if (!file) return;
                 const img = document.getElementById(previewId);
                 if (!img) return;
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     img.src = e.target.result;
@@ -383,7 +437,6 @@
                 reader.readAsDataURL(file);
             }
 
-            // Auto-preview setiap file input yang berubah
             document.addEventListener('change', function(e) {
                 const target = e.target;
                 if (target.tagName === 'INPUT' && target.type === 'file') {
@@ -401,7 +454,6 @@
                 const form = document.querySelector('form');
                 if (!form) return;
 
-                // Tambahkan input action_type jika belum ada
                 let hiddenInput = form.querySelector('input[name="action_type"]');
                 if (!hiddenInput) {
                     hiddenInput = document.createElement('input');

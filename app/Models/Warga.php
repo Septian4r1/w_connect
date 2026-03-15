@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 use App\Models\KategoriUmur;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\PengajuanPerubahan;
 
 class Warga extends Model
 {
@@ -134,5 +136,16 @@ class Warga extends Model
             'nama' => $kategori->nama,
             'keterangan' => $kategori->keterangan,
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PENGAJUAN PERUBAHAN DATA
+    |--------------------------------------------------------------------------
+    */
+
+    public function pengajuanPerubahan(): HasMany
+    {
+        return $this->hasMany(PengajuanPerubahan::class, 'warga_id');
     }
 }

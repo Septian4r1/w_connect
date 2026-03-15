@@ -62,7 +62,7 @@
                 class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <i class="bi bi-card-checklist me-2 text-primary"></i>
-                    Data Keluarga
+                    Tentang Saya
                 </div>
                 <i class="bi bi-chevron-right"></i>
             </a>

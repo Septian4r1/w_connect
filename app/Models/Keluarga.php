@@ -26,6 +26,7 @@ class Keluarga extends Model
         'rumah_id',
         'no_kk',
         'foto_kk',
+        'jenis_kk_id',
 
         'status',
         'ktp_setempat',
@@ -129,5 +130,10 @@ class Keluarga extends Model
             $this->kecamatan . ', ' .
             $this->kota_kabupaten . ', ' .
             $this->provinsi;
+    }
+
+    public function jenisKk()
+    {
+        return $this->belongsTo(JenisKk::class, 'jenis_kk_id');
     }
 }

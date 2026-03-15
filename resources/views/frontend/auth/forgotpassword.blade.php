@@ -346,50 +346,176 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener("DOMContentLoaded", function() {
 
-            const form = document.getElementById('forgotForm');
+            // =========================
+            // 1. Proteksi klik kanan
+            // =========================
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                alert("Klik kanan dinonaktifkan!");
+            });
+
+            // =========================
+            // 2. Proteksi tombol DevTools
+            // =========================
+            document.addEventListener('keydown', function(e) {
+                if (e.key === "F12") e.preventDefault();
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "I") e.preventDefault();
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "J") e.preventDefault();
+                if (e.ctrlKey && e.key.toUpperCase() === "U") e.preventDefault();
+            });
+
+            // =========================
+            // 3. Deteksi DevTools terbuka
+            // =========================
+            let devtoolsOpen = false;
+            setInterval(() => {
+                const threshold = 160;
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+                if (widthThreshold || heightThreshold) {
+                    if (!devtoolsOpen) {
+                        devtoolsOpen = true;
+                        alert("Inspect element terdeteksi! Konten akan disembunyikan.");
+                        document.body.innerHTML = '';
+                    }
+                } else {
+                    devtoolsOpen = false;
+                }
+            }, 1000);
+
+            // =========================
+            // 4. Blur saat tab tidak fokus (mencegah screenshot)
+            // =========================
+            window.addEventListener("blur", function() {
+                document.body.style.filter = "blur(8px)";
+            });
+            window.addEventListener("focus", function() {
+                document.body.style.filter = "none";
+            });
+
+            // =========================
+            // 5. Modal persetujuan layanan
+            // =========================
+            const modalEl = document.getElementById('approvalModal');
+            if (modalEl) {
+                const approvalModal = new bootstrap.Modal(modalEl);
+                const checkbox = document.getElementById('agreeCheck');
+                const btnAgree = document.getElementById('btnAgree');
+
+                approvalModal.show();
+
+                checkbox.addEventListener('change', function() {
+                    btnAgree.disabled = !this.checked;
+                });
+
+                btnAgree.addEventListener('click', function() {
+                    const rumahId = "{{ session('rumah_id') }}";
+
+                    if (!rumahId || rumahId === "") {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ID rumah tidak ditemukan',
+                            text: 'Silakan login ulang.',
+                        });
+                        return;
+                    }
+
+                    fetch("{{ route('setujuLayanan') }}", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({
+                                rumah_id: rumahId
+                            })
+                        })
+                        .then(async res => {
+                            const data = await res.json().catch(() => null);
+                            if (!data) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Server tidak merespon JSON. Cek log Laravel.',
+                                });
+                                return;
+                            }
+                            if (data.status === 'success') {
+                                approvalModal.hide();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: data.message,
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: data.message ||
+                                        "Gagal menyimpan persetujuan. Silakan coba lagi.",
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Fetch error:", err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan Server',
+                                text: 'Terjadi kesalahan server. Silakan coba lagi.',
+                            });
+                        });
+                });
+            }
+
+            // =========================
+            // 6. Form Forgot Password
+            // =========================
+            const forgotForm = document.getElementById('forgotForm');
             const overlay = document.getElementById('loadingOverlay');
 
-            if (form && overlay) {
+            if (forgotForm && overlay) {
+                const button = forgotForm.querySelector('button[type="submit"]');
 
-                const button = form.querySelector('button[type="submit"]');
-
-                form.addEventListener('submit', function() {
-
-                    // Disable button
+                forgotForm.addEventListener('submit', function() {
                     button.disabled = true;
-
-                    // Tampilkan overlay
                     overlay.classList.add('active');
 
-                    // Safety timeout (jika terjadi error network)
                     setTimeout(() => {
                         overlay.classList.remove('active');
                         button.disabled = false;
                     }, 8000);
                 });
             }
+
+            // =========================
+            // 7. Global alert function
+            // =========================
+            window.showAlert = function(type, title, message) {
+                Swal.fire({
+                    icon: type,
+                    title: title,
+                    text: message,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInUp animate__faster'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutDown animate__faster'
+                    }
+                });
+            }
+
         });
-
-
-        // GLOBAL ALERT FUNCTION (STANDARD APK)
-        function showAlert(type, title, message) {
-            Swal.fire({
-                icon: type,
-                title: title,
-                text: message,
-                timer: 2000,
-                showConfirmButton: false,
-                timerProgressBar: true,
-                showClass: {
-                    popup: 'animate__animated animate__fadeInUp animate__faster'
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutDown animate__faster'
-                }
-            });
-        }
     </script>
 
 </body>

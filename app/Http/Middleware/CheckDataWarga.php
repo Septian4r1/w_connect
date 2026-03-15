@@ -67,7 +67,10 @@ class CheckDataWarga
 
         if (!$wargaAda) {
 
-            if (!$request->routeIs('warga.*')) {
+            if (
+                !$request->routeIs('warga.create') &&
+                !$request->routeIs('warga.store')
+            ) {
 
                 return redirect()->route('warga.create')
                     ->with('warning', 'Silakan isi data warga terlebih dahulu');

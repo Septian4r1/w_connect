@@ -346,84 +346,241 @@
 
 
     <script>
-        function togglePassword() {
-            const pass = document.getElementById('password');
-            pass.type = pass.type === "password" ? "text" : "password";
-        }
+        document.addEventListener("DOMContentLoaded", function() {
 
-        const form = document.getElementById('loginForm');
-
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const result = await Swal.fire({
-                title: 'Login?',
-                text: 'Pastikan data sudah benar',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#1abc9c',
-                cancelButtonText: 'Batal'
+            // =========================
+            // 1. Proteksi klik kanan
+            // =========================
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                alert("Klik kanan dinonaktifkan!");
             });
 
-            if (!result.isConfirmed) return;
-
-            Swal.fire({
-                html: '<div class="spinner"></div>',
-                showConfirmButton: false,
-                allowOutsideClick: false
+            // =========================
+            // 2. Proteksi tombol DevTools
+            // =========================
+            document.addEventListener('keydown', function(e) {
+                if (e.key === "F12") e.preventDefault(); // F12
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "I") e
+                    .preventDefault(); // Ctrl+Shift+I
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "J") e
+                    .preventDefault(); // Ctrl+Shift+J
+                if (e.ctrlKey && e.key.toUpperCase() === "U") e.preventDefault(); // Ctrl+U
             });
 
-            const formData = new FormData(form);
+            // =========================
+            // 3. Deteksi DevTools terbuka
+            // =========================
+            let devtoolsOpen = false;
+            setInterval(() => {
+                const threshold = 160;
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
 
-            try {
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': formData.get('_token'),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                if (widthThreshold || heightThreshold) {
+                    if (!devtoolsOpen) {
+                        devtoolsOpen = true;
+                        alert("Inspect element terdeteksi! Konten akan disembunyikan.");
+                        document.body.innerHTML = ''; // sembunyikan konten
+                    }
+                } else {
+                    devtoolsOpen = false;
+                }
+            }, 1000);
+
+            // =========================
+            // 4. Blur saat tab tidak fokus (mencegah screenshot)
+            // =========================
+            window.addEventListener("blur", function() {
+                document.body.style.filter = "blur(8px)";
+            });
+            window.addEventListener("focus", function() {
+                document.body.style.filter = "none";
+            });
+
+            // =========================
+            // 5. Modal persetujuan layanan
+            // =========================
+            const modalEl = document.getElementById('approvalModal');
+            if (modalEl) {
+                const approvalModal = new bootstrap.Modal(modalEl);
+                const checkbox = document.getElementById('agreeCheck');
+                const btnAgree = document.getElementById('btnAgree');
+
+                approvalModal.show();
+                checkbox.addEventListener('change', function() {
+                    btnAgree.disabled = !this.checked;
                 });
 
-                // ==== CEK RATE LIMIT ====
-                if (res.status === 429) { // <-- ini tambahan
-                    const data = await res.json();
-                    Swal.close();
-                    Swal.fire('Gagal', data.message, 'error');
-                    return; // hentikan eksekusi lebih lanjut
-                }
+                btnAgree.addEventListener('click', function() {
+                    const rumahId = "{{ session('rumah_id') }}";
 
-                const data = await res.json().catch(() => ({}));
-                Swal.close();
+                    if (!rumahId || rumahId === "") {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ID rumah tidak ditemukan',
+                            text: 'Silakan login ulang.',
+                        });
+                        return;
+                    }
 
-                // =========================
-                // CEK STATUS RESPONSE
-                // =========================
-                if (data.status === 'success' && data.redirect) {
-                    Swal.fire('Sukses', data.message || 'Login berhasil', 'success')
-                        .then(() => window.location.href = data.redirect);
-                } else if (data.status === 'warning' && data.redirect) {
-                    Swal.fire({
-                        title: 'Akun Sedang Login',
-                        icon: 'warning',
-                        html: `${data.message.replace(/\n/g, '<br>')}`,
+                    fetch("{{ route('setujuLayanan') }}", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({
+                                rumah_id: rumahId
+                            })
+                        })
+                        .then(async res => {
+                            const data = await res.json().catch(() => null);
+                            if (!data) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Server tidak merespon JSON. Cek log Laravel.',
+                                });
+                                return;
+                            }
+                            if (data.status === 'success') {
+                                approvalModal.hide();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: data.message,
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: data.message ||
+                                        "Gagal menyimpan persetujuan. Silakan coba lagi.",
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Fetch error:", err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan Server',
+                                text: 'Terjadi kesalahan server. Silakan coba lagi.',
+                            });
+                        });
+                });
+            }
+
+            // =========================
+            // 6. Login form logic
+            // =========================
+            const form = document.getElementById('loginForm');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const result = await Swal.fire({
+                        title: 'Login?',
+                        text: 'Pastikan data sudah benar',
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Logout Semua Perangkat',
-                        cancelButtonText: 'Batal',
-                        confirmButtonColor: '#e74c3c'
-                    }).then(result => {
-                        if (result.isConfirmed) {
-                            window.location.href = data.redirect;
-                        }
+                        confirmButtonColor: '#1abc9c',
+                        cancelButtonText: 'Batal'
                     });
-                } else {
-                    Swal.fire('Gagal', data.message || 'Login gagal', 'error');
-                }
-            } catch (error) {
-                Swal.close();
-                Swal.fire('Error', 'Terjadi kesalahan, silakan coba lagi.', 'error');
+
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        html: '<div class="spinner"></div>',
+                        showConfirmButton: false,
+                        allowOutsideClick: false
+                    });
+
+                    const formData = new FormData(form);
+
+                    try {
+                        const res = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': formData.get('_token'),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+
+                        // ==== CEK RATE LIMIT ====
+                        if (res.status === 429) {
+                            const data = await res.json();
+                            Swal.close();
+                            Swal.fire('Gagal', data.message, 'error');
+                            return;
+                        }
+
+                        const data = await res.json().catch(() => ({}));
+                        Swal.close();
+
+                        // =========================
+                        // CEK STATUS RESPONSE
+                        // =========================
+                        if (data.status === 'success' && data.redirect) {
+                            Swal.fire('Sukses', data.message || 'Login berhasil', 'success')
+                                .then(() => window.location.href = data.redirect);
+                        } else if (data.status === 'warning' && data.redirect) {
+                            Swal.fire({
+                                title: 'Akun Sedang Login',
+                                icon: 'warning',
+                                html: `${data.message.replace(/\n/g, '<br>')}`,
+                                showCancelButton: true,
+                                confirmButtonText: 'Logout Semua Perangkat',
+                                cancelButtonText: 'Batal',
+                                confirmButtonColor: '#e74c3c'
+                            }).then(result => {
+                                if (result.isConfirmed) {
+                                    window.location.href = data.redirect;
+                                }
+                            });
+                        } else {
+                            Swal.fire('Gagal', data.message || 'Login gagal', 'error');
+                        }
+                    } catch (error) {
+                        Swal.close();
+                        Swal.fire('Error', 'Terjadi kesalahan, silakan coba lagi.', 'error');
+                    }
+                });
+            }
+
+            // =========================
+            // 7. Toggle password
+            // =========================
+            const passToggle = document.getElementById('passwordToggle');
+            if (passToggle) {
+                passToggle.addEventListener('click', function() {
+                    const pass = document.getElementById('password');
+                    pass.type = pass.type === "password" ? "text" : "password";
+                });
             }
         });
+
+        // =========================
+        // FUNCTION GLOBAL
+        // =========================
+        function togglePassword() {
+            const pass = document.getElementById('password');
+            const icon = document.querySelector('.toggle-password');
+
+            if (pass.type === "password") {
+                pass.type = "text";
+                icon.textContent = "🙈";
+            } else {
+                pass.type = "password";
+                icon.textContent = "👁";
+            }
+        }
     </script>
 
 </body>

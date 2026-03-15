@@ -6,57 +6,157 @@ use App\Http\Controllers\Controller;
 use App\Models\Rumah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use App\Http\Middleware\RateLimiter;
 
 class LoginController extends Controller
 {
-    /**
-     * ==============================
-     * 1. TAMPILKAN FORM LOGIN
-     * ==============================
-     */
+
+    /*
+    ======================================================
+    1. MENAMPILKAN HALAMAN LOGIN
+    ======================================================
+    */
+
     public function showLogin()
     {
         return view('frontend.auth.login');
     }
 
-    /**
-     * ==============================
-     * 2. PROSES LOGIN USER
-     * ==============================
-     */
+
+
+    /*
+    ======================================================
+    2. PROSES LOGIN USER
+    ======================================================
+    */
+
     public function login(Request $request)
     {
-        // VALIDASI INPUT
+
+        /*
+        ======================================================
+        VALIDASI INPUT
+        ======================================================
+        Melindungi dari input yang tidak sesuai format
+        */
+
         $request->validate([
             'nomor_rumah' => 'required|string|max:20',
             'password'    => 'required|string|max:100'
         ]);
 
-        // BERSIHKAN INPUT
-        $nomorRumah = strtoupper(trim($request->nomor_rumah));
-        $password   = trim($request->password);
 
-        // AMBIL DATA RUMAH
-        $rumah = Rumah::select('id', 'password', 'status_login', 'nomor_rumah')
+
+        /*
+        ======================================================
+        SANITASI INPUT
+        ======================================================
+        - trim() menghapus spasi
+        - strip_tags() mencegah script injection
+        - strtoupper() menyamakan format nomor rumah
+        */
+
+        $nomorRumah = strtoupper(
+            strip_tags(
+                trim($request->input('nomor_rumah'))
+            )
+        );
+
+        $password = trim($request->input('password'));
+
+
+        /*
+======================================================
+CEK RATE LIMIT LOGIN
+======================================================
+Mencegah brute force login
+*/
+
+        if (RateLimiter::tooManyAttempts($request->ip(), $nomorRumah)) {
+
+            return $this->response(
+                $request,
+                'error',
+                'Terlalu banyak percobaan login. Tunggu 15 menit.',
+                429
+            );
+        }
+
+
+
+        /*
+        ======================================================
+        AMBIL DATA RUMAH
+        ======================================================
+        Query ringan hanya mengambil kolom penting
+        */
+
+        $rumah = Rumah::select(
+            'id',
+            'password',
+            'status_login',
+            'nomor_rumah'
+        )
             ->where('nomor_rumah', $nomorRumah)
             ->first();
 
-        // CEK NOMOR RUMAH
+
+
+        /*
+        ======================================================
+        CEK NOMOR RUMAH
+        ======================================================
+        */
+
         if (!$rumah) {
-            return $this->response($request, 'error', 'Nomor rumah tidak ditemukan', 404);
+
+            RateLimiter::hit($request->ip(), $nomorRumah);
+
+            return $this->response(
+                $request,
+                'error',
+                'Nomor rumah tidak ditemukan',
+                404
+            );
         }
 
-        // CEK PASSWORD
+
+
+        /*
+        ======================================================
+        CEK PASSWORD
+        ======================================================
+        Password dicek menggunakan Hash Laravel
+        */
+
         if (!Hash::check($password, $rumah->password)) {
-            return $this->response($request, 'error', 'Password salah', 401);
+
+            RateLimiter::hit($request->ip(), $nomorRumah);
+
+            return $this->response(
+                $request,
+                'error',
+                'Password salah',
+                401
+            );
         }
 
-        // CEK DOUBLE LOGIN
+
+
+        /*
+        ======================================================
+        CEK DOUBLE LOGIN
+        ======================================================
+        Jika akun sedang login di perangkat lain
+        */
+
         if ($rumah->status_login === 'online') {
-            // Pesan khusus untuk double login
-            $message = "Apakah benar akun Anda sedang login di perangkat lain?\n\n" .
+
+            $message =
+                "Akun ini sedang login di perangkat lain.\n\n" .
                 "Jika bukan Anda, segera logout semua perangkat dan ganti password.";
+
             return $this->response(
                 $request,
                 'warning',
@@ -66,18 +166,37 @@ class LoginController extends Controller
             );
         }
 
-        // UPDATE STATUS LOGIN MENJADI ONLINE
+
+
+        /*
+        ======================================================
+        UPDATE STATUS LOGIN
+        ======================================================
+        Proteksi race condition:
+        hanya update jika status masih offline
+        */
+
         $updated = Rumah::where('id', $rumah->id)
             ->where('status_login', 'offline')
             ->update([
                 'status_login' => 'online',
-                'updated_at'   => now()
+                'updated_at' => now()
             ]);
 
+
+
+        /*
+        ======================================================
+        PROTEKSI DOUBLE LOGIN RACE CONDITION
+        ======================================================
+        */
+
         if (!$updated) {
-            // Jika bentrok saat update status, tetap kirim pesan double login
-            $message = "Akun sedang login di perangkat lain.\n\n" .
-                "Jika bukan Anda, segera logout semua perangkat dan ganti password.";
+
+            $message =
+                "Akun sedang login di perangkat lain.\n\n" .
+                "Jika bukan Anda, segera logout semua perangkat.";
+
             return $this->response(
                 $request,
                 'warning',
@@ -86,81 +205,207 @@ class LoginController extends Controller
                 route('logoutAllDevices', ['id' => $rumah->id])
             );
         }
-        // ===== RESET RATE LIMITER =====
-        RateLimiter::reset($request->ip());  // <-- LETAKKAN DI SINI, setelah login sukses
 
-        // LOGIN BERHASIL
+
+        /*
+======================================================
+RESET RATE LIMIT JIKA LOGIN BERHASIL
+======================================================
+*/
+
+        RateLimiter::reset($request->ip(), $nomorRumah);
+
+
+
+        /*
+        ======================================================
+        PROTEKSI SESSION FIXATION
+        ======================================================
+        */
+
+        Session::regenerate();
+
+
+
+        /*
+        ======================================================
+        SIMPAN SESSION LOGIN
+        ======================================================
+        */
+
         $request->session()->put('rumah_id', $rumah->id);
-        return $this->response($request, 'success', 'Login berhasil', 200, route('homeWarga'));
+
+
+
+        /*
+        ======================================================
+        LOGIN BERHASIL
+        ======================================================
+        */
+
+        return $this->response(
+            $request,
+            'success',
+            'Login berhasil',
+            200,
+            route('homeWarga')
+        );
     }
 
-    /**
-     * ==============================
-     * 3. LOGOUT
-     * ==============================
-     */
+
+
+    /*
+    ======================================================
+    3. LOGOUT USER
+    ======================================================
+    */
+
     public function logout(Request $request)
     {
-        // Ambil rumah_id dari session atau input
+
         $rumahId = $request->session()->get('rumah_id');
 
-        // Jika ada input nomor_rumah tapi session kosong, ambil dari DB
+
+
+        /*
+        Jika session tidak ada,
+        cek nomor rumah dari request
+        */
+
         if (!$rumahId && $request->input('nomor_rumah')) {
-            $rumah = Rumah::where('nomor_rumah', $request->input('nomor_rumah'))->first();
+
+            $nomorRumah = strip_tags(
+                trim($request->input('nomor_rumah'))
+            );
+
+            $rumah = Rumah::where('nomor_rumah', $nomorRumah)->first();
+
             $rumahId = $rumah?->id;
         }
 
-        // Jika rumah ada, panggil logoutAllDevices
+
+
+        /*
+        Jika rumah ditemukan
+        logout semua perangkat
+        */
+
         if ($rumahId) {
             return $this->logoutAllDevices($rumahId, $request);
         }
 
-        // Jika tidak ada rumah, hapus session tetap
+
+
+        /*
+        Jika tidak ditemukan
+        hapus session saja
+        */
+
         $request->session()->forget('rumah_id');
 
-        return redirect()->route('showlogin')
+        return redirect()
+            ->route('showlogin')
             ->with('success', 'Anda berhasil logout.');
     }
 
-    /**
-     * ==============================
-     * 4. LOGOUT SEMUA PERANGKAT
-     * ==============================
-     */
+
+
+    /*
+    ======================================================
+    4. LOGOUT SEMUA PERANGKAT
+    ======================================================
+    */
+
     public function logoutAllDevices($id, Request $request)
     {
-        // Update status login menjadi offline
-        Rumah::where('id', $id)->update(['status_login' => 'offline']);
 
-        // Hapus semua session login rumah
-        $request->session()->forget('rumah_id');
+        /*
+        Update status login menjadi offline
+        */
 
-        // Redirect ke halaman login dengan pesan sukses
-        return redirect()->route('showlogin')
-            ->with('success', 'Semua perangkat berhasil logout. Silakan login kembali dan ganti password jika perlu.');
+        Rumah::where('id', $id)->update([
+            'status_login' => 'offline'
+        ]);
+
+
+
+        /*
+        Hapus semua session
+        */
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+
+
+        return redirect()
+            ->route('showlogin')
+            ->with(
+                'success',
+                'Semua perangkat berhasil logout. Silakan login kembali.'
+            );
     }
-    /**
-     * ==============================
-     * RESPONSE HELPER
-     * ==============================
-     */
-    private function response(Request $request, string $status, string $message, int $code = 200, ?string $redirect = null)
-    {
+
+
+
+    /*
+    ======================================================
+    RESPONSE HELPER
+    ======================================================
+    Mengatur response untuk:
+    - AJAX
+    - Redirect
+    - Error
+    */
+
+    private function response(
+        Request $request,
+        string $status,
+        string $message,
+        int $code = 200,
+        ?string $redirect = null
+    ) {
+
+        /*
+        Response AJAX
+        */
+
         if ($request->ajax()) {
+
             $response = [
-                'status'  => $status,
+                'status' => $status,
                 'message' => $message
             ];
+
             if ($redirect) {
                 $response['redirect'] = $redirect;
             }
+
             return response()->json($response, $code);
         }
 
+
+
+        /*
+        Redirect jika sukses
+        */
+
         if ($status === 'success' && $redirect) {
-            return redirect($redirect)->with('message', $message);
+
+            return redirect($redirect)
+                ->with('message', $message);
         }
 
-        return back()->withInput()->withErrors(['nomor_rumah' => $message]);
+
+
+        /*
+        Response error
+        */
+
+        return back()
+            ->withInput()
+            ->withErrors([
+                'nomor_rumah' => $message
+            ]);
     }
 }

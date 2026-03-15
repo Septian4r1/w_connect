@@ -103,22 +103,14 @@
     </div>
 
     <!-- ================= ANGGOTA KELUARGA ================= -->
-    @foreach ($rumah->keluarga->wargas as $index => $warga)
+    {{-- @foreach ($rumah->keluarga->wargas as $index => $warga)
         <div class="card border-0 shadow-sm p-3 mb-3" style="font-size: 0.75rem;">
             <h6 class="mb-3 text-center" style="font-size: 0.8rem;">
                 Anggota Keluarga : {{ $index + 1 }} - {{ $warga->nama }}
             </h6>
             <table class="table table-striped table-bordered mb-0 table-sm" style="font-size: 0.75rem;">
                 <tbody>
-                    {{-- ID dan Keluarga ID disembunyikan --}}
-                    {{-- <tr>
-                    <th>ID</th>
-                    <td>{{ $warga->id }}</td>
-                </tr>
-                <tr>
-                    <th>Keluarga ID</th>
-                    <td>{{ $warga->keluarga_id }}</td>
-                </tr> --}}
+
 
                     <tr>
                         <th>NIK</th>
@@ -219,7 +211,7 @@
                 </tbody>
             </table>
         </div>
-    @endforeach
+    @endforeach --}}
 
     <!-- ================= Kembali ================= -->
     <div class="card border-0 shadow-sm">

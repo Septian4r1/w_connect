@@ -348,11 +348,13 @@
 
 
                 <!-- FORM LARAVEL -->
-                <form method="POST" action="{{ route('keluarga.store') }}" enctype="multipart/form-data">
+                <form id="formKeluarga" method="POST" action="{{ route('keluarga.store') }}"
+                    enctype="multipart/form-data">
 
                     @csrf
 
-
+                    <input type="hidden" name="keluarga_id"
+                        value="{{ $keluarga->id ?? request()->route('keluarga_id') }}">
                     <label class="label">
                         Nomor KK
                     </label>
@@ -461,6 +463,18 @@
                     </div>
 
 
+                    <!-- FOOTER -->
+
+                    <div class="footer">
+
+                        <button type="submit" class="btn">
+                            Simpan Data
+                        </button>
+
+                    </div>
+
+
+
                 </form>
 
             </div>
@@ -469,17 +483,6 @@
 
 
 
-        <!-- FOOTER -->
-
-        <div class="footer">
-
-            <button class="btn">
-
-                Simpan Data
-
-            </button>
-
-        </div>
 
 
 
@@ -488,10 +491,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         /*
-                                            ================================
-                                            CONFIG API WILAYAH (.ENV)
-                                            ================================
-                                    */
+                                                                ================================
+                                                                CONFIG API WILAYAH (.ENV)
+                                                                ================================
+                                                        */
 
         const API_PROVINSI = "{{ config('wilayah.provinsi') }}";
         const API_KOTA = "{{ config('wilayah.kota') }}";
@@ -700,11 +703,11 @@
         }
 
         /*
-    ==========================================
-    SWEET ALERT RESPONSE KELUARGA CONTROLLER
-    (PERBAIKAN: gunakan didOpen untuk mencegah error)
-    ==========================================
-    */
+        ==========================================
+        SWEET ALERT RESPONSE KELUARGA CONTROLLER
+        (PERBAIKAN: gunakan didOpen untuk mencegah error)
+        ==========================================
+        */
         @if (session('status'))
             document.addEventListener("DOMContentLoaded", function() {
                 Swal.fire({
@@ -727,15 +730,11 @@
         SUBMIT FORM DARI BUTTON FOOTER + LOADING ALERT
         ==========================================
         */
-        const footerBtn = document.querySelector('.btn');
-        if (footerBtn) {
-            footerBtn.addEventListener('click', function(e) {
-                e.preventDefault(); // hentikan submit default sementara
-
-                const form = document.querySelector('form');
-                if (!form) return;
-
-                // ✅ Tampilkan SweetAlert2 loading dengan teks lebih kecil
+        // Tangani submit form normal, tampilkan SweetAlert loading
+        const formKeluarga = document.getElementById('formKeluarga');
+        if (formKeluarga) {
+            formKeluarga.addEventListener('submit', function(e) {
+                // Tampilkan SweetAlert loading tanpa mencegah submit
                 Swal.fire({
                     title: 'Sedang memproses data...',
                     html: 'Mohon tunggu beberapa saat.',
@@ -748,9 +747,7 @@
                         Swal.showLoading(); // animasi loading
                     }
                 });
-
-                // submit form setelah alert tampil
-                form.submit();
+                // submit tetap berjalan normal, file upload aman
             });
         }
     </script>

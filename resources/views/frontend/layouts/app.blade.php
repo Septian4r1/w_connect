@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +13,249 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        /* ===== MOBILE ACCORDION CARD STYLE (GOJEK STYLE) ===== */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            list-style: none;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e5e5;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-icon {
+            position: absolute;
+            left: -22px;
+            top: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .timeline-content {
+            padding-left: 10px;
+        }
+
+        /* =============================
+   MODAL EDIT WARGA - PROPORSIONAL
+============================= */
+
+        #modalEditWarga {
+            font-size: 13px;
+        }
+
+        #modalEditWarga .modal-title {
+            font-size: 14px;
+        }
+
+        #modalEditWarga label {
+            font-size: 12px;
+        }
+
+        #modalEditWarga .form-control,
+        #modalEditWarga .form-select {
+            font-size: 12px;
+            padding: 6px 8px;
+        }
+
+        #modalEditWarga textarea {
+            font-size: 12px;
+        }
+
+        #modalEditWarga .nav-tabs .nav-link {
+            font-size: 12px;
+            padding: 6px;
+        }
+
+        #modalEditWarga .accordion-button {
+            font-size: 13px;
+        }
+
+        #modalEditWarga .accordion-body {
+            font-size: 12px;
+        }
+
+        #modalEditWarga small {
+            font-size: 11px;
+        }
+
+        #modalEditWarga .btn {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        #modalEditWarga .modal-dialog {
+            max-width: 380px;
+        }
+
+        .mobile-accordion .accordion-item {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            background: #fff;
+
+            /* floating shadow */
+            box-shadow:
+                0 4px 10px rgba(0, 0, 0, 0.05),
+                0 10px 25px rgba(0, 0, 0, 0.08);
+
+            transition: all .25s ease;
+        }
+
+        /* efek sedikit mengangkat (desktop feel) */
+        .mobile-accordion .accordion-item:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 18px rgba(0, 0, 0, 0.08),
+                0 18px 35px rgba(0, 0, 0, 0.10);
+        }
+
+        /* HEADER */
+        .mobile-accordion .accordion-button {
+            background: #f8f9fa;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 12px 14px;
+            border: none;
+        }
+
+        /* saat terbuka */
+        .mobile-accordion .accordion-button:not(.collapsed) {
+            background: #eef3ff;
+            color: #333;
+        }
+
+        /* hilangkan garis bootstrap */
+        .mobile-accordion .accordion-button:focus {
+            box-shadow: none;
+        }
+
+        /* BODY */
+        .mobile-accordion .accordion-body {
+            padding: 14px;
+            background: #fff;
+        }
+
+        /* icon panah lebih kecil */
+        .mobile-accordion .accordion-button::after {
+            transform: scale(.8);
+            transition: transform .25s ease;
+        }
+
+        /* animasi rotate icon */
+        .mobile-accordion .accordion-button:not(.collapsed)::after {
+            transform: rotate(180deg) scale(.8);
+        }
+
+
+
+        /* =============================
+   MOBILE MODAL FULLSCREEN
+============================= */
+
+        @media (max-width: 576px) {
+
+            #modalEditWarga .modal-dialog {
+                margin: 0;
+                max-width: 100%;
+                height: 100%;
+            }
+
+            #modalEditWarga .modal-content {
+                height: 100vh;
+                border-radius: 0;
+                font-size: 13px !important;
+            }
+
+            #modalEditWarga .modal-header {
+                position: sticky;
+                top: 0;
+                background: #fff;
+                z-index: 10;
+                padding: 8px 12px;
+                border-bottom: 1px solid #eee;
+            }
+
+            #modalEditWarga .modal-footer {
+                position: sticky;
+                bottom: 0;
+                background: #fff;
+                z-index: 10;
+                padding: 8px 12px;
+                border-top: 1px solid #eee;
+            }
+
+            #modalEditWarga .modal-body {
+                overflow-y: auto;
+                max-height: calc(100vh - 110px);
+                padding: 10px;
+            }
+
+            /* accordion body padding mobile */
+            #modalEditWarga .accordion-body {
+                padding: 12px;
+            }
+
+            #modalEditWarga label {
+                font-size: 11px !important;
+            }
+
+            #modalEditWarga .form-control {
+                font-size: 12px !important;
+                padding: 6px 8px !important;
+            }
+
+            #modalEditWarga textarea {
+                font-size: 12px !important;
+            }
+
+
+            /* FOTO KTP */
+            #modalEditWarga img#edit_foto_ktp {
+                width: 100%;
+                max-width: 260px;
+                aspect-ratio: 1.586/1;
+                object-fit: cover;
+                border-radius: 10px;
+            }
+
+            /* SELFIE */
+            #modalEditWarga img#preview_selfie {
+                width: 100px;
+                height: 100px;
+                object-fit: cover;
+            }
+
+        }
+
+
+        /* =============================
+   TAB NAV STYLE
+============================= */
+
+        #modalEditWarga .nav-tabs .nav-link {
+            font-size: 12px;
+            padding: 6px;
+        }
+
+        #modalEditWarga .nav-tabs .nav-link.active {
+            font-weight: 600;
+        }
+
         /* ===============================
            GLOBAL
         =============================== */
@@ -290,8 +534,6 @@
                 transform: rotate(360deg);
             }
         }
-
-
     </style>
 </head>
 
@@ -457,6 +699,60 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+
+        // // =========================
+        // // 1. Proteksi klik kanan
+        // // =========================
+        // document.addEventListener('contextmenu', function(e) {
+        //     e.preventDefault();
+        //     alert("Klik kanan dinonaktifkan!");
+        // });
+
+        // // =========================
+        // // 2. Proteksi tombol DevTools
+        // // =========================
+        // document.addEventListener('keydown', function(e) {
+        //     if (e.key === "F12") e.preventDefault(); // F12
+        //     if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "I") e
+        //         .preventDefault(); // Ctrl+Shift+I
+        //     if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "J") e
+        //         .preventDefault(); // Ctrl+Shift+J
+        //     if (e.ctrlKey && e.key.toUpperCase() === "U") e.preventDefault(); // Ctrl+U
+        // });
+
+        // // =========================
+        // // 3. Deteksi DevTools terbuka
+        // // =========================
+        // let devtoolsOpen = false;
+        // setInterval(() => {
+        //     const threshold = 160;
+        //     const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        //     const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+        //     if (widthThreshold || heightThreshold) {
+        //         if (!devtoolsOpen) {
+        //             devtoolsOpen = true;
+        //             alert("Inspect element terdeteksi! Konten akan disembunyikan.");
+        //             document.body.innerHTML = ''; // sembunyikan konten
+        //         }
+        //     } else {
+        //         devtoolsOpen = false;
+        //     }
+        // }, 1000);
+
+        // // =========================
+        // // 4. Blur saat tab tidak fokus (mencegah screenshot)
+        // // =========================
+        // window.addEventListener("blur", function() {
+        //     document.body.style.filter = "blur(8px)";
+        // });
+        // window.addEventListener("focus", function() {
+        //     document.body.style.filter = "none";
+        // });
+
+        // =========================
+        // 5. Modal persetujuan layanan
+        // =========================
         const modalEl = document.getElementById('approvalModal');
         if (!modalEl) return;
 
@@ -498,7 +794,6 @@
                 })
                 .then(async res => {
                     const data = await res.json().catch(() => null);
-
                     if (!data) {
                         Swal.fire({
                             icon: 'error',
@@ -507,7 +802,6 @@
                         });
                         return;
                     }
-
                     if (data.status === 'success') {
                         approvalModal.hide();
                         Swal.fire({
@@ -517,7 +811,7 @@
                             timer: 1500,
                             showConfirmButton: false,
                         }).then(() => {
-                            location.reload(); // reload supaya middleware update
+                            location.reload();
                         });
                     } else {
                         Swal.fire({
@@ -537,6 +831,7 @@
                     });
                 });
         });
+
     });
 </script>
 

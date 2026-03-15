@@ -2,50 +2,79 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class RateLimiter
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
-    public function handle($request, $next)
+
+    /*
+    ======================================================
+    CEK APAKAH LOGIN SUDAH MELEBIHI BATAS
+    ======================================================
+    */
+
+    public static function tooManyAttempts($ip, $nomorRumah = null)
     {
+
         $limit = 3;
-        $minutes = 15;
-        $ip = $request->ip();
-        $key = 'login_rate:' . $ip;
+
+        $key = self::key($ip, $nomorRumah);
+
         $attempts = Cache::get($key, 0);
 
-        if ($attempts >= $limit) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => "Terlalu banyak percobaan login. Silakan tunggu {$minutes} menit."
-                ], 429); // 429 Too Many Requests
-            }
-
-            return redirect()->route('showlogin')
-                ->with('error', "Terlalu banyak percobaan login. Silakan tunggu {$minutes} menit.");
-        }
-
-        Cache::put($key, $attempts + 1, now()->addMinutes($minutes));
-        Cache::put($key . '_expires', now()->addMinutes($minutes)->timestamp, now()->addMinutes($minutes));
-
-        return $next($request);
+        return $attempts >= $limit;
     }
 
-    // Method reset harus static
-    public static function reset($ip)
+
+
+    /*
+    ======================================================
+    TAMBAH JUMLAH PERCOBAAN LOGIN
+    ======================================================
+    */
+
+    public static function hit($ip, $nomorRumah = null)
     {
-        Cache::forget('login_rate:' . $ip);
-        Cache::forget('login_rate:' . $ip . '_expires');
+
+        $minutes = 15;
+
+        $key = self::key($ip, $nomorRumah);
+
+        $attempts = Cache::get($key, 0);
+
+        Cache::put(
+            $key,
+            $attempts + 1,
+            now()->addMinutes($minutes)
+        );
+    }
+
+
+
+    /*
+    ======================================================
+    RESET RATE LIMIT JIKA LOGIN BERHASIL
+    ======================================================
+    */
+
+    public static function reset($ip, $nomorRumah = null)
+    {
+
+        $key = self::key($ip, $nomorRumah);
+
+        Cache::forget($key);
+    }
+
+
+
+    /*
+    ======================================================
+    GENERATE KEY CACHE
+    ======================================================
+    */
+
+    private static function key($ip, $nomorRumah)
+    {
+        return 'login_rate:' . $ip . ':' . $nomorRumah;
     }
 }
