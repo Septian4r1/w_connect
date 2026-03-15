@@ -59,7 +59,7 @@ jobs:
             # ================================
             # 2️⃣ Clone Repository (Lightweight)
             # ================================
-            git clone --depth 1 https://github.com/Septian4r1/w_connect.git $NEW_RELEASE
+            git clone --depth 1 https://github.com/${{ github.repository }}.git $NEW_RELEASE
             cd $NEW_RELEASE
 
             # ================================
