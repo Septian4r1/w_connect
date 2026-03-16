@@ -67,10 +67,10 @@
                 <i class="bi bi-chevron-right"></i>
             </a>
 
-            <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ route('setting.password') }}" class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <i class="bi bi-lock me-2 text-danger"></i>
-                    Keamanan Akun
+                    Setting Password
                 </div>
                 <i class="bi bi-chevron-right"></i>
             </a>

@@ -221,7 +221,12 @@
             transform: translateY(-50%);
             cursor: pointer;
             color: #888;
+            z-index: 10;
+            user-select: none;
+            pointer-events: auto;
+            font-size: 18px;
         }
+
 
         /* =============================
            REMEMBER & FORGOT
@@ -541,6 +546,36 @@
 
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            document.querySelectorAll(".toggle-password").forEach(icon => {
+
+                icon.addEventListener("click", function(e) {
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const input = document.getElementById(this.dataset.target);
+                    if (!input) return;
+
+                    if (input.type === "password") {
+                        input.type = "text";
+                        this.innerHTML = "🙈";
+                        this.style.color = "#1abc9c";
+                    } else {
+                        input.type = "password";
+                        this.innerHTML = "👁";
+                        this.style.color = "#888";
+                    }
+
+                });
+
+            });
+
+        });
+    </script>
+
 </body>
 
 </html>

@@ -33,6 +33,7 @@ use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\Profile\DataPribadiController;
 use App\Http\Controllers\Frontend\LayananApprovalController;
 use App\Http\Controllers\Frontend\PengajuanPerubahanController;
+use App\Http\Controllers\Frontend\Profile\SettingPasswordController;
 use App\Http\Controllers\Frontend\TambahDataAnakController;
 use App\Http\Controllers\Frontend\WargaUpdateController;
 /*
@@ -126,11 +127,7 @@ Route::middleware(['auth.rumah', 'check.approval', 'check.data'])->prefix('manag
         Route::put('/warga/update-selfie/{id}', [WargaUpdateController::class, 'updateSelfie'])->name('warga.updateSelfie');
         Route::put('/pengajuan-perubahan/store',[PengajuanPerubahanController::class,'store'])->name('pengajuan.perubahan.store');
 
-        //-------------------------------END EDIT DATA WARGA -------------------------------------//
-
-
-
-
+                //-------------------------END EDIT DATA WARGA --------------------------//
         //------------------------------- END TAMBAH DATA KELUARGA -------------------------------------//
 
         Route::get('/ipl', [IplController::class, 'index'])->name('ipl');
@@ -152,6 +149,12 @@ Route::middleware(['auth.rumah', 'check.approval', 'check.data'])->prefix('manag
 
             Route::get('/', [ProfileController::class, 'index'])->name('profil');
             Route::get('/data-pribadi',[DataPribadiController::class, 'index'])->name('profil.dataPribadi');
+            Route::get('/setting-password',[SettingPasswordController::class, 'index'])->name('setting.password');
+            Route::post('/verify_nik',[SettingPasswordController::class, 'verify_data'])->name('data.Verify');
+            Route::get('/password_baru',[SettingPasswordController::class, 'password_baru'])->name('password.baru');
+            Route::post('/simpan-password',[SettingPasswordController::class, 'simpan_password'])->name('password.simpan');
+
+
         });
 
 
