@@ -421,7 +421,7 @@
                                                         Batal
                                                     </button>
 
-                                                    <button type="submit" class="btn btn-purple btn-sm">
+                                                    <button type="submit" class="btn btn-primary btn-sm">
                                                         Kirim Pengajuan
                                                     </button>
 
