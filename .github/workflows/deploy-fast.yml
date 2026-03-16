@@ -1,0 +1,140 @@
+name: Deploy to Hostinger (Fast Zero Downtime)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: 🚀 Deploy Laravel with Rollback & Backup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: 🔐 Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.HOST_USER }}
+          key: ${{ secrets.HOST_SSH_KEY }}
+          port: 65002
+          command_timeout: 30m
+          script_stop: true
+          debug: false
+          script: |
+            set -e
+            echo "🚀 Starting Deployment..."
+
+            DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
+            RELEASES_PATH=$DOMAIN_PATH/releases
+            SHARED_PATH=$DOMAIN_PATH/shared
+            CURRENT_PATH=$DOMAIN_PATH/current
+            TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+            NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
+
+            mkdir -p $RELEASES_PATH
+            mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
+            mkdir -p $SHARED_PATH/storage/app/public
+            mkdir -p $SHARED_PATH/bootstrap/cache
+            mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
+
+            # ==============================
+            # Backup Database
+            # ==============================
+            echo "💾 Backup database before migration..."
+            BACKUP_FILE="$SHARED_PATH/db_backup_$TIMESTAMP.sql"
+            mysqldump -u root -proot wconnect_test > $BACKUP_FILE
+            echo "✅ Database backed up: $BACKUP_FILE"
+
+            # ==============================
+            # FIRST DEPLOY = CLONE / NEXT = PULL
+            # ==============================
+            if [ ! -d "$CURRENT_PATH/.git" ]; then
+              echo "📥 First deployment - cloning repository"
+              git clone git@github-wconnect:Septian4r1/w_connect.git $CURRENT_PATH
+            else
+              echo "⚡ Fast deploy - pulling latest code"
+              cd $CURRENT_PATH
+              git reset --hard
+              git pull origin main
+            fi
+
+            cd $CURRENT_PATH
+
+            # ==============================
+            # ENV FILE
+            # ==============================
+            if [ ! -f $SHARED_PATH/.env ]; then
+              cp .env.example $SHARED_PATH/.env
+            fi
+            ln -sfn $SHARED_PATH/.env .env
+
+            # ==============================
+            # STORAGE & DATA WARGA SYMLINK
+            # ==============================
+            rm -rf storage
+            ln -sfn $SHARED_PATH/storage storage
+            mkdir -p frontend
+            rm -rf frontend/data_warga
+            ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
+            chmod -R 775 storage bootstrap/cache || true
+            echo "🔗 Storage & data_warga symlinks ready"
+
+            # ==============================
+            # COMPOSER INSTALL
+            # ==============================
+            if [ -f composer.lock ]; then
+              echo "📦 Installing composer packages..."
+              composer install --no-dev --optimize-autoloader --no-interaction
+            fi
+
+            # ==============================
+            # Clear Queues & Cache
+            # ==============================
+            echo "🧹 Clearing queues & caches..."
+            php artisan queue:restart || true
+            php artisan config:clear || true
+            php artisan route:clear || true
+            php artisan view:clear || true
+
+            # ==============================
+            # Database Migration
+            # ==============================
+            echo "📈 Running migrations..."
+            if ! php artisan migrate --force; then
+              echo "⚠️ Migration failed, rolling back to previous release..."
+              ln -sfn $(ls -dt $RELEASES_PATH/release_* | sed -n '2p') $CURRENT_PATH
+              ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+              exit 1
+            fi
+
+            # ==============================
+            # Cache Build
+            # ==============================
+            php artisan config:cache || true
+            php artisan route:cache || true
+            php artisan view:cache || true
+
+            # ==============================
+            # Storage Link
+            # ==============================
+            php artisan storage:link || true
+
+            # ==============================
+            # Public HTML Zero Downtime
+            # ==============================
+            rm -rf $DOMAIN_PATH/public_html
+            ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+            echo "🟢 Site updated with zero downtime"
+
+            # ==============================
+            # Keep Only 2 Latest Releases
+            # ==============================
+            cd $RELEASES_PATH
+            ls -dt release_* | tail -n +3 | xargs rm -rf || true
+            echo "🗑️ Old releases cleanup done"
+
+            echo "✅ Deployment Completed Successfully!"

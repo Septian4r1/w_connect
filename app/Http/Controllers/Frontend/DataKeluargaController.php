@@ -35,20 +35,23 @@ class DataKeluargaController extends Controller
     {
         $rumahId = session('rumah_id');
 
+        if (!$rumahId) {
+            abort(403, 'Session rumah tidak ditemukan');
+        }
+
         // KK Utama
         $keluargaUtama = Keluarga::with(['kepalaKeluarga', 'jenisKk', 'anggota'])
             ->where('rumah_id', $rumahId)
             ->where('jenis_kk_id', 1)
             ->get();
 
-        // KK Tambahan
+        // KK Tambahan (TANPA whereHas)
         $keluargaTambahan = Keluarga::with(['kepalaKeluarga', 'anggota', 'jenisKk'])
             ->where('rumah_id', $rumahId)
             ->where('jenis_kk_id', '!=', 1)
-            ->whereHas('kepalaKeluarga')
             ->get();
 
-        // Ambil pengajuan perubahan warga untuk rumah ini
+        // Pengajuan perubahan
         $pengajuanList = PengajuanPerubahan::with('approvals')
             ->whereHas('warga.keluarga', function ($q) use ($rumahId) {
                 $q->where('rumah_id', $rumahId);

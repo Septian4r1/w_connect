@@ -460,12 +460,12 @@ KELUARGA TAMBAHAN
                         <img id="view_foto" src="{{ asset($keluarga->kepalaKeluarga->foto_ktp) }}"
                             class="shadow-sm mb-3 border"
                             style="
-        width:260px;
-        aspect-ratio:1.586/1;
-        object-fit:contain;
-        background:#f5f5f5;
-        border-radius:8px;
-    ">
+                                width:260px;
+                                aspect-ratio:1.586/1;
+                                object-fit:contain;
+                                background:#f5f5f5;
+                                border-radius:8px;
+                            ">
 
                         <div class="table-responsive">
 

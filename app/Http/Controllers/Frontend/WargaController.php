@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\Crypt;
 
 class WargaController extends Controller
 {
@@ -27,12 +28,23 @@ class WargaController extends Controller
     FORM CREATE
     =========================
     */
-    public function create()
+    public function create(Request $request)
     {
         $rumahId = session('rumah_id');
 
-        $keluarga = Keluarga::where('rumah_id', $rumahId)
-            ->first(['id']);
+        if (!$rumahId) {
+            abort(403);
+        }
+
+        try {
+            $keluargaId = Crypt::decryptString(
+                $request->route('keluarga_id')
+            );
+        } catch (\Exception $e) {
+            abort(404);
+        }
+
+        $keluarga = Keluarga::findOrFail($keluargaId);
 
         return view('frontend.data_warga.create_warga', compact('keluarga'));
     }
@@ -45,7 +57,6 @@ class WargaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'keluarga_id' => 'required|exists:keluargas,id',
             'nik' => 'required|string|max:20|unique:wargas,nik',
             'nama' => 'required|string|max:255',
             'jenis_kelamin' => 'required|string',
@@ -74,9 +85,13 @@ class WargaController extends Controller
             $fotoKtpDb = $this->processImage($request->file('foto_ktp'), $basePath, $namaSlug . '_KTP_' . $now);
             $fotoSelfieDb = $this->processImage($request->file('foto'), $basePath, $namaSlug . '_SELFIE_' . $now);
 
+            $keluarga = Keluarga::where('id', $request->keluarga_id)
+            ->where('rumah_id', session('rumah_id'))
+            ->firstOrFail();
+
             // simpan database
             $warga = Warga::create([
-                'keluarga_id' => $request->keluarga_id,
+                'keluarga_id' => $keluarga->id,
                 'nik' => $request->nik,
                 'nama' => $request->nama,
                 'jenis_kelamin' => $request->jenis_kelamin,

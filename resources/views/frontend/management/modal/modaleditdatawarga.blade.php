@@ -62,7 +62,7 @@
                                             <div class="text-center mb-3">
 
                                                 <img id="edit_foto_ktp"
-                                                    src="{{ asset('frontend/image/sample/ktp_sample.png') }}"
+                                                    src="{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}"
                                                     class="border shadow-sm mx-auto d-block img-fluid"
                                                     style="
                                                     max-width:280px;
@@ -236,7 +236,7 @@
                                                 <div class="text-center mb-2">
 
                                                     <img id="preview_selfie"
-                                                        src="{{ asset('frontend/image/sample/user.png') }}"
+                                                        src="{{ asset('frontend/data_warga/image/sample/user.png') }}"
                                                         class="rounded-circle border shadow-sm"
                                                         style="width:120px;height:120px;object-fit:cover">
 
