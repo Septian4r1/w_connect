@@ -1,7 +1,6 @@
 # ========================
 # Laravel / PHP
 # ========================
-
 /vendor/
 /node_modules/
 .env
@@ -18,10 +17,12 @@
 /storage/framework/sessions
 /storage/framework/views
 
+# Jangan upload data_warga lokal
+/frontend/data_warga/
+
 # ========================
 # Node / npm / Yarn
 # ========================
-
 /npm-debug.log*
 /yarn-debug.log*
 /yarn-error.log*
@@ -31,7 +32,6 @@
 # ========================
 # OS & Editor
 # ========================
-
 .DS_Store
 Thumbs.db
 *.swp
@@ -42,13 +42,11 @@ Thumbs.db
 # ========================
 # Composer
 # ========================
-
 composer.lock
 
 # ========================
 # IDE
 # ========================
-
 .idea/
 *.sublime-project
 *.sublime-workspace
@@ -57,7 +55,6 @@ composer.lock
 # ========================
 # Misc
 # ========================
-
 .env.*
 .env.testing
 .env.production

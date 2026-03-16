@@ -28,6 +28,9 @@ jobs:
             set -e
             echo "🚀 Starting Deployment..."
 
+            # ==============================
+            # 1️⃣ Paths & Timestamp
+            # ==============================
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
             RELEASES_PATH=$DOMAIN_PATH/releases
             SHARED_PATH=$DOMAIN_PATH/shared
@@ -35,6 +38,9 @@ jobs:
             TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
+            # ==============================
+            # 2️⃣ Ensure Directories Exist
+            # ==============================
             mkdir -p $RELEASES_PATH
             mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
             mkdir -p $SHARED_PATH/storage/app/public
@@ -42,7 +48,7 @@ jobs:
             mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
 
             # ==============================
-            # Backup Database
+            # 3️⃣ Backup Database
             # ==============================
             echo "💾 Backup database before migration..."
             BACKUP_FILE="$SHARED_PATH/db_backup_$TIMESTAMP.sql"
@@ -50,7 +56,7 @@ jobs:
             echo "✅ Database backed up: $BACKUP_FILE"
 
             # ==============================
-            # FIRST DEPLOY = CLONE / NEXT = PULL
+            # 4️⃣ Deploy Code (Clone / Pull)
             # ==============================
             if [ ! -d "$CURRENT_PATH/.git" ]; then
               echo "📥 First deployment - cloning repository"
@@ -65,26 +71,34 @@ jobs:
             cd $CURRENT_PATH
 
             # ==============================
-            # ENV FILE
+            # 5️⃣ Environment File
             # ==============================
             if [ ! -f $SHARED_PATH/.env ]; then
               cp .env.example $SHARED_PATH/.env
             fi
             ln -sfn $SHARED_PATH/.env .env
+            echo "✅ Environment file ready"
 
             # ==============================
-            # STORAGE & DATA WARGA SYMLINK
+            # 6️⃣ Symlinks: Storage & Data Warga
             # ==============================
+            echo "🔗 Creating symlinks for storage and data_warga..."
+
+            # Remove old storage symlink & create new
             rm -rf storage
             ln -sfn $SHARED_PATH/storage storage
+
+            # Ensure frontend folder exists
             mkdir -p frontend
+            # Remove old data_warga folder & create symlink
             rm -rf frontend/data_warga
             ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
+
             chmod -R 775 storage bootstrap/cache || true
-            echo "🔗 Storage & data_warga symlinks ready"
+            echo "✅ Storage & data_warga symlinks ready"
 
             # ==============================
-            # COMPOSER INSTALL
+            # 7️⃣ Composer Install
             # ==============================
             if [ -f composer.lock ]; then
               echo "📦 Installing composer packages..."
@@ -92,7 +106,7 @@ jobs:
             fi
 
             # ==============================
-            # Clear Queues & Cache
+            # 8️⃣ Clear Queues & Cache
             # ==============================
             echo "🧹 Clearing queues & caches..."
             php artisan queue:restart || true
@@ -101,7 +115,7 @@ jobs:
             php artisan view:clear || true
 
             # ==============================
-            # Database Migration
+            # 9️⃣ Run Migrations
             # ==============================
             echo "📈 Running migrations..."
             if ! php artisan migrate --force; then
@@ -112,26 +126,26 @@ jobs:
             fi
 
             # ==============================
-            # Cache Build
+            # 🔟 Cache Build
             # ==============================
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
 
             # ==============================
-            # Storage Link
+            # 1️⃣1️⃣ Laravel Storage Link
             # ==============================
             php artisan storage:link || true
 
             # ==============================
-            # Public HTML Zero Downtime
+            # 1️⃣2️⃣ Update Public HTML (Zero Downtime)
             # ==============================
             rm -rf $DOMAIN_PATH/public_html
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
             echo "🟢 Site updated with zero downtime"
 
             # ==============================
-            # Keep Only 2 Latest Releases
+            # 1️⃣3️⃣ Cleanup Old Releases (Keep 2)
             # ==============================
             cd $RELEASES_PATH
             ls -dt release_* | tail -n +3 | xargs rm -rf || true
