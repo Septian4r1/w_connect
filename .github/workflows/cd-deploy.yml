@@ -1,26 +1,27 @@
-name: Deploy to Hostinger (Fast Zero Downtime)
+name: "Laravel CD - Deploy to Hostinger (Zero Downtime)"
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
   deploy:
-    name: 🚀 Deploy Laravel Zero Downtime with Safe Rollback
+    name: "🚀 CD: Deploy Laravel Zero Downtime"
     runs-on: ubuntu-latest
 
     steps:
       # ==============================
       # 1️⃣ Checkout Repository
       # ==============================
-      - name: 📥 Checkout Repository
+      - name: "📥 Checkout Repository"
         uses: actions/checkout@v3
 
       # ==============================
       # 2️⃣ Test SSH Connection
       # ==============================
-      - name: 🔗 Test SSH Connection
+      - name: "🔗 Test SSH Connection"
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_NAME }}
@@ -32,7 +33,7 @@ jobs:
       # ==============================
       # 3️⃣ Deploy via SSH
       # ==============================
-      - name: 🔐 Deploy via SSH
+      - name: "🔐 Deploy via SSH"
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_NAME }}
@@ -40,7 +41,7 @@ jobs:
           key: ${{ secrets.HOST_SSH_KEY }}
           port: 65002
           command_timeout: 30m
-          script_stop: true
+          script_stop: false
           debug: true
           script: |
             set -e
@@ -107,16 +108,17 @@ jobs:
             # Composer Install
             # ==============================
             echo "📦 Installing composer dependencies..."
-            composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction || true
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts || true
 
             # ==============================
             # Detect PSR-4 Errors
             # ==============================
             echo "🔍 Checking for PSR-4 autoloading issues..."
-            PSR4_ERRORS=$(composer dump-autoload -o 2>&1 | grep "does not comply with PSR-4")
+            PSR4_ERRORS=$(composer dump-autoload -o 2>&1 | grep "does not comply with PSR-4" || true)
             if [ -n "$PSR4_ERRORS" ]; then
               echo "⚠️ PSR-4 Warnings found:"
               echo "$PSR4_ERRORS"
+              echo "$PSR4_ERRORS" > $SHARED_PATH/psr4_warnings.log
             else
               echo "✅ No PSR-4 errors detected"
             fi

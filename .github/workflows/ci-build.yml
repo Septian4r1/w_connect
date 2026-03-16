@@ -1,0 +1,47 @@
+name: "Laravel CI - Build & PSR-4 Check"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: "🧪 CI: Composer & PSR-4"
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout Repository
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup PHP
+      - name: "⚙️ Setup PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: mbstring, bcmath, curl, intl, xml, gd
+          ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=1024M
+
+      # 3️⃣ Install Composer Dependencies
+      - name: "📦 Install Composer"
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      # 4️⃣ Detect PSR-4 Errors
+      - name: "🔍 Check PSR-4 Autoloading"
+        run: |
+          PSR4_ERRORS=$(composer dump-autoload -o 2>&1 | grep "does not comply with PSR-4" || true)
+          if [ -n "$PSR4_ERRORS" ]; then
+            echo "⚠️ PSR-4 Warnings found:"
+            echo "$PSR4_ERRORS"
+            echo "$PSR4_ERRORS" > psr4_warnings.log
+          else
+            echo "✅ No PSR-4 errors detected"
+          fi
+
+      # 5️⃣ Run Tests (Optional)
+      - name: "🧪 Run PHPUnit Tests"
+        run: php artisan test --no-interaction --parallel
