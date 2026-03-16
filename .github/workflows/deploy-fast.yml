@@ -7,13 +7,19 @@ on:
 
 jobs:
   deploy:
-    name: 🚀 Deploy Laravel with Rollback
+    name: 🚀 Deploy Laravel Zero Downtime with Safe Rollback
     runs-on: ubuntu-latest
 
     steps:
+      # ==============================
+      # 1️⃣ Checkout Repository
+      # ==============================
       - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
+      # ==============================
+      # 2️⃣ Test SSH Connection
+      # ==============================
       - name: 🔗 Test SSH Connection
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -23,6 +29,9 @@ jobs:
           port: 65002
           script: echo "✅ Connected from GitHub Actions"
 
+      # ==============================
+      # 3️⃣ Deploy via SSH
+      # ==============================
       - name: 🔐 Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -38,7 +47,7 @@ jobs:
             echo "🚀 Starting Deployment..."
 
             # ==============================
-            # 1️⃣ Paths & Timestamp
+            # Paths & Release Timestamp
             # ==============================
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
             RELEASES_PATH=$DOMAIN_PATH/releases
@@ -48,7 +57,7 @@ jobs:
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
             # ==============================
-            # 2️⃣ Ensure Directories Exist
+            # Ensure Directories Exist
             # ==============================
             mkdir -p $RELEASES_PATH
             mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
@@ -57,7 +66,7 @@ jobs:
             mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
 
             # ==============================
-            # 3️⃣ Deploy Code (Clone / Pull)
+            # Deploy Code: Clone or Pull
             # ==============================
             if [ ! -d "$CURRENT_PATH/.git" ]; then
               echo "📥 First deployment - cloning repository"
@@ -72,7 +81,7 @@ jobs:
             cd $CURRENT_PATH
 
             # ==============================
-            # 4️⃣ Environment File
+            # Environment File
             # ==============================
             if [ ! -f $SHARED_PATH/.env ]; then
               cp .env.example $SHARED_PATH/.env
@@ -81,9 +90,9 @@ jobs:
             echo "✅ Environment file ready"
 
             # ==============================
-            # 5️⃣ Symlinks: Storage & Data Warga
+            # Symlinks: Storage & Data Warga
             # ==============================
-            echo "🔗 Creating symlinks for storage and data_warga..."
+            echo "🔗 Creating symlinks..."
             rm -rf storage
             ln -sfn $SHARED_PATH/storage storage
 
@@ -92,18 +101,28 @@ jobs:
             ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
 
             chmod -R 775 storage bootstrap/cache || true
-            echo "✅ Storage & data_warga symlinks ready"
+            echo "✅ Symlinks ready"
 
             # ==============================
-            # 6️⃣ Composer Install
+            # Composer Install
             # ==============================
-            if [ -f composer.lock ]; then
-              echo "📦 Installing composer packages..."
-              composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
+            echo "📦 Installing composer dependencies..."
+            composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction || true
+
+            # ==============================
+            # Detect PSR-4 Errors
+            # ==============================
+            echo "🔍 Checking for PSR-4 autoloading issues..."
+            PSR4_ERRORS=$(composer dump-autoload -o 2>&1 | grep "does not comply with PSR-4")
+            if [ -n "$PSR4_ERRORS" ]; then
+              echo "⚠️ PSR-4 Warnings found:"
+              echo "$PSR4_ERRORS"
+            else
+              echo "✅ No PSR-4 errors detected"
             fi
 
             # ==============================
-            # 7️⃣ Clear Queues & Cache
+            # Clear Queues & Cache
             # ==============================
             echo "🧹 Clearing queues & caches..."
             php artisan queue:restart || true
@@ -112,37 +131,43 @@ jobs:
             php artisan view:clear || true
 
             # ==============================
-            # 8️⃣ Run Migrations
+            # Run Migrations with Safe Rollback
             # ==============================
             echo "📈 Running migrations..."
+            PREVIOUS_RELEASE=$(ls -dt $RELEASES_PATH/release_* | sed -n '2p' || echo "")
             if ! php artisan migrate --force; then
-              echo "⚠️ Migration failed, rolling back to previous release..."
-              ln -sfn $(ls -dt $RELEASES_PATH/release_* | sed -n '2p') $CURRENT_PATH
-              ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+              echo "⚠️ Migration failed!"
+              if [ -n "$PREVIOUS_RELEASE" ]; then
+                echo "🔙 Rolling back to previous release: $PREVIOUS_RELEASE"
+                ln -sfn $PREVIOUS_RELEASE $CURRENT_PATH
+                ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+              else
+                echo "❌ No previous release to rollback!"
+              fi
               exit 1
             fi
 
             # ==============================
-            # 9️⃣ Cache Build
+            # Cache Build
             # ==============================
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
 
             # ==============================
-            # 🔟 Laravel Storage Link
+            # Laravel Storage Link
             # ==============================
             php artisan storage:link || true
 
             # ==============================
-            # 1️⃣1️⃣ Update Public HTML (Zero Downtime)
+            # Update Public HTML (Zero Downtime)
             # ==============================
             rm -rf $DOMAIN_PATH/public_html
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
             echo "🟢 Site updated with zero downtime"
 
             # ==============================
-            # 1️⃣2️⃣ Cleanup Old Releases (Keep 2)
+            # Cleanup Old Releases (Keep 2)
             # ==============================
             cd $RELEASES_PATH
             ls -dt release_* | tail -n +3 | xargs rm -rf || true
