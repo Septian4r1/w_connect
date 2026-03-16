@@ -52,7 +52,7 @@ jobs:
             # ==============================
             echo "💾 Backup database before migration..."
             BACKUP_FILE="$SHARED_PATH/db_backup_$TIMESTAMP.sql"
-            mysqldump -u u595038546_w_connect -p'Septian1234567890' u595038546_w_connect > $BACKUP_FILE || true
+            mysqldump -u u595038546_w_connect -p'Septian1234567890,' u595038546_w_connect > $BACKUP_FILE || true
             echo "✅ Database backed up: $BACKUP_FILE"
 
             # ==============================
