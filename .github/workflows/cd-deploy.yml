@@ -26,7 +26,7 @@ jobs:
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.HOST_USER }}
-          key: ${{ secrets.HOST_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           script: echo "✅ Connected from GitHub Actions"
 
@@ -38,7 +38,7 @@ jobs:
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.HOST_USER }}
-          key: ${{ secrets.HOST_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           command_timeout: 30m
           script_stop: false
