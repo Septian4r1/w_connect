@@ -28,7 +28,8 @@ jobs:
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          script: echo "✅ Connected from GitHub Actions"
+          script: |
+            echo "✅ Connected from GitHub Actions"
 
       # ==============================
       # 3️⃣ Deploy via SSH
@@ -40,7 +41,7 @@ jobs:
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          command_timeout: 30m
+          command_timeout: 60m
           script_stop: false
           debug: true
           script: |
