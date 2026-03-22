@@ -7,11 +7,10 @@ use App\Models\Rumah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use App\Http\Middleware\RateLimiter;
+use App\Support\LoginRateLimiter;
 
 class LoginController extends Controller
 {
-
     /*
     ======================================================
     1. MENAMPILKAN HALAMAN LOGIN
@@ -24,7 +23,6 @@ class LoginController extends Controller
     }
 
 
-
     /*
     ======================================================
     2. PROSES LOGIN USER
@@ -33,12 +31,10 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-
         /*
         ======================================================
         VALIDASI INPUT
         ======================================================
-        Melindungi dari input yang tidak sesuai format
         */
 
         $request->validate([
@@ -47,14 +43,10 @@ class LoginController extends Controller
         ]);
 
 
-
         /*
         ======================================================
         SANITASI INPUT
         ======================================================
-        - trim() menghapus spasi
-        - strip_tags() mencegah script injection
-        - strtoupper() menyamakan format nomor rumah
         */
 
         $nomorRumah = strtoupper(
@@ -64,32 +56,30 @@ class LoginController extends Controller
         );
 
         $password = trim($request->input('password'));
+        $ip = $request->ip();
 
 
         /*
-======================================================
-CEK RATE LIMIT LOGIN
-======================================================
-Mencegah brute force login
-*/
+        ======================================================
+        CEK RATE LIMIT LOGIN
+        ======================================================
+        */
 
-        if (RateLimiter::tooManyAttempts($request->ip(), $nomorRumah)) {
+        if (LoginRateLimiter::tooManyAttempts($ip, $nomorRumah)) {
 
             return $this->response(
                 $request,
                 'error',
-                'Terlalu banyak percobaan login. Tunggu 15 menit.',
+                'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.',
                 429
             );
         }
-
 
 
         /*
         ======================================================
         AMBIL DATA RUMAH
         ======================================================
-        Query ringan hanya mengambil kolom penting
         */
 
         $rumah = Rumah::select(
@@ -102,7 +92,6 @@ Mencegah brute force login
             ->first();
 
 
-
         /*
         ======================================================
         CEK NOMOR RUMAH
@@ -111,7 +100,7 @@ Mencegah brute force login
 
         if (!$rumah) {
 
-            RateLimiter::hit($request->ip(), $nomorRumah);
+            LoginRateLimiter::hit($ip, $nomorRumah);
 
             return $this->response(
                 $request,
@@ -122,17 +111,15 @@ Mencegah brute force login
         }
 
 
-
         /*
         ======================================================
         CEK PASSWORD
         ======================================================
-        Password dicek menggunakan Hash Laravel
         */
 
         if (!Hash::check($password, $rumah->password)) {
 
-            RateLimiter::hit($request->ip(), $nomorRumah);
+            LoginRateLimiter::hit($ip, $nomorRumah);
 
             return $this->response(
                 $request,
@@ -143,12 +130,10 @@ Mencegah brute force login
         }
 
 
-
         /*
         ======================================================
         CEK DOUBLE LOGIN
         ======================================================
-        Jika akun sedang login di perangkat lain
         */
 
         if ($rumah->status_login === 'online') {
@@ -167,13 +152,10 @@ Mencegah brute force login
         }
 
 
-
         /*
         ======================================================
-        UPDATE STATUS LOGIN
+        UPDATE STATUS LOGIN (RACE CONDITION SAFE)
         ======================================================
-        Proteksi race condition:
-        hanya update jika status masih offline
         */
 
         $updated = Rumah::where('id', $rumah->id)
@@ -182,14 +164,6 @@ Mencegah brute force login
                 'status_login' => 'online',
                 'updated_at' => now()
             ]);
-
-
-
-        /*
-        ======================================================
-        PROTEKSI DOUBLE LOGIN RACE CONDITION
-        ======================================================
-        */
 
         if (!$updated) {
 
@@ -208,13 +182,12 @@ Mencegah brute force login
 
 
         /*
-======================================================
-RESET RATE LIMIT JIKA LOGIN BERHASIL
-======================================================
-*/
+        ======================================================
+        RESET RATE LIMIT JIKA LOGIN BERHASIL
+        ======================================================
+        */
 
-        RateLimiter::reset($request->ip(), $nomorRumah);
-
+        LoginRateLimiter::reset($ip, $nomorRumah);
 
 
         /*
@@ -226,7 +199,6 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
         Session::regenerate();
 
 
-
         /*
         ======================================================
         SIMPAN SESSION LOGIN
@@ -234,7 +206,6 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
         */
 
         $request->session()->put('rumah_id', $rumah->id);
-
 
 
         /*
@@ -253,7 +224,6 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
     }
 
 
-
     /*
     ======================================================
     3. LOGOUT USER
@@ -262,15 +232,7 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
 
     public function logout(Request $request)
     {
-
         $rumahId = $request->session()->get('rumah_id');
-
-
-
-        /*
-        Jika session tidak ada,
-        cek nomor rumah dari request
-        */
 
         if (!$rumahId && $request->input('nomor_rumah')) {
 
@@ -283,23 +245,9 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
             $rumahId = $rumah?->id;
         }
 
-
-
-        /*
-        Jika rumah ditemukan
-        logout semua perangkat
-        */
-
         if ($rumahId) {
             return $this->logoutAllDevices($rumahId, $request);
         }
-
-
-
-        /*
-        Jika tidak ditemukan
-        hapus session saja
-        */
 
         $request->session()->forget('rumah_id');
 
@@ -307,7 +255,6 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
             ->route('showlogin')
             ->with('success', 'Anda berhasil logout.');
     }
-
 
 
     /*
@@ -318,25 +265,12 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
 
     public function logoutAllDevices($id, Request $request)
     {
-
-        /*
-        Update status login menjadi offline
-        */
-
         Rumah::where('id', $id)->update([
             'status_login' => 'offline'
         ]);
 
-
-
-        /*
-        Hapus semua session
-        */
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-
 
         return redirect()
             ->route('showlogin')
@@ -347,15 +281,10 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
     }
 
 
-
     /*
     ======================================================
     RESPONSE HELPER
     ======================================================
-    Mengatur response untuk:
-    - AJAX
-    - Redirect
-    - Error
     */
 
     private function response(
@@ -365,11 +294,6 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
         int $code = 200,
         ?string $redirect = null
     ) {
-
-        /*
-        Response AJAX
-        */
-
         if ($request->ajax()) {
 
             $response = [
@@ -384,23 +308,11 @@ RESET RATE LIMIT JIKA LOGIN BERHASIL
             return response()->json($response, $code);
         }
 
-
-
-        /*
-        Redirect jika sukses
-        */
-
         if ($status === 'success' && $redirect) {
 
             return redirect($redirect)
                 ->with('message', $message);
         }
-
-
-
-        /*
-        Response error
-        */
 
         return back()
             ->withInput()

@@ -9,23 +9,27 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use App\Services\NomorPengajuanService;
-use Illuminate\Support\Str;
 use App\Models\Warga;
 use App\Models\PengajuanPerubahan;
 use App\Models\PengajuanFile;
 use App\Models\PengajuanApproval;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Facades\Image;
+
+
 
 class PengajuanPerubahanController extends Controller
 {
-
     public function store(Request $request)
     {
         try {
-
             $rumahId = session('rumah_id');
-            if (!$rumahId) abort(403);
+            if (!$rumahId) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Session rumah hilang / tidak ditemukan'
+                ], 403);
+            }
 
             $fieldPerubahan = [
                 'nama',
@@ -48,13 +52,18 @@ class PengajuanPerubahanController extends Controller
                 'data_awal' => ['nullable', 'string', 'max:255'],
                 'data_baru' => ['nullable', 'string', 'max:255'],
                 'alasan'    => ['nullable', 'string', 'max:500'],
-                'dokumen'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120']
+                'dokumen'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+                'foto_ktp'  => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120']
             ]);
 
             try {
                 $wargaId = Crypt::decryptString($validated['id_warga']);
             } catch (\Throwable $e) {
-                abort(404);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'ID warga tidak valid / gagal decrypt',
+                    'error' => $e->getMessage()
+                ], 404);
             }
 
             $warga = Warga::query()
@@ -81,63 +90,11 @@ class PengajuanPerubahanController extends Controller
                     'created_by'      => $wargaId
                 ]);
 
-                /*
-                ============================================
-                UPLOAD FILE SAMA SEPERTI FOTO KK
-                ============================================
-                */
+                // Upload file
+                $this->handleFileUpload($request, $pengajuan, 'dokumen', 'dokumen_pendukung');
+                $this->handleFileUpload($request, $pengajuan, 'foto_ktp', 'foto_ktp');
 
-                if ($request->hasFile('dokumen')) {
-
-                    $file = $request->file('dokumen');
-
-                    $manager = new ImageManager(new Driver());
-
-                    $kodeUnik = now()->timestamp . '_' . mt_rand(1000, 9999);
-                    $namaFile = $noPengajuan . '_' . $kodeUnik . '.jpg';
-
-                    $pathFolder = public_path('frontend/data_warga/file_pengajuan');
-
-                    if (!File::exists($pathFolder)) {
-                        File::makeDirectory($pathFolder, 0755, true);
-                    }
-
-                    if (in_array($file->extension(), ['jpg', 'jpeg', 'png'])) {
-
-                        $image = $manager->read($file->getRealPath())->orient();
-
-                        if ($image->width() > 5000 || $image->height() > 5000) {
-                            $image = $image->scale(width: 2000);
-                        }
-
-                        if ($image->width() > 1024) {
-                            $image = $image->scaleDown(width: 1024);
-                        }
-
-                        $image = $image->toJpeg(65);
-                        $image->save($pathFolder . '/' . $namaFile);
-                    } else {
-
-                        $namaFile = $noPengajuan . '_' . $kodeUnik . '.' . $file->extension();
-                        $file->move($pathFolder, $namaFile);
-                    }
-
-                    $dbPath = 'frontend/data_warga/file_pengajuan/' . $namaFile;
-
-                    PengajuanFile::create([
-                        'pengajuan_id'  => $pengajuan->id,
-                        'nama_file'     => $file->getClientOriginalName(),
-                        'path_file'     => $dbPath,
-                        'jenis_dokumen' => 'dokumen_pendukung'
-                    ]);
-                }
-
-                /*
-                ============================================
-                APPROVAL LEVEL PERTAMA
-                ============================================
-                */
-
+                // Approval pertama
                 PengajuanApproval::create([
                     'pengajuan_id' => $pengajuan->id,
                     'level'        => 'admin',
@@ -151,17 +108,81 @@ class PengajuanPerubahanController extends Controller
                 ]);
             });
         } catch (\Throwable $e) {
-
             Log::error('Error Pengajuan Perubahan', [
                 'message' => $e->getMessage(),
                 'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan sistem'
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
             ], 500);
+        }
+    }
+
+    private function handleFileUpload(Request $request, PengajuanPerubahan $pengajuan, string $inputName, string $jenisDokumen)
+    {
+        // Jika tidak ada file, langsung return
+        if (!$request->hasFile($inputName)) {
+            return;
+        }
+
+        $file = $request->file($inputName);
+
+        // Jika file tidak valid, log dan return
+        if (!$file->isValid()) {
+            Log::warning("Upload file '$inputName' gagal: " . $file->getErrorMessage());
+            return;
+        }
+
+        // Buat kode unik & nama file dasar
+        $kodeUnik = now()->timestamp . '_' . mt_rand(1000, 9999);
+        $extension = strtolower($file->extension());
+        $namaFile = $pengajuan->no_pengajuan . '_' . $kodeUnik;
+        $pathFolder = public_path('frontend/data_warga/file_pengajuan');
+
+        // Buat folder jika belum ada
+        if (!File::exists($pathFolder)) {
+            File::makeDirectory($pathFolder, 0755, true);
+        }
+
+        try {
+            // Jika gambar, proses dengan Intervention Image
+            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                $image = Image::make($file->getRealPath())->orientate();
+
+                // Resize jika lebar lebih dari 1024px
+                if ($image->width() > 1024) {
+                    $image->resize(1024, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                $namaFile .= '.jpg';
+                $image->save($pathFolder . '/' . $namaFile, 65); // kualitas 65%
+            } else {
+                // File selain gambar (PDF, docx, dll)
+                $namaFile .= '.' . $extension;
+                $file->move($pathFolder, $namaFile);
+            }
+
+            $dbPath = 'frontend/data_warga/file_pengajuan/' . $namaFile;
+
+            // Simpan info file ke database
+            PengajuanFile::create([
+                'pengajuan_id'  => $pengajuan->id,
+                'nama_file'     => $file->getClientOriginalName(),
+                'path_file'     => $dbPath,
+                'jenis_dokumen' => $jenisDokumen
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Gagal memproses file '$inputName': " . $e->getMessage());
         }
     }
 }

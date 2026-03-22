@@ -296,10 +296,8 @@
                                             <form id="formPengajuanedit"
                                                 action="{{ route('pengajuan.perubahan.store') }}" method="POST"
                                                 enctype="multipart/form-data">
-
-
                                                 @csrf
-                                                @method('PUT')
+
 
                                                 <input type="hidden" name="id_warga" id="edit_id_warga">
 
@@ -349,14 +347,14 @@
                                                     <div class="mt-2">
                                                         <img id="previewKtp"
                                                             style="
-        display:none;
-        width:100%;
-        max-height:220px;
-        object-fit:cover;
-        border-radius:10px;
-        border:1px solid #ddd;
-        padding:4px;
-        ">
+                                                        display:none;
+                                                        width:100%;
+                                                        max-height:220px;
+                                                        object-fit:cover;
+                                                        border-radius:10px;
+                                                        border:1px solid #ddd;
+                                                        padding:4px;
+                                                        ">
                                                     </div>
 
                                                 </div>

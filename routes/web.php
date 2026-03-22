@@ -83,8 +83,7 @@ Route::middleware(['guest.rumah'])->group(function () {
     Route::get('/forgotPassword/new-password',[ForgotPasswordController::class, 'showNewPassword'])->name('forgotPassword.newPassword');
 });
 
-
-Route::middleware(['guest.rumah'])->group(function () {
+Route::middleware(['guest.rumah', 'login.limit'])->group(function () {
 
     Route::post('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/register', [RegisterController::class, 'register'])->name('register');
@@ -125,7 +124,7 @@ Route::middleware(['auth.rumah', 'check.approval', 'check.data'])->prefix('manag
 
         //------------------------------- EDIT DATA WARGA -------------------------------------//
         Route::put('/warga/update-selfie/{id}', [WargaUpdateController::class, 'updateSelfie'])->name('warga.updateSelfie');
-        Route::put('/pengajuan-perubahan/store',[PengajuanPerubahanController::class,'store'])->name('pengajuan.perubahan.store');
+        Route::post('/pengajuan-perubahan/store',[PengajuanPerubahanController::class,'store'])->name('pengajuan.perubahan.store');
 
                 //-------------------------END EDIT DATA WARGA --------------------------//
         //------------------------------- END TAMBAH DATA KELUARGA -------------------------------------//

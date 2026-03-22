@@ -722,21 +722,21 @@ KELUARGA TAMBAHAN
                     }
 
                     if (field === "foto_ktp") {
-
-                        if (inputAwal) inputAwal.value = "Foto KTP Lama";
-
                         if (wrapDataBaru) wrapDataBaru.style.display = "none";
                         if (uploadKtp) uploadKtp.style.display = "block";
 
+                        // hapus required karena input disembunyikan
+                        if (inputBaru) inputBaru.removeAttribute('required');
                     } else {
-
                         if (wrapDataBaru) wrapDataBaru.style.display = "block";
                         if (uploadKtp) uploadKtp.style.display = "none";
 
                         if (wargaData[field]) {
-
                             if (inputAwal) inputAwal.value = wargaData[field];
-                            if (inputBaru) inputBaru.value = '';
+                            if (inputBaru) {
+                                inputBaru.value = '';
+                                inputBaru.setAttribute('required', 'required'); // wajib sekarang
+                            }
                         }
                     }
 
@@ -793,6 +793,7 @@ KELUARGA TAMBAHAN
             =============================== */
 
             const formPengajuan = document.getElementById('formPengajuanedit');
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
 
             if (formPengajuan) {
 
@@ -812,9 +813,9 @@ KELUARGA TAMBAHAN
 
                     fetch(url, {
                             method: "POST",
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                    ?.content
+                              headers: {
+                                'X-CSRF-TOKEN': token
+                                // jangan set 'Content-Type' di sini kalau pakai FormData
                             },
                             body: formData
                         })

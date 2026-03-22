@@ -1,59 +1,88 @@
 # ========================
-# Laravel / PHP
+# Laravel Core
 # ========================
 /vendor/
 /node_modules/
+/bootstrap/cache/*.php
+/public/hot
+
+# Environment
 .env
-/.idea/
-/.env.local
-/.vscode/
-/homestead.yaml
-/.phpunit.result.cache
+.env.*
+!.env.example
+
+# ========================
+# Storage (dibuat di server / shared)
+# ========================
 /storage/*.key
-/public/storage
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
 /storage/debugbar
-/storage/framework/cache/data
-/storage/logs
-/storage/framework/sessions
-/storage/framework/views
+/public/storage
+
+# Project custom upload
 /public/frontend/data_warga/
 
 # ========================
-# Node / npm / Yarn
+# Tunnel / Local Testing
 # ========================
-/npm-debug.log*
-/yarn-debug.log*
-/yarn-error.log*
-/package-lock.json
-/yarn.lock
+tunnel.log
+tunnel-url.txt
+*.tunnel.log
 
 # ========================
-# OS & Editor
+# Logs
+# ========================
+*.log
+
+# ========================
+# Node / Frontend
+# ========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Optional (boleh diignore kalau CI install ulang)
+# package-lock.json
+# yarn.lock
+
+# ========================
+# OS
 # ========================
 .DS_Store
 Thumbs.db
-*.swp
-*.swo
-*.bak
-*.tmp
+Desktop.ini
 
 # ========================
-# Composer
-# ========================
-composer.lock
-
-# ========================
-# IDE
+# Editor / IDE
 # ========================
 .idea/
+.vscode/
 *.sublime-project
 *.sublime-workspace
-.vscode/
+*.swp
+*.swo
 
 # ========================
-# Misc
+# Backup / Temp
 # ========================
-.env.*
+*.bak
+*.tmp
+*.old
+*.backup
+
+# ========================
+# Testing
+# ========================
+.phpunit.result.cache
 .env.testing
 .env.production
 .env.backup
+
+# ========================
+# Homestead / Local VM
+# ========================
+/homestead.yaml

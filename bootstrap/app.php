@@ -15,8 +15,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
 
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
 
@@ -31,12 +31,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.rumah' => GuestRumah::class,
             'check.approval' => CheckLayananApproval::class,
             'check.data' => CheckDataWarga::class,
-            'rate.limiter' => RateLimiter::class,
+
+            // Login Security
+            'login.limit' => RateLimiter::class,
+
+            // Device & Security
             'check.device' => CheckDeviceLogin::class,
             'prevent.back' => PreventBackHistory::class,
+
+            // Management
             'redirect.management' => RedirectIfManagementLoggedIn::class,
         ]);
-
     })
 
     ->withExceptions(function ($exceptions) {

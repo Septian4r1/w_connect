@@ -2,79 +2,28 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Support\Facades\Cache;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use App\Support\LoginRateLimiter;
 
 class RateLimiter
 {
-
-    /*
-    ======================================================
-    CEK APAKAH LOGIN SUDAH MELEBIHI BATAS
-    ======================================================
-    */
-
-    public static function tooManyAttempts($ip, $nomorRumah = null)
+    public function handle(Request $request, Closure $next): Response
     {
+        $ip = $request->ip();
+        $nomorRumah = strtoupper(trim($request->input('nomor_rumah')));
 
-        $limit = 3;
+        if (LoginRateLimiter::tooManyAttempts($ip, $nomorRumah)) {
 
-        $key = self::key($ip, $nomorRumah);
+            $minutes = LoginRateLimiter::remainingMinutes($ip, $nomorRumah);
 
-        $attempts = Cache::get($key, 0);
+            return response()->json([
+                'status' => false,
+                'message' => "Terlalu banyak percobaan login. Coba lagi dalam {$minutes} menit."
+            ], 429);
+        }
 
-        return $attempts >= $limit;
-    }
-
-
-
-    /*
-    ======================================================
-    TAMBAH JUMLAH PERCOBAAN LOGIN
-    ======================================================
-    */
-
-    public static function hit($ip, $nomorRumah = null)
-    {
-
-        $minutes = 15;
-
-        $key = self::key($ip, $nomorRumah);
-
-        $attempts = Cache::get($key, 0);
-
-        Cache::put(
-            $key,
-            $attempts + 1,
-            now()->addMinutes($minutes)
-        );
-    }
-
-
-
-    /*
-    ======================================================
-    RESET RATE LIMIT JIKA LOGIN BERHASIL
-    ======================================================
-    */
-
-    public static function reset($ip, $nomorRumah = null)
-    {
-
-        $key = self::key($ip, $nomorRumah);
-
-        Cache::forget($key);
-    }
-
-
-
-    /*
-    ======================================================
-    GENERATE KEY CACHE
-    ======================================================
-    */
-
-    private static function key($ip, $nomorRumah)
-    {
-        return 'login_rate:' . $ip . ':' . $nomorRumah;
+        return $next($request);
     }
 }
