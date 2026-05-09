@@ -12,22 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # =========================================================
+      # ==============================
       # 1️⃣ Checkout Repository
-      # =========================================================
-      # Mengambil source code terbaru dari GitHub Actions runner
-      # =========================================================
+      # ==============================
       - name: "📥 Checkout Repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # =========================================================
+      # ==============================
       # 2️⃣ Test SSH Connection
-      # =========================================================
-      # Memastikan koneksi SSH ke server Hostinger berhasil
-      # =========================================================
+      # ==============================
       - name: "🔗 Test SSH Connection"
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.HOST_USER }}
@@ -36,288 +31,149 @@ jobs:
           script: |
             echo "✅ Connected from GitHub Actions"
 
-      # =========================================================
-      # 3️⃣ Deploy Laravel Application
-      # =========================================================
-      - name: "🚀 Deploy Laravel App"
-        uses: appleboy/ssh-action@v1.2.0
+      # ==============================
+      # 3️⃣ Deploy via SSH
+      # ==============================
+      - name: "🔐 Deploy via SSH"
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           command_timeout: 60m
-          script_stop: true
+          script_stop: false
           debug: true
-
           script: |
-
             set -e
+            echo "🚀 Starting Deployment..."
 
-            echo "================================================="
-            echo "🚀 STARTING LARAVEL DEPLOYMENT"
-            echo "================================================="
-
-            # =====================================================
-            # 📁 PATH CONFIGURATION
-            # =====================================================
+            # ==============================
+            # Paths & Release Timestamp
+            # ==============================
             DOMAIN_PATH=/home/u595038546/domains/csr.majubersamaadp.com
-
-            CURRENT_PATH=$DOMAIN_PATH/current
-            SHARED_PATH=$DOMAIN_PATH/shared
             RELEASES_PATH=$DOMAIN_PATH/releases
-
+            SHARED_PATH=$DOMAIN_PATH/shared
+            CURRENT_PATH=$DOMAIN_PATH/current
             TIMESTAMP=$(date +"%Y%m%d%H%M%S")
             NEW_RELEASE=$RELEASES_PATH/release_$TIMESTAMP
 
-            echo "📁 DOMAIN_PATH: $DOMAIN_PATH"
-            echo "📁 CURRENT_PATH: $CURRENT_PATH"
-
-            # =====================================================
-            # 📁 CREATE REQUIRED DIRECTORIES
-            # =====================================================
-            echo "📁 Creating required directories..."
-
+            # ==============================
+            # Ensure Directories Exist
+            # ==============================
             mkdir -p $RELEASES_PATH
-
-            mkdir -p $SHARED_PATH/storage/framework/cache
-            mkdir -p $SHARED_PATH/storage/framework/sessions
-            mkdir -p $SHARED_PATH/storage/framework/views
-
+            mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
             mkdir -p $SHARED_PATH/storage/app/public
             mkdir -p $SHARED_PATH/bootstrap/cache
+            mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
 
-            mkdir -p $SHARED_PATH/frontend/data_warga/kk
-            mkdir -p $SHARED_PATH/frontend/data_warga/ktp
-
-            echo "✅ Directories ready"
-
-            # =====================================================
-            # 📥 FIRST DEPLOY OR FAST PULL
-            # =====================================================
-            echo "📥 Preparing source code..."
-
+            # ==============================
+            # Deploy Code: Clone or Pull
+            # ==============================
             if [ ! -d "$CURRENT_PATH/.git" ]; then
-
-              echo "📥 First deployment detected"
-
+              echo "📥 First deployment - cloning repository"
               git clone git@github.com:Septian4r1/w_connect.git $CURRENT_PATH
-
             else
-
-              echo "⚡ Existing deployment detected"
-
+              echo "⚡ Fast deploy - pulling latest code"
               cd $CURRENT_PATH
-
-              # ===================================================
-              # CLEAN OLD FILES
-              # ===================================================
-              # Penting untuk menghindari:
-              # "untracked working tree files would be overwritten"
-              # ===================================================
-
-              echo "🧹 Cleaning old git files..."
-
-              git fetch origin main
-
-              git reset --hard origin/main
-
-              git clean -fd
-
-              echo "✅ Git cleanup completed"
-
-              # ===================================================
-              # PULL LATEST CODE
-              # ===================================================
-
-              echo "📥 Pulling latest code..."
-
+              git reset --hard
               git pull origin main
-
-              echo "✅ Latest code pulled"
-
             fi
 
             cd $CURRENT_PATH
 
-            # =====================================================
-            # 🧹 REMOVE DUPLICATE / OLD FILES
-            # =====================================================
-            # Menghindari PSR-4 duplicate issue
-            # =====================================================
-
-            echo "🧹 Removing duplicate old files..."
-
-            rm -rf app/mail || true
-            rm -f app/Models/Userotp.php || true
-
-            echo "✅ Duplicate cleanup done"
-
-            # =====================================================
-            # 🔐 ENVIRONMENT FILE
-            # =====================================================
-
-            echo "🔐 Preparing environment file..."
-
+            # ==============================
+            # Environment File
+            # ==============================
             if [ ! -f $SHARED_PATH/.env ]; then
               cp .env.example $SHARED_PATH/.env
             fi
-
-            rm -f .env
             ln -sfn $SHARED_PATH/.env .env
+            echo "✅ Environment file ready"
 
-            echo "✅ Environment ready"
-
-            # =====================================================
-            # 🔗 STORAGE SYMLINKS
-            # =====================================================
-
+            # ==============================
+            # Symlinks: Storage & Data Warga
+            # ==============================
             echo "🔗 Creating symlinks..."
-
             rm -rf storage
             ln -sfn $SHARED_PATH/storage storage
 
             mkdir -p frontend
-
             rm -rf frontend/data_warga
             ln -sfn $SHARED_PATH/frontend/data_warga frontend/data_warga
 
-            echo "✅ Symlinks created"
-
-            # =====================================================
-            # 🛡️ ENSURE BOOTSTRAP CACHE EXISTS
-            # =====================================================
-
-            mkdir -p bootstrap/cache
-            touch bootstrap/cache/.gitignore
-
             chmod -R 775 storage bootstrap/cache || true
+            echo "✅ Symlinks ready"
 
-            echo "✅ bootstrap/cache ready"
-
-            # =====================================================
-            # 📦 COMPOSER INSTALL
-            # =====================================================
-
+            # ==============================
+            # Composer Install
+            # ==============================
             echo "📦 Installing composer dependencies..."
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts || true
 
-            composer install \
-              --no-dev \
-              --prefer-dist \
-              --optimize-autoloader \
-              --no-interaction
-
-            echo "✅ Composer install completed"
-
-            # =====================================================
-            # 🔍 CHECK PSR-4 WARNINGS
-            # =====================================================
-
-            echo "🔍 Checking PSR-4 compliance..."
-
+            # ==============================
+            # Detect PSR-4 Errors
+            # ==============================
+            echo "🔍 Checking for PSR-4 autoloading issues..."
             PSR4_ERRORS=$(composer dump-autoload -o 2>&1 | grep "does not comply with PSR-4" || true)
-
             if [ -n "$PSR4_ERRORS" ]; then
-
-              echo "⚠️ PSR-4 warnings detected"
+              echo "⚠️ PSR-4 Warnings found:"
               echo "$PSR4_ERRORS"
-
               echo "$PSR4_ERRORS" > $SHARED_PATH/psr4_warnings.log
-
             else
-
-              echo "✅ No PSR-4 warnings"
-
+              echo "✅ No PSR-4 errors detected"
             fi
 
-            # =====================================================
-            # 🧹 CLEAR OLD CACHE
-            # =====================================================
-
-            echo "🧹 Clearing old Laravel caches..."
-
-            php artisan optimize:clear || true
-
+            # ==============================
+            # Clear Queues & Cache
+            # ==============================
+            echo "🧹 Clearing queues & caches..."
             php artisan queue:restart || true
             php artisan config:clear || true
             php artisan route:clear || true
             php artisan view:clear || true
-            php artisan cache:clear || true
 
-            echo "✅ Cache cleared"
-
-            # =====================================================
-            # 🔑 GENERATE APP KEY IF EMPTY
-            # =====================================================
-
-            if ! grep -q "^APP_KEY=base64:" .env; then
-
-              echo "🔑 APP_KEY missing, generating..."
-
-              php artisan key:generate --force
-
+            # ==============================
+            # Run Migrations with Safe Rollback
+            # ==============================
+            echo "📈 Running migrations..."
+            PREVIOUS_RELEASE=$(ls -dt $RELEASES_PATH/release_* | sed -n '2p' || echo "")
+            if ! php artisan migrate --force; then
+              echo "⚠️ Migration failed!"
+              if [ -n "$PREVIOUS_RELEASE" ]; then
+                echo "🔙 Rolling back to previous release: $PREVIOUS_RELEASE"
+                ln -sfn $PREVIOUS_RELEASE $CURRENT_PATH
+                ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+              else
+                echo "❌ No previous release to rollback!"
+              fi
+              exit 1
             fi
 
-            # =====================================================
-            # 📈 RUN DATABASE MIGRATIONS
-            # =====================================================
-
-            echo "📈 Running database migrations..."
-
-            php artisan migrate --force
-
-            echo "✅ Migration completed"
-
-            # =====================================================
-            # ⚡ BUILD LARAVEL CACHE
-            # =====================================================
-
-            echo "⚡ Building Laravel caches..."
-
+            # ==============================
+            # Cache Build
+            # ==============================
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
 
-            echo "✅ Cache build completed"
-
-            # =====================================================
-            # 🔗 STORAGE LINK
-            # =====================================================
-
-            echo "🔗 Creating Laravel storage link..."
-
+            # ==============================
+            # Laravel Storage Link
+            # ==============================
             php artisan storage:link || true
 
-            echo "✅ Storage link ready"
-
-            # =====================================================
-            # 🌐 UPDATE PUBLIC_HTML
-            # =====================================================
-
-            echo "🌐 Updating public_html..."
-
+            # ==============================
+            # Update Public HTML (Zero Downtime)
+            # ==============================
             rm -rf $DOMAIN_PATH/public_html
-
             ln -sfn $CURRENT_PATH/public $DOMAIN_PATH/public_html
+            echo "🟢 Site updated with zero downtime"
 
-            echo "🟢 Zero downtime deployment completed"
-
-            # =====================================================
-            # 🗑️ CLEAN OLD RELEASES
-            # =====================================================
-
-            echo "🗑️ Cleaning old releases..."
-
+            # ==============================
+            # Cleanup Old Releases (Keep 2)
+            # ==============================
             cd $RELEASES_PATH
+            ls -dt release_* | tail -n +3 | xargs rm -rf || true
+            echo "🗑️ Old releases cleanup done"
 
-            ls -dt release_* 2>/dev/null | tail -n +3 | xargs rm -rf || true
-
-            echo "✅ Old releases cleaned"
-
-            # =====================================================
-            # ✅ FINISHED
-            # =====================================================
-
-            echo "================================================="
-            echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
-            echo "================================================="
+            echo "✅ Deployment Completed Successfully!"
