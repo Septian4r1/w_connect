@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable; // <- diganti
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
@@ -14,7 +15,7 @@ use App\Models\Warga;
 
 class Rumah extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $table = 'rumahs';
 

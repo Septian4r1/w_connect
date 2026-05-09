@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 use App\Models\KategoriUmur;
@@ -12,7 +13,7 @@ use App\Models\PengajuanPerubahan;
 
 class Warga extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $table = 'wargas';
 
@@ -54,7 +55,7 @@ class Warga extends Model
     */
     public function keluarga(): BelongsTo
     {
-        return $this->belongsTo(Keluarga::class);
+        return $this->belongsTo(Keluarga::class, 'keluarga_id');
     }
 
     /*

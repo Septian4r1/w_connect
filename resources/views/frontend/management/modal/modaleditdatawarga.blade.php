@@ -15,7 +15,7 @@
                                 Pengajuan
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="tab" href="#tab_status">
                                 Status
                             </a>
@@ -24,7 +24,7 @@
                             <a class="nav-link" data-bs-toggle="tab" href="#tab_hasil">
                                 Hasil
                             </a>
-                        </li>
+                        </li> --}}
                     </ul>
 
 
@@ -332,6 +332,24 @@
 
                                                 <div class="mb-2" id="uploadKtp" style="display:none;">
 
+                                                    <!-- FOTO KTP LAMA -->
+                                                    <div class="mb-2" id="ktpLamaContainer" style="display:none;">
+                                                        <label class="form-label small text-muted">
+                                                            Foto KTP Lama
+                                                        </label>
+
+                                                        <img id="ktpLamaImage"
+                                                            style="
+                                                            width:100%;
+                                                            max-height:220px;
+                                                            object-fit:cover;
+                                                            border-radius:10px;
+                                                            border:1px solid #ddd;
+                                                            padding:4px;
+                                                        ">
+                                                    </div>
+
+                                                    <!-- UPLOAD KTP BARU -->
                                                     <label class="form-label small text-muted">
                                                         Upload Foto KTP Baru
                                                     </label>
@@ -354,7 +372,7 @@
                                                         border-radius:10px;
                                                         border:1px solid #ddd;
                                                         padding:4px;
-                                                        ">
+                                                    ">
                                                     </div>
 
                                                 </div>
@@ -442,69 +460,77 @@
                                     TAB 2 STATUS PROSES
                                     ========================= -->
 
-                        <div class="tab-pane fade" id="tab_status">
+                        {{-- <div class="tab-pane fade" id="tab_status">
 
-                            <div class="card shadow-sm">
-                                <div class="card-body">
 
-                                    @foreach ($pengajuanList as $pengajuan)
-                                        <!-- INFO PENGAJUAN -->
-                                        <div class="mb-3 border-bottom pb-2">
 
-                                            <div class="fw-bold small text-primary">
-                                                No Pengajuan : {{ $pengajuan->no_pengajuan }}
-                                            </div>
+                            @foreach ($pengajuanList as $pengajuan)
+                                <!-- CONTAINER PER PENGAJUAN -->
+                                <div class="pengajuan-item p-3 mb-4 shadow-sm rounded">
 
-                                            <div class="small text-muted">
-                                                Perihal : {{ $pengajuan->field_perubahan }}
-                                            </div>
-
+                                    <!-- INFO PENGAJUAN -->
+                                    <div class="mb-3 border-bottom pb-2">
+                                        <div class="fw-bold small text-primary">
+                                            No Pengajuan : {{ $pengajuan->no_pengajuan }}
                                         </div>
+                                        <div class="small text-muted">
+                                            Nama : {{ $pengajuan->nama_pengaju }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            Perihal : {{ $pengajuan->field_perubahan }}
+                                        </div>
+                                    </div>
 
-                                        <ul class="timeline mb-4">
+                                    <!-- TIMELINE -->
+                                    <ul class="timeline timeline-sm mb-0">
+                                        @foreach ($pengajuan->approvals as $step)
+                                            <li class="timeline-item d-flex align-items-start">
 
-                                            @foreach ($pengajuan->approvals as $step)
-                                                <li class="timeline-item">
+                                                <!-- ICON STATUS -->
+                                                <div class="timeline-icon me-2 mb-2">
+                                                    @if ($step->status == 'approved')
+                                                        <i class="bi bi-check-circle-fill text-success fs-6"></i>
+                                                    @elseif ($step->status == 'rejected')
+                                                        <i class="bi bi-x-circle-fill text-danger fs-6"></i>
+                                                    @elseif ($step->status == 'pending')
+                                                        <i class="bi bi-hourglass-split text-primary fs-6"></i>
+                                                    @endif
+                                                </div>
 
-                                                    <div
-                                                        class="timeline-icon
-                                                        @if ($step->status == 'approved') bg-success
-                                                        @elseif($step->status == 'rejected') bg-danger
-                                                        @elseif($step->status == 'pending') bg-warning @endif">
+                                                <!-- CONTENT -->
+                                                <div class="timeline-content flex-grow-1">
+                                                    <div class="fw-bold text-capitalize mb-1">
+                                                        @switch($step->level)
+                                                            @case('admin')
+                                                                <i class="bi bi-shield-lock"></i> Verifikasi Admin
+                                                            @break
+
+                                                            @case('rt')
+                                                                <i class="bi bi-house"></i> Verifikasi RT
+                                                            @break
+
+                                                            @case('rw')
+                                                                <i class="bi bi-clipboard-data"></i> Verifikasi RW
+                                                            @break
+
+                                                            @default
+                                                                <i class="bi bi-file-text"></i> Proses
+                                                        @endswitch
                                                     </div>
-
-                                                    <div class="timeline-content">
-
-                                                        <div class="fw-bold text-capitalize">
-
-                                                            @if ($step->level == 'admin')
-                                                                🔍 Verifikasi Admin
-                                                            @elseif($step->level == 'rt')
-                                                                🏠 Verifikasi RT
-                                                            @elseif($step->level == 'rw')
-                                                                📋 Verifikasi RW
-                                                            @else
-                                                                📄 Proses
-                                                            @endif
-
-                                                        </div>
-
-                                                        <div class="small text-muted">
-                                                            {{ $step->created_at->format('d M Y H:i') }}
-                                                        </div>
-
+                                                    <div class="small text-muted">
+                                                        {{ $step->created_at->format('d M Y H:i') }}
                                                     </div>
-
-                                                </li>
-                                            @endforeach
-
-                                        </ul>
-                                    @endforeach
+                                                </div>
+                                            </li>
+                                        @endforeach
+                                    </ul>
 
                                 </div>
-                            </div>
+                            @endforeach
 
-                        </div>
+
+
+                        </div> --}}
 
 
 
@@ -512,7 +538,7 @@
                                     TAB 3 HASIL PENGAJUAN
                                     ========================= -->
 
-                        <div class="tab-pane fade" id="tab_hasil">
+                        {{-- <div class="tab-pane fade" id="tab_hasil">
 
                             <div class="card shadow-sm">
 
@@ -534,7 +560,7 @@
 
                             </div>
 
-                        </div>
+                        </div> --}}
 
 
                     </div>

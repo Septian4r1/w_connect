@@ -81,12 +81,26 @@ class LoginManagementController extends Controller
         ]);
     }
 
-    // Logout
     public function logout_management(Request $request)
     {
-        $this->deviceService->logoutDevice(Auth::id());
+        if (Auth::check()) {
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            // Hapus token device
+            $this->deviceService->logoutDevice($user->id);
+
+            // Reset email verification (opsional - sesuai kebutuhan kamu)
+            $user->forceFill([
+                'email_verified_at' => null
+            ])->save();
+        }
+
+        // Logout user
         Auth::logout();
 
+        // Hapus session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -14,14 +14,14 @@
                           </div>
                       </a>
                   </li>
-                  <li class="nav-item">
-                      <a class="nav-link" href="javascript:;" data-bs-toggle="offcanvas"
-                          data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
-                          <div class="">
-                              <i class="bi bi-gear"></i>
-                          </div>
-                      </a>
-                  </li>
+                  {{-- <li class="nav-item">
+                        <a class="nav-link" href="javascript:;" data-bs-toggle="offcanvas"
+                            data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">
+                            <div class="">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                        </a>
+                    </li> --}}
                   {{-- <li class="nav-item dropdown dropdown-large dropdown-apps">
                       <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
                           data-bs-toggle="dropdown">
@@ -74,7 +74,7 @@
                       <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
                           data-bs-toggle="dropdown">
                           <div class="position-relative">
-                              <span class="notify-badge">8</span>
+                              {{-- <span class="notify-badge">8</span> --}}
                               <i class="bi bi-bell"></i>
                           </div>
                       </a>
@@ -85,7 +85,7 @@
                                   <p class="msg-header-clear ms-auto">Marks all as read</p>
                               </div>
                           </a>
-                          <div class="header-notifications-list">
+                          {{-- <div class="header-notifications-list">
                               <a class="dropdown-item" href="javascript:;">
                                   <div class="d-flex align-items-center">
                                       <div class="notify">
@@ -205,61 +205,107 @@
                           </div>
                           <a href="javascript:;">
                               <div class="text-center msg-footer">View All Notifications</div>
-                          </a>
+                          </a> --}}
                       </div>
                   </li>
+
                   <li class="nav-item dropdown dropdown-user-setting">
+
+                      @php
+                          $user = auth()->user();
+
+                          // ambil role pertama
+                          $role = $user->roles->first();
+
+                          // ambil foto dari relasi warga
+                          $foto = optional($user->warga)->foto;
+
+                          // cek file foto ada atau tidak
+                          $photo =
+                              !empty($foto) && file_exists(public_path($foto))
+                                  ? asset($foto)
+                                  : asset('frontend/data_warga/image/sample/User.png');
+                      @endphp
+
                       <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" href="javascript:;"
                           data-bs-toggle="dropdown">
+
                           <div class="user-setting">
-                              <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-img"
-                                  alt="User">
+                              <img src="{{ $photo }}" class="user-img" alt="User">
                           </div>
+
                       </a>
+
                       <ul class="dropdown-menu dropdown-menu-end">
+
+                          {{-- USER INFO --}}
                           <li>
                               <a class="dropdown-item" href="javascript:;">
                                   <div class="d-flex flex-row align-items-center gap-2">
 
-                                      <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                                          class="rounded-circle" width="54" height="54" alt="User">
-                                      <div class="">
-                                          <h6 class="mb-0 dropdown-user-name">Jhon Deo</h6>
-                                          <small class="mb-0 dropdown-user-designation text-secondary">UI
-                                              Developer</small>
+                                      <img src="{{ $photo }}" class="rounded-circle" width="54"
+                                          height="54" style="object-fit:cover;" alt="User">
+
+                                      <div class="flex-grow-1 overflow-hidden" style="max-width:180px;">
+
+                                          {{-- NAMA --}}
+                                          <h6 class="mb-0 dropdown-user-name text-truncate">
+                                              {{ $user->name }}
+                                          </h6>
+
+                                          {{-- ROLE --}}
+                                          <small class="dropdown-user-designation text-secondary d-block text-truncate">
+
+                                              {{ ucfirst(str_replace('_', ' ', $role?->name ?? 'No Role')) }}
+
+                                          </small>
+
                                       </div>
                                   </div>
                               </a>
                           </li>
-                          <li>
+
+                          {{-- <li>
                               <hr class="dropdown-divider">
-                          </li>
-                          <li>
-                              <a class="dropdown-item" href="javascript:;">
+                          </li> --}}
+
+                          {{-- PROFILE --}}
+                          {{-- <li>
+                              <a class="dropdown-item" href="#">
                                   <div class="d-flex align-items-center">
-                                      <div class="">
+
+                                      <div>
                                           <ion-icon name="person-outline"></ion-icon>
                                       </div>
-                                      <div class="ms-3"><span>Profile</span></div>
+
+                                      <div class="ms-3">
+                                          <span>Profile</span>
+                                      </div>
+
                                   </div>
                               </a>
-                          </li>
-
+                          </li> --}}
 
                           <li>
                               <hr class="dropdown-divider">
                           </li>
+
+                          {{-- LOGOUT --}}
                           <li>
                               <a class="dropdown-item" href="#"
                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
 
                                   <div class="d-flex align-items-center">
+
                                       <div>
                                           <ion-icon name="log-out-outline"></ion-icon>
                                       </div>
-                                      <div class="ms-3"><span>Logout</span></div>
-                                  </div>
 
+                                      <div class="ms-3">
+                                          <span>Logout</span>
+                                      </div>
+
+                                  </div>
                               </a>
                           </li>
 
@@ -267,6 +313,7 @@
                               style="display:none;">
                               @csrf
                           </form>
+
                       </ul>
                   </li>
 

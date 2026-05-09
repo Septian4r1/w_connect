@@ -67,6 +67,20 @@ COPY --from=vendor /app/composer.json ./composer.json
 # Copy source code
 COPY . .
 
+# ============================================
+# FIX PERMISSION PUBLIC + UPLOAD (FINAL)
+# ============================================
+RUN mkdir -p /var/www/html/public/frontend/data_warga/file_pengajuan \
+    && chown -R www-data:www-data /var/www/html/public \
+    && chmod -R 775 /var/www/html/public
+
+# ============================================
+# FIX PERMISSION UNTUK UPLOAD (WAJIB)
+# ============================================
+RUN mkdir -p /var/www/html/public/frontend/data_warga \
+    && chown -R www-data:www-data /var/www/html/public/frontend/data_warga \
+    && chmod -R 775 /var/www/html/public/frontend/data_warga
+
 # Supervisor config
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

@@ -9,12 +9,15 @@
     <div class="card border-0 shadow-sm p-3 mb-3 text-center"
         style="background: linear-gradient(135deg, #1abc9c, #16a085); color:white;">
 
+        @php
+            $foto = optional($rumah->kepalaKeluarga)->foto;
+            $fotoPath = !empty($foto) ? asset($foto) : asset('frontend/data_warga/image/sample/user.png');
+        @endphp
+
         <div class="mx-auto mb-2 border border-3 border-white rounded-circle"
-            style="width: 90px; height: 90px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-            <img src="{{ $rumah->kepalaKeluarga && $rumah->kepalaKeluarga->foto
-                ? asset($rumah->kepalaKeluarga->foto)
-                : 'https://cdn-icons-png.flaticon.com/512/149/149071.png' }}"
-                style="width: 100%; height: auto; object-fit: cover;">
+            style="width:90px;height:90px;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+
+            <img src="{{ $fotoPath }}" style="width:100%;height:100%;object-fit:cover;">
         </div>
         <h6 class="mb-0">{{ $rumah->kepalaKeluarga->nama ?? '-' }}</h6>
         <small>NIK : {{ $rumah->kepalaKeluarga->nik ?? '-' }}</small>
@@ -67,7 +70,8 @@
                 <i class="bi bi-chevron-right"></i>
             </a>
 
-            <a href="{{ route('setting.password') }}" class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="{{ route('setting.password') }}"
+                class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                     <i class="bi bi-lock me-2 text-danger"></i>
                     Setting Password

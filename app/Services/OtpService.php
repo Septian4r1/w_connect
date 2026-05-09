@@ -55,14 +55,26 @@ class OtpService
         $otpData = UserOtp::where('user_id', $user->id)->first();
         if (!$otpData) abort(401, 'OTP tidak ditemukan');
         if ($otpData->expired_at < now()) abort(401, 'OTP expired');
+
         if (!Hash::check($otp, $otpData->otp)) {
-            RateLimiter::hit($key, 900); // 15 menit
+            RateLimiter::hit($key, 900);
             abort(401, 'OTP salah');
         }
 
+        // ✅ HAPUS OTP
         $otpData->delete();
         RateLimiter::clear($key);
 
-        return $user;
+        // 🔥 INI WAJIB ADA
+        $updated = $user->forceFill([
+            'email_verified_at' => now()
+        ])->save();
+
+        // DEBUG (sementara)
+        if (!$updated) {
+            throw new \Exception('Gagal update email_verified_at');
+        }
+
+        return $user->fresh(); // ambil data terbaru dari DB
     }
 }

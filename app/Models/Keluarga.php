@@ -67,7 +67,7 @@ class Keluarga extends Model
     // Keluarga milik Rumah
     public function rumah()
     {
-        return $this->belongsTo(Rumah::class);
+        return $this->belongsTo(Rumah::class, 'rumah_id');
     }
 
 
@@ -90,6 +90,16 @@ class Keluarga extends Model
     public function anggota()
     {
         return $this->hasMany(Warga::class, 'keluarga_id');
+    }
+
+    public function ayah()
+    {
+        return $this->hasOne(Warga::class)->where('hubungan', 'kepala_keluarga');
+    }
+
+    public function ibu()
+    {
+        return $this->hasOne(Warga::class)->where('hubungan', 'istri');
     }
 
 

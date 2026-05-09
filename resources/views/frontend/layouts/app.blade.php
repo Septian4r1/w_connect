@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="rumah-id" content="{{ session('rumah_id') }}">
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,6 +14,124 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        /* Style dropdown notifikasi */
+
+        .accordion-item {
+            border-left: 4px solid transparent;
+            transition: 0.25s;
+        }
+
+        .bg-success-subtle {
+            border-left: 4px solid #198754;
+        }
+
+        .bg-warning-subtle {
+            border-left: 4px solid #ffc107;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            list-style: none;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10px;
+            width: 2px;
+            height: 100%;
+            background: #dee2e6;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-icon {
+            position: absolute;
+            left: -2px;
+            top: 0;
+            font-size: 18px;
+        }
+
+        .timeline-content {
+            padding-left: 10px;
+        }
+
+        .timeline-latest {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 6px;
+        }
+
+
+
+
+        /* Style dropdown notifikasi */
+        .notif-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 90vw !important;
+            /* paksa lebar layar */
+            max-width: 90vw !important;
+            min-width: 90vw !important;
+            /* ini yang penting */
+            margin: 0;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+
+        .notif-item span {
+            display: block;
+            width: 100%;
+        }
+
+        .dropdown {
+            position: static;
+        }
+
+        /* Item notifikasi */
+        .notif-item {
+            font-size: 0.7rem;
+            white-space: normal;
+            word-wrap: break-word;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+
+        .notif-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Hanya di HP (<450px), lebarnya full dan dropdown masuk layar */
+        @media (max-width: 750px) {
+            .notif-dropdown {
+                left: 10% !important;
+                right: 5% !important;
+                width: 90vw !important;
+                min-width: 90vw !important;
+            }
+        }
+
+        /* Item notifikasi */
+        .notif-item {
+            font-size: 0.7rem;
+            white-space: normal;
+            word-wrap: break-word;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+
+        .notif-item:hover {
+            background-color: #f8f9fa;
+        }
+
+
         /* ===== MOBILE ACCORDION CARD STYLE (GOJEK STYLE) ===== */
         .timeline {
             position: relative;
@@ -543,15 +662,57 @@
     <div class="app-container">
 
         <!-- HEADER -->
+        <!-- HEADER -->
         <div class="header">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <strong>Citra Swarna Riverside </strong>
+                    <strong>Citra Swarna Riverside</strong>
                     <div class="fw-bold">@yield('header-title', 'Beranda')</div>
                 </div>
-                <i class="bi bi-bell fs-5"></i>
+
+                <!-- Bell Notification -->
+                <!-- Bell Notification -->
+                <div class="dropdown">
+                    <i class="bi bi-bell fs-5" id="notifBell" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="cursor:pointer; position: relative;">
+                        <span id="notifCount"
+                            style="
+                  position: absolute;
+                  top: -5px;
+                  right: -5px;
+                  background: red;
+                  color: white;
+                  font-size: 0.7rem;
+                  width: 16px;
+                  height: 16px;
+                  text-align: center;
+                  border-radius: 50%;
+                  display: none;
+              ">0</span>
+                    </i>
+                    {{-- @php
+                        use Illuminate\Support\Facades\Crypt;
+                    @endphp --}}
+                    <ul class="dropdown-menu dropdown-menu-end notif-dropdown" id="notifList">
+                        @forelse(session('initial_notifications', []) as $notif)
+                            <li>
+                                <a href="{{ route('pesanWarga.show', Crypt::encryptString($notif['id'])) }}"
+                                    class="dropdown-item d-flex flex-column notif-item">
+                                    <span>{{ $notif['message'] }}</span>
+                                    <small class="text-muted">{{ $notif['created_at'] }}</small>
+                                </a>
+                            </li>
+                        @empty
+                            <li class="empty-notif">
+                                <span class="dropdown-item">Belum ada notifikasi</span>
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+
             </div>
         </div>
+
 
         <!-- CONTENT (SCROLL ONLY THIS) -->
         <div class="app-content">
@@ -574,12 +735,34 @@
             <small>Berita</small>
         </a>
 
-        <a href="{{ route('kontak') }}" class="text-center nav-item {{ request()->routeIs('kontak') ? 'active' : '' }}">
+        <!-- Bottom Nav Pesan -->
+        <a href="{{ route('pesanWarga') }}"
+            class="text-center nav-item position-relative {{ request()->routeIs('pesanWarga') ? 'active' : '' }}">
+            <i class="bi bi-envelope"></i><br>
+            <small>Pesan</small>
+            <span id="pesanBadge"
+                style="position: absolute;
+                  top: -5px;
+                  right: -5px;
+                  background: red;
+                  color: white;
+                  font-size: 0.7rem;
+                  width: 16px;
+                  height: 16px;
+                  text-align: center;
+                  border-radius: 50%;
+                  display: none;">0</span>
+        </a>
+
+
+        <a href="{{ route('kontak') }}"
+            class="text-center nav-item {{ request()->routeIs('kontak') ? 'active' : '' }}">
             <i class="bi bi-chat-dots"></i><br>
             <small>Kontak</small>
         </a>
 
-        <a href="{{ route('profil') }}" class="text-center nav-item {{ request()->routeIs('profil') ? 'active' : '' }}">
+        <a href="{{ route('profil') }}"
+            class="text-center nav-item {{ request()->routeIs('profil') ? 'active' : '' }}">
             <i class="bi bi-person"></i><br>
             <small>Profil</small>
         </a>
@@ -696,6 +879,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -705,7 +890,7 @@
         // // =========================
         // document.addEventListener('contextmenu', function(e) {
         //     e.preventDefault();
-        //     alert("Klik kanan dinonaktifkan!");
+        //     alert("Anda tidak di izinkan untuk melihat!");
         // });
 
         // // =========================
@@ -834,5 +1019,197 @@
 
     });
 </script>
+<!-- app.blade.php (footer / sebelum </body>) -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        console.log('🚀 Notification system loaded');
+
+        // ===============================
+        // ELEMENT
+        // ===============================
+        const notifBadge = document.getElementById('notifCount');
+        const pesanBadge = document.getElementById('pesanBadge');
+        const notifBell = document.getElementById('notifBell');
+        const notifList = document.getElementById('notifList');
+
+        // ===============================
+        // DATA DARI SESSION
+        // ===============================
+        let initialNotifs = @json(session('initial_notifications', []));
+
+        console.log('Initial notifications:', initialNotifs);
+
+        // ===============================
+        // NORMALISASI DATA
+        // ===============================
+        initialNotifs = initialNotifs.map(n => ({
+            ...n,
+            read_at: n.read_at ?? null
+        }));
+
+        // ===============================
+        // HITUNG BADGE
+        // ===============================
+        function updateBadge() {
+
+            const unreadCount = initialNotifs.filter(n => !n.read_at).length;
+
+            if (notifBadge) {
+                notifBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                notifBadge.textContent = unreadCount;
+            }
+
+            if (pesanBadge) {
+                pesanBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                pesanBadge.textContent = unreadCount;
+            }
+
+            console.log('🔔 Badge updated:', unreadCount);
+        }
+
+        updateBadge();
+
+        // ===============================
+        // REALTIME NOTIFICATION
+        // ===============================
+        function addNotification(notification) {
+
+            if (!notification?.data) return;
+
+            initialNotifs.unshift({
+                id: notification.id,
+                no_pengajuan: notification.data.no_pengajuan ?? notification.data.pengajuan_id ?? null,
+                message: notification.data.message,
+                created_at: new Date().toLocaleString(),
+                read_at: null
+            });
+
+            updateBadge();
+
+            if (notifList) {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                <a href="/management/pesan?open=${notification.data.no_pengajuan}"
+                   class="dropdown-item">
+                   ${notification.data.message}
+                </a>
+            `;
+                notifList.prepend(li);
+            }
+
+            console.log('📥 New notification:', notification);
+        }
+
+        // ===============================
+        // AUTO OPEN ACCORDION
+        // ===============================
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open');
+
+        if (openId) {
+            const items = document.querySelectorAll('.accordion-item');
+
+            items.forEach(item => {
+                if (item.dataset.pengajuan == openId) {
+
+                    const collapse = item.querySelector('.accordion-collapse');
+                    const bs = bootstrap.Collapse.getOrCreateInstance(collapse);
+                    bs.show();
+
+                    item.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+
+                    console.log('📂 Open message:', openId);
+                }
+            });
+        }
+
+        // ===============================
+        // MARK AS READ
+        // ===============================
+        const routePesanShow = "{{ route('pesanWarga.show', ':id') }}";
+        const buttons = document.querySelectorAll('.mark-read');
+
+        buttons.forEach(btn => {
+
+            btn.addEventListener('click', function() {
+
+                const notifId = btn.dataset.id;
+                if (!notifId) return;
+
+                const url = routePesanShow.replace(':id', notifId);
+
+                fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+
+                        if (!res.success) return;
+
+                        const item = btn.closest('.accordion-item');
+                        const noPengajuan = item.dataset.pengajuan;
+
+                        // ===============================
+                        // HAPUS HANYA BADGE PESAN BARU
+                        // ===============================
+                        const newBadge = btn.querySelector('.badge.bg-success');
+                        if (newBadge) newBadge.remove();
+
+                        // ===============================
+                        // HAPUS HIGHLIGHT HIJAU SAJA
+                        // ===============================
+                        item.classList.remove('bg-success-subtle', 'border-success');
+
+                        // ===============================
+                        // UPDATE MEMORY NOTIF
+                        // ===============================
+                        initialNotifs = initialNotifs.map(n => {
+
+                            const pengajuanNotif =
+                                n.no_pengajuan ??
+                                n.data?.no_pengajuan ??
+                                n.data?.pengajuan_id ??
+                                null;
+
+                            if (pengajuanNotif == noPengajuan) {
+                                n.read_at = new Date().toISOString();
+                            }
+
+                            return n;
+                        });
+
+                        updateBadge();
+
+                        console.log('✅ Mark as read:', noPengajuan);
+
+                    })
+                    .catch(err => console.error(err));
+
+            }, {
+                once: true
+            });
+
+        });
+
+        // ===============================
+        // CLICK BELL
+        // ===============================
+        if (notifBell) {
+            notifBell.addEventListener('click', () => {
+                console.log('🔔 Bell opened');
+                updateBadge();
+            });
+        }
+
+    });
+</script>
+
 
 </html>

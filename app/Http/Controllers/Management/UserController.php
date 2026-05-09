@@ -10,9 +10,11 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index($title)
     {
-        //
+        return view('backend.management.user_management.index', [
+            'title' => $title
+        ]);
     }
 
     /**
