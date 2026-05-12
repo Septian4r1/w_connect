@@ -45,7 +45,14 @@
          overflow: hidden;
          text-overflow: ellipsis;
      }
+
+     .list-group-item:hover {
+         background: #f8f9fa;
+         transition: 0.2s;
+     }
  </style>
+
+
 
 
  <title>W_connect Management</title>

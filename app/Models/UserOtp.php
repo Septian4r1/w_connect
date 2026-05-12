@@ -14,6 +14,7 @@ class UserOtp extends Model
 
     protected $fillable = [
         'user_id',
+        'type',
         'otp',
         'expired_at',
         'device_fingerprint',

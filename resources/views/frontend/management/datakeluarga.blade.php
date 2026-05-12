@@ -525,6 +525,7 @@ KELUARGA TAMBAHAN
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
+
             // ============================================================
             // CACHE ELEMENTS
             // ============================================================
@@ -557,6 +558,13 @@ KELUARGA TAMBAHAN
                 edit_golongan_darah: document.getElementById('edit_golongan_darah'),
                 edit_hp: document.getElementById('edit_hp'),
                 edit_email: document.getElementById('edit_email'),
+                edit_id_warga: document.getElementById('edit_id_warga'),
+                edit_id_selfie: document.getElementById('edit_id_selfie'),
+                formEditSelfie: document.getElementById('formEditSelfie'),
+                formPengajuan: document.getElementById('formPengajuanedit'),
+
+                // TAMBAHKAN INI
+                edit_foto_ktp: document.getElementById('edit_foto_ktp'),
                 edit_id_warga: document.getElementById('edit_id_warga'),
                 edit_id_selfie: document.getElementById('edit_id_selfie'),
                 formEditSelfie: document.getElementById('formEditSelfie'),
@@ -626,21 +634,37 @@ KELUARGA TAMBAHAN
                     setText(document.getElementById('view_email'), d.email);
 
                     // =========================
-                    // FIX IMAGE (ANTI RANDOM ERROR)
+                    // FOTO KTP
                     // =========================
                     const img = document.getElementById('view_foto');
 
-                    // reset dulu biar ga nempel
-                    img.src = fallback;
+                    img.onload = function() {
+                        // console.log('Foto berhasil dimuat');
+                    };
 
-                    // delay dikit biar bootstrap modal siap
-                    setTimeout(() => {
-                        if (d.foto && d.foto.trim() !== '') {
-                            img.src = d.foto;
-                        } else {
-                            img.src = fallback;
-                        }
-                    }, 50);
+                    img.onerror = function() {
+                        // console.log('Foto gagal dimuat');
+
+                        this.src =
+                            "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+                    };
+
+                    if (
+                        d.foto &&
+                        d.foto !== 'null' &&
+                        d.foto !== 'undefined' &&
+                        d.foto.trim() !== ''
+                    ) {
+
+                        // paksa refresh browser cache
+                        img.src = d.foto + '?v=' + new Date().getTime();
+
+                    } else {
+
+                        img.src =
+                            "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+
+                    }
 
                     modalView.show();
                 }
@@ -657,6 +681,7 @@ KELUARGA TAMBAHAN
                     // console.log('no_hp dari dataset:', d.no_hp);
                     // console.log('noHp dari dataset:', d.noHp);
                     // console.log('hp dari dataset:', d.hp);
+                    // console.log(d.foto);
 
 
                     wargaData = {
@@ -667,8 +692,8 @@ KELUARGA TAMBAHAN
 
 
                     // DEBUG wargaData
-                    console.log('===== WARGA DATA =====');
-                    console.log(wargaData);
+                    // console.log('===== WARGA DATA =====');
+                    // console.log(wargaData);
 
 
 
@@ -686,8 +711,31 @@ KELUARGA TAMBAHAN
                         }
                     });
 
-                    setImage(elems.edit_foto_ktp, d.foto,
-                        "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}");
+                    const fallbackKtp =
+                        "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+
+                    if (elems.edit_foto_ktp) {
+
+                        elems.edit_foto_ktp.onerror = function() {
+                            this.src = fallbackKtp;
+                        };
+
+                        if (
+                            d.foto &&
+                            d.foto !== 'null' &&
+                            d.foto !== 'undefined' &&
+                            d.foto.trim() !== ''
+                        ) {
+
+                            elems.edit_foto_ktp.src =
+                                d.foto + '?v=' + new Date().getTime();
+
+                        } else {
+
+                            elems.edit_foto_ktp.src = fallbackKtp;
+                        }
+                    }
+
                     const fallbackSelfie = "{{ asset('frontend/data_warga/image/sample/user.png') }}";
 
                     const imgSelfie = elems.preview_selfie;

@@ -265,26 +265,20 @@
                               </a>
                           </li>
 
-                          {{-- <li>
+                          <li>
                               <hr class="dropdown-divider">
-                          </li> --}}
+                          </li>
 
                           {{-- PROFILE --}}
-                          {{-- <li>
-                              <a class="dropdown-item" href="#">
-                                  <div class="d-flex align-items-center">
+                          <li>
+                              <a class="dropdown-item d-flex align-items-center gap-2" href="javascript:void(0)"
+                                  data-bs-toggle="modal" data-bs-target="#settingModal">
 
-                                      <div>
-                                          <ion-icon name="person-outline"></ion-icon>
-                                      </div>
+                                  <i class="bi bi-gear"></i>
+                                  <span>Setting</span>
 
-                                      <div class="ms-3">
-                                          <span>Profile</span>
-                                      </div>
-
-                                  </div>
                               </a>
-                          </li> --}}
+                          </li>
 
                           <li>
                               <hr class="dropdown-divider">

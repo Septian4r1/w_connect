@@ -8,13 +8,24 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\AuthService;
 use App\Services\OtpService;
 use App\Services\DeviceService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class LoginManagementController extends Controller
 {
-    protected $authService;
-    protected $otpService;
-    protected $deviceService;
+    /**
+     * 🔥 SERVICES
+     */
+    protected AuthService $authService;
 
+    protected OtpService $otpService;
+
+    protected DeviceService $deviceService;
+
+    /**
+     * 🔥 CONSTRUCTOR
+     */
     public function __construct(
         AuthService $authService,
         OtpService $otpService,
@@ -25,85 +36,157 @@ class LoginManagementController extends Controller
         $this->deviceService = $deviceService;
     }
 
-    // Halaman login
-    public function showLogin_management()
+    /**
+     * 🔥 HALAMAN LOGIN
+     */
+    public function showLogin_management(): View
     {
         return view('backend.management.auth.login_management');
     }
 
-    // Step 1: login dengan password → kirim OTP
-    public function login_management(Request $request)
-    {
+    /**
+     * 🔥 STEP 1
+     * VALIDASI PASSWORD
+     * KIRIM OTP
+     */
+    public function login_management(
+        Request $request
+    ): JsonResponse {
+
         $request->validate([
+
             'email' => ['required', 'email'],
+
             'password' => ['required']
         ]);
 
-        // Login password valid → generate OTP
+        /**
+         * 🔥 LOGIN PASSWORD
+         */
         $user = $this->authService->loginWithPassword(
             $request->email,
             $request->password,
             $request
         );
 
-        // Response JSON supaya frontend bisa menampilkan email & form OTP
+        /**
+         * ✅ RESPONSE
+         */
         return response()->json([
-            'status' => true,
-            'message' => 'Password valid. Kode OTP sudah dikirim ke email.',
-            'email' => $user->email,    // tampilkan email
+
+            'status'  => true,
+
+            'message' => 'Password valid. OTP berhasil dikirim.',
+
+            'email'   => $user->email,
+
             'otpSent' => true
         ]);
     }
 
-    // Step 2: verifikasi OTP → login
-    public function verifyOtp(Request $request)
-    {
+    /**
+     * 🔥 STEP 2
+     * VERIFY OTP
+     */
+    public function verifyOtp(
+        Request $request
+    ): JsonResponse {
+
         $request->validate([
-            'email' => 'required|email',
-            'otp' => 'required'
+
+            'email' => ['required', 'email'],
+
+            'otp'   => ['required', 'digits:6']
         ]);
 
-        $user = $this->otpService->verifyOtp($request->email, $request->otp);
+        /**
+         * 🔥 VERIFY OTP
+         */
+        $user = $this->otpService->verifyOtp(
+            $request->email,
+            $request->otp
+        );
 
-        // Login session Laravel (jika diperlukan)
+        /**
+         * 🔥 LOGIN SESSION
+         */
         Auth::login($user);
+
         $request->session()->regenerate();
 
-        // Register device & dapatkan token
-        $token = $this->deviceService->registerDevice($user, $request);
-        $request->session()->put('login_token', $token);
+        /**
+         * 🔥 REGISTER DEVICE
+         */
+        $token = $this->deviceService
+            ->registerDevice($user, $request);
 
+        /**
+         * 🔥 SAVE TOKEN SESSION
+         */
+        $request->session()->put(
+            'login_token',
+            $token
+        );
+
+        /**
+         * ✅ SUCCESS
+         */
         return response()->json([
-            'status' => true,
-            'message' => 'Login berhasil',
+
+            'status'   => true,
+
+            'message'  => 'Login berhasil',
+
             'redirect' => route('management.dashboard'),
-            'token' => $token // <-- kirim token ke frontend
+
+            'token'    => $token
         ]);
     }
 
-    public function logout_management(Request $request)
-    {
+    /**
+     * 🔥 LOGOUT
+     */
+    public function logout_management(
+        Request $request
+    ): RedirectResponse {
+
         if (Auth::check()) {
 
             /** @var \App\Models\User $user */
             $user = Auth::user();
 
-            // Hapus token device
-            $this->deviceService->logoutDevice($user->id);
+            /**
+             * 🔥 HAPUS DEVICE TOKEN
+             */
+            $this->deviceService
+                ->logoutDevice($user->id);
 
-            // Reset email verification (opsional - sesuai kebutuhan kamu)
+            /**
+             * 🔥 RESET VERIFICATION
+             */
             $user->forceFill([
+
                 'email_verified_at' => null
+
             ])->save();
         }
 
-        // Logout user
+        /**
+         * 🔥 LOGOUT
+         */
         Auth::logout();
 
-        // Hapus session
+        /**
+         * 🔥 CLEAR SESSION
+         */
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
-        return redirect()->route('showlogin_management');
+        /**
+         * 🔥 REDIRECT LOGIN
+         */
+        return redirect()
+            ->route('showlogin_management');
     }
 }

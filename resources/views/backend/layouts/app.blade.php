@@ -79,6 +79,142 @@
 
     @stack('scripts')
 
+    <div class="modal fade" id="settingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-gear me-2"></i> Setting Menu
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="list-group">
+
+                        {{-- PASSWORD --}}
+                        <a href="{{ route('management.change_password') }}"
+                            class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+
+                            <i class="bi bi-key"></i>
+                            Ganti Password
+
+                        </a>
+
+                        {{-- QR CARD --}}
+                        <a href="#"
+                            class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+
+                            <i class="bi bi-qr-code"></i>
+                            QR Card
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            // =====================================
+            // DISABLE RIGHT CLICK
+            // =====================================
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Akses Dibatasi',
+                    text: 'Klik kanan dinonaktifkan'
+                });
+            });
+
+            // =====================================
+            // BLOCK SHORTCUT DEVTOOLS
+            // =====================================
+            document.addEventListener('keydown', function(e) {
+
+                // F12
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                }
+
+                // Ctrl+Shift+I
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'I') {
+                    e.preventDefault();
+                }
+
+                // Ctrl+Shift+J
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'J') {
+                    e.preventDefault();
+                }
+
+                // Ctrl+Shift+C
+                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'C') {
+                    e.preventDefault();
+                }
+
+                // Ctrl+U
+                if (e.ctrlKey && e.key.toUpperCase() === 'U') {
+                    e.preventDefault();
+                }
+
+                // Ctrl+S
+                if (e.ctrlKey && e.key.toUpperCase() === 'S') {
+                    e.preventDefault();
+                }
+
+            });
+
+            // =====================================
+            // DETECT DEVTOOLS
+            // =====================================
+            let devtools = false;
+
+            setInterval(() => {
+
+                const widthThreshold =
+                    window.outerWidth - window.innerWidth > 160;
+
+                const heightThreshold =
+                    window.outerHeight - window.innerHeight > 160;
+
+                if (widthThreshold || heightThreshold) {
+
+                    if (!devtools) {
+
+                        devtools = true;
+
+                        document.body.style.filter = "blur(10px)";
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Inspect Terdeteksi',
+                            text: 'Halaman dibatasi demi keamanan',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        });
+
+                    }
+
+                } else {
+
+                    devtools = false;
+                    document.body.style.filter = "none";
+
+                }
+
+            }, 1000);
+
+        });
+    </script>
 
 
 </body>

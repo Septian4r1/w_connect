@@ -58,6 +58,7 @@ use App\Http\Controllers\Management\LaporanKeuanganController;
 use App\Http\Controllers\Management\SuratPengantarController;
 use App\Http\Controllers\Management\SuratKeteranganController;
 use App\Http\Controllers\Management\ArsipSuratController;
+use App\Http\Controllers\Management\ManagementSettingPasswordController;
 use App\Http\Controllers\Management\ManagementTambahDataBedaKKController;
 use App\Http\Controllers\Management\ManagementTambahDataSatukkController;
 use App\Http\Controllers\Management\ManagementTambahKeluargaBedaKKController;
@@ -366,4 +367,23 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     |----------------------------------------------------------------------
     */
     Route::post('/logout', [LoginManagementController::class, 'logout_management'])->name('management.logout');
+
+    /*
+|--------------------------------------------------------------------------
+| PROFILE / SECURITY ACTION
+|--------------------------------------------------------------------------
+*/
+
+    Route::prefix('/')->group(function () {
+
+        // halaman ganti password management
+        Route::get('/change-password', [ManagementSettingPasswordController::class, 'index'])->name('management.change_password');
+        Route::post('/verify-change-password', [ManagementSettingPasswordController::class, 'verifyCaptcha'])->name('management.verify.captcha');
+        Route::post('/management/verify-otp', [ManagementSettingPasswordController::class, 'verifyOtpResetPassword'])->name('management.verify.otp');
+        Route::get('/input-password-baru', [ManagementSettingPasswordController::class, 'inputPassword'])->name('management.input.password');
+        Route::post('/update-password-baru', [ManagementSettingPasswordController::class, 'updatePassword'])->name('management.password.update');
+
+
+
+    });
 });
