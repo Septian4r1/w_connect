@@ -522,28 +522,49 @@ KELUARGA TAMBAHAN
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-
             // ============================================================
-            // CACHE ELEMENTS
+            // BOOTSTRAP MODAL
             // ============================================================
             const modalViewEl = document.getElementById('modalViewWarga');
             const modalEditEl = document.getElementById('modalEditWarga');
             const modalTambahEl = document.getElementById('modalTambahAnggota');
 
-            const modalView = new bootstrap.Modal(modalViewEl ?? document.createElement('div'));
-            const modalEdit = new bootstrap.Modal(modalEditEl ?? document.createElement('div'));
-            const modalTambah = new bootstrap.Modal(modalTambahEl ?? document.createElement('div'));
+            const modalView = modalViewEl ? new bootstrap.Modal(modalViewEl) : null;
+            const modalEdit = modalEditEl ? new bootstrap.Modal(modalEditEl) : null;
+            const modalTambah = modalTambahEl ? new bootstrap.Modal(modalTambahEl) : null;
 
-            let wargaData = {}; // untuk menyimpan data warga sementara ketika edit
-            let lastClickedEditBtn = null;
+            // ============================================================
+            // STORAGE DATA
+            // ============================================================
+            let wargaData = {};
 
+            // ============================================================
+            // FALLBACK IMAGE
+            // ============================================================
+            const fallbackKtp =
+                "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+
+            const fallbackSelfie =
+                "{{ asset('frontend/data_warga/image/sample/user.png') }}";
+
+            // ============================================================
+            // CSRF TOKEN
+            // ============================================================
+            const token =
+                document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+            // ============================================================
+            // CACHE ELEMENT
+            // ============================================================
             const elems = {
-                // ========================================================
-                // Edit modal fields
-                // ========================================================
+
+                // =========================
+                // EDIT INPUT
+                // =========================
                 edit_nama: document.getElementById('edit_nama'),
                 edit_nik: document.getElementById('edit_nik'),
                 edit_hubungan: document.getElementById('edit_hubungan'),
@@ -560,30 +581,30 @@ KELUARGA TAMBAHAN
                 edit_email: document.getElementById('edit_email'),
                 edit_id_warga: document.getElementById('edit_id_warga'),
                 edit_id_selfie: document.getElementById('edit_id_selfie'),
-                formEditSelfie: document.getElementById('formEditSelfie'),
-                formPengajuan: document.getElementById('formPengajuanedit'),
-
-                // TAMBAHKAN INI
                 edit_foto_ktp: document.getElementById('edit_foto_ktp'),
-                edit_id_warga: document.getElementById('edit_id_warga'),
-                edit_id_selfie: document.getElementById('edit_id_selfie'),
+
+                // =========================
+                // FORM
+                // =========================
                 formEditSelfie: document.getElementById('formEditSelfie'),
                 formPengajuan: document.getElementById('formPengajuanedit'),
 
-                // ========================================================
-                // Preview & upload
-                // ========================================================
+                // =========================
+                // PREVIEW
+                // =========================
                 preview_selfie: document.getElementById('preview_selfie'),
+
                 fotoKtpInput: document.getElementById('fotoKtpInput'),
                 previewKtp: document.getElementById('previewKtp'),
+
                 dokumenInput: document.getElementById('dokumenInput'),
                 previewDokumenContainer: document.getElementById('previewDokumenContainer'),
                 previewDokumenImage: document.getElementById('previewDokumenImage'),
                 previewDokumenFile: document.getElementById('previewDokumenFile'),
 
-                // ========================================================
-                // Pengajuan perihal
-                // ========================================================
+                // =========================
+                // PENGAJUAN
+                // =========================
                 selectPerihal: document.getElementById('pengajuan_rubah_data'),
                 wrapDataBaru: document.getElementById('wrap_data_baru'),
                 uploadKtp: document.getElementById('uploadKtp'),
@@ -593,367 +614,660 @@ KELUARGA TAMBAHAN
                 ktpLamaImage: document.getElementById('ktpLamaImage')
             };
 
-            const token = document.querySelector('meta[name="csrf-token"]')?.content;
-
-
-
             // ============================================================
-            // UTILITY FUNCTIONS
+            // UTILITIES
             // ============================================================
-            const setValue = (el, val) => el && (el.value = val || '');
-            const setText = (el, val) => el && (el.textContent = val || '-');
-            const setImage = (el, src, fallback) => el && (el.src = src || fallback);
-            const formatTanggal = tgl => tgl ? new Date(tgl).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            }) : '';
 
-            // ============================================================
-            // EVENT DELEGATION BUTTON CLICK
-            // ============================================================
-            document.addEventListener('click', e => {
-                const btnView = e.target.closest('.btnViewWarga');
-                const btnEdit = e.target.closest('.btnEditWarga');
-                const btnTambah = e.target.closest('.btnTambahAnggota');
+            /**
+             * SET VALUE INPUT
+             */
+            const setValue = (el, value) => {
 
-                if (btnView) {
-                    e.preventDefault();
+                if (!el) return;
 
-                    const d = btnView.dataset;
-                    const fallback = "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+                el.value = value || '';
+            };
 
-                    // =========================
-                    // SET TEXT
-                    // =========================
-                    setText(document.getElementById('view_nama'), d.nama);
-                    setText(document.getElementById('view_nik'), d.nik);
-                    setText(document.getElementById('view_hubungan'), d.hubungan);
-                    setText(document.getElementById('view_tanggal'), d.tanggal);
-                    setText(document.getElementById('view_hp'), d.no_hp);
-                    setText(document.getElementById('view_email'), d.email);
+            /**
+             * SET TEXT
+             */
+            const setText = (el, value) => {
 
-                    // =========================
-                    // FOTO KTP
-                    // =========================
-                    const img = document.getElementById('view_foto');
+                if (!el) return;
 
-                    img.onload = function() {
-                        // console.log('Foto berhasil dimuat');
-                    };
+                el.textContent = value || '-';
+            };
 
-                    img.onerror = function() {
-                        // console.log('Foto gagal dimuat');
+            /**
+             * FORMAT TANGGAL
+             */
+            const formatTanggal = (tanggal) => {
 
-                        this.src =
-                            "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
-                    };
+                if (!tanggal) return '';
 
-                    if (
-                        d.foto &&
-                        d.foto !== 'null' &&
-                        d.foto !== 'undefined' &&
-                        d.foto.trim() !== ''
-                    ) {
+                try {
 
-                        // paksa refresh browser cache
-                        img.src = d.foto + '?v=' + new Date().getTime();
-
-                    } else {
-
-                        img.src =
-                            "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
-
-                    }
-
-                    modalView.show();
-                }
-
-                if (btnEdit) {
-                    e.preventDefault();
-                    const d = btnEdit.dataset;
-                    const id = d.id;
-
-                    // DEBUG DATASET
-
-                    // console.log('===== DATASET BTN EDIT =====');
-                    // console.log(d);
-                    // console.log('no_hp dari dataset:', d.no_hp);
-                    // console.log('noHp dari dataset:', d.noHp);
-                    // console.log('hp dari dataset:', d.hp);
-                    // console.log(d.foto);
-
-
-                    wargaData = {
-                        ...d,
-                        tanggal_lahir: formatTanggal(d.tanggal),
-                        no_hp: d.no_hp || d.hp || '', // konsolidasi
-                    };
-
-
-                    // DEBUG wargaData
-                    // console.log('===== WARGA DATA =====');
-                    // console.log(wargaData);
-
-
-
-                    // ====================================================
-                    // Set semua field edit dengan data dari dataset
-                    // ====================================================
-                    Object.keys(elems).forEach(key => {
-                        if (!key.startsWith('edit_')) return;
-
-                        const field = key.replace('edit_', '');
-                        const value = d[field];
-
-                        if (value !== undefined) {
-                            setValue(elems[key], value);
-                        }
+                    return new Date(tanggal).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
                     });
 
-                    const fallbackKtp =
-                        "{{ asset('frontend/data_warga/image/sample/ktp_sample.png') }}";
+                } catch {
 
-                    if (elems.edit_foto_ktp) {
+                    return tanggal;
+                }
+            };
 
-                        elems.edit_foto_ktp.onerror = function() {
+            /**
+             * VALID URL IMAGE
+             */
+            const isValidImage = (url) => {
+
+                return (
+                    url &&
+                    url !== 'null' &&
+                    url !== 'undefined' &&
+                    url.trim() !== ''
+                );
+            };
+
+            /**
+             * FORCE REFRESH IMAGE
+             * SUPPORT APK BUILDER / WEBVIEW
+             */
+            const forceImage = (imgEl, src, fallback) => {
+
+                if (!imgEl) return;
+
+                imgEl.onerror = function() {
+
+                    this.onerror = null;
+                    this.src = fallback;
+                };
+
+                if (isValidImage(src)) {
+
+                    const separator =
+                        src.includes('?') ? '&' : '?';
+
+                    imgEl.src =
+                        src + separator + 'v=' + Date.now();
+
+                } else {
+
+                    imgEl.src = fallback;
+                }
+            };
+
+            /**
+             * RESET IMAGE
+             */
+            const resetImage = (imgEl) => {
+
+                if (!imgEl) return;
+
+                imgEl.removeAttribute('src');
+            };
+
+            // ============================================================
+            // FILE VALIDATION
+            // ============================================================
+
+            const allowedImageTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/jpg',
+                'image/webp'
+            ];
+
+            const allowedDocumentTypes = [
+                'application/pdf'
+            ];
+
+            const maxFileSize = 5 * 1024 * 1024;
+
+            /**
+             * VALIDASI FILE
+             */
+            const validateFile = (file, allowPdf = true) => {
+
+                if (!file) {
+
+                    return {
+                        status: false,
+                        message: 'File tidak ditemukan'
+                    };
+                }
+
+                const validMime =
+                    allowedImageTypes.includes(file.type) ||
+                    (allowPdf && allowedDocumentTypes.includes(file.type));
+
+                if (!validMime) {
+
+                    return {
+                        status: false,
+                        message: 'Format file tidak didukung'
+                    };
+                }
+
+                if (file.size > maxFileSize) {
+
+                    return {
+                        status: false,
+                        message: 'Ukuran maksimal 5MB'
+                    };
+                }
+
+                return {
+                    status: true
+                };
+            };
+
+            // ============================================================
+            // PREVIEW FILE
+            // ============================================================
+
+            const previewFile = (
+                input,
+                imgEl = null,
+                fileEl = null,
+                containerEl = null
+            ) => {
+
+                const file = input.files[0];
+
+                if (!file) {
+
+                    if (containerEl) {
+                        containerEl.style.display = 'none';
+                    }
+
+                    return;
+                }
+
+                const validation = validateFile(file);
+
+                if (!validation.status) {
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Upload Gagal',
+                        text: validation.message
+                    });
+
+                    input.value = '';
+
+                    return;
+                }
+
+                const isImage =
+                    allowedImageTypes.includes(file.type);
+
+                const isPdf =
+                    allowedDocumentTypes.includes(file.type);
+
+                if (containerEl) {
+                    containerEl.style.display = 'block';
+                }
+
+                // ========================================================
+                // IMAGE PREVIEW
+                // ========================================================
+                if (isImage && imgEl) {
+
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+
+                        imgEl.src = e.target.result;
+
+                        imgEl.style.display = 'block';
+
+                        imgEl.onerror = function() {
+
+                            this.onerror = null;
                             this.src = fallbackKtp;
                         };
 
-                        if (
-                            d.foto &&
-                            d.foto !== 'null' &&
-                            d.foto !== 'undefined' &&
-                            d.foto.trim() !== ''
-                        ) {
-
-                            elems.edit_foto_ktp.src =
-                                d.foto + '?v=' + new Date().getTime();
-
-                        } else {
-
-                            elems.edit_foto_ktp.src = fallbackKtp;
+                        if (fileEl) {
+                            fileEl.style.display = 'none';
                         }
-                    }
+                    };
 
-                    const fallbackSelfie = "{{ asset('frontend/data_warga/image/sample/user.png') }}";
-
-                    const imgSelfie = elems.preview_selfie;
-
-                    // reset dulu biar ga nyangkut
-                    if (imgSelfie) {
-                        imgSelfie.src = fallbackSelfie;
-
-                        setTimeout(() => {
-                            if (d.selfie && d.selfie !== 'null' && d.selfie.trim() !== '') {
-                                imgSelfie.src = d.selfie;
-                            } else {
-                                imgSelfie.src = fallbackSelfie;
-                            }
-                        }, 50);
-                    }
-
-                    if (elems.edit_id_warga) elems.edit_id_warga.value = id;
-                    if (elems.edit_id_selfie) elems.edit_id_selfie.value = id;
-                    if (elems.formEditSelfie) elems.formEditSelfie.action =
-                        "{{ route('warga.updateSelfie', ':id') }}".replace(':id', id);
-
-                    modalEdit.show();
+                    reader.readAsDataURL(file);
                 }
 
-                if (btnTambah) {
+                // ========================================================
+                // PDF PREVIEW
+                // ========================================================
+                else if (isPdf) {
+
+                    if (imgEl) {
+                        imgEl.style.display = 'none';
+                    }
+
+                    if (fileEl) {
+
+                        fileEl.innerHTML = `
+                    <div class="border rounded p-2 bg-light small">
+                        <i class="bi bi-file-earmark-pdf text-danger"></i>
+                        ${file.name}
+                    </div>
+                `;
+
+                        fileEl.style.display = 'block';
+                    }
+                }
+            };
+
+            // ============================================================
+            // CLICK EVENTS
+            // ============================================================
+
+            document.addEventListener('click', (e) => {
+
+                const btnView =
+                    e.target.closest('.btnViewWarga');
+
+                const btnEdit =
+                    e.target.closest('.btnEditWarga');
+
+                const btnTambah =
+                    e.target.closest('.btnTambahAnggota');
+
+                // ========================================================
+                // VIEW DATA
+                // ========================================================
+                if (btnView) {
+
                     e.preventDefault();
-                    const kkId = btnTambah.dataset.kk;
-                    const input = document.getElementById('kk_id');
-                    if (input) input.value = kkId;
-                    modalTambah.show();
+
+                    const d = btnView.dataset;
+
+                    setText(
+                        document.getElementById('view_nama'),
+                        d.nama
+                    );
+
+                    setText(
+                        document.getElementById('view_nik'),
+                        d.nik
+                    );
+
+                    setText(
+                        document.getElementById('view_hubungan'),
+                        d.hubungan
+                    );
+
+                    setText(
+                        document.getElementById('view_tanggal'),
+                        d.tanggal
+                    );
+
+                    setText(
+                        document.getElementById('view_hp'),
+                        d.no_hp || d.hp
+                    );
+
+                    setText(
+                        document.getElementById('view_email'),
+                        d.email
+                    );
+
+                    forceImage(
+                        document.getElementById('view_foto'),
+                        d.foto,
+                        fallbackKtp
+                    );
+
+                    modalView?.show();
+                }
+
+                // ========================================================
+                // EDIT DATA
+                // ========================================================
+                if (btnEdit) {
+
+                    e.preventDefault();
+
+                    const d = btnEdit.dataset;
+
+                    wargaData = {
+                        ...d,
+                        no_hp: d.no_hp || d.hp || ''
+                    };
+
+                    Object.keys(elems).forEach(key => {
+
+                        if (!key.startsWith('edit_')) return;
+
+                        const field =
+                            key.replace('edit_', '');
+
+                        if (d[field] !== undefined) {
+
+                            setValue(
+                                elems[key],
+                                d[field]
+                            );
+                        }
+                    });
+
+                    // =========================
+                    // FORCE IMAGE KTP
+                    // =========================
+                    forceImage(
+                        elems.edit_foto_ktp,
+                        d.foto,
+                        fallbackKtp
+                    );
+
+                    // =========================
+                    // FORCE SELFIE
+                    // =========================
+                    forceImage(
+                        elems.preview_selfie,
+                        d.selfie,
+                        fallbackSelfie
+                    );
+
+                    // =========================
+                    // SET ID
+                    // =========================
+                    if (elems.edit_id_warga) {
+                        elems.edit_id_warga.value = d.id;
+                    }
+
+                    if (elems.edit_id_selfie) {
+                        elems.edit_id_selfie.value = d.id;
+                    }
+
+                    // =========================
+                    // FORM ACTION
+                    // =========================
+                    if (elems.formEditSelfie) {
+
+                        elems.formEditSelfie.action =
+                            "{{ route('warga.updateSelfie', ':id') }}"
+                            .replace(':id', d.id);
+                    }
+
+                    modalEdit?.show();
+                }
+
+                // ========================================================
+                // TAMBAH ANGGOTA
+                // ========================================================
+                if (btnTambah) {
+
+                    e.preventDefault();
+
+                    const kkId =
+                        btnTambah.dataset.kk;
+
+                    const kkInput =
+                        document.getElementById('kk_id');
+
+                    if (kkInput) {
+                        kkInput.value = kkId;
+                    }
+
+                    modalTambah?.show();
                 }
             });
 
             // ============================================================
-            // PERIHAL CHANGE
+            // CHANGE PERIHAL
             // ============================================================
-            if (elems.selectPerihal) {
-                elems.selectPerihal.addEventListener('change', function() {
 
-                    const field = this.value;
+            elems.selectPerihal?.addEventListener('change', function() {
 
-                    // ==============================
-                    // RESET UI DULU
-                    // ==============================
-                    elems.wrapDataBaru?.classList.remove('d-none');
+                const field = this.value;
 
+                elems.wrapDataBaru?.classList.remove('d-none');
+
+                if (elems.uploadKtp) {
+                    elems.uploadKtp.style.display = 'none';
+                }
+
+                if (elems.ktpLamaContainer) {
+                    elems.ktpLamaContainer.style.display = 'none';
+                }
+
+                if (field === 'foto_ktp') {
+
+                    // =========================================
+                    // HIDE INPUT DATA BARU
+                    // =========================================
+                    elems.wrapDataBaru?.classList.add('d-none');
+
+                    // =========================================
+                    // REMOVE REQUIRED
+                    // WAJIB AGAR TIDAK ERROR
+                    // =========================================
+                    if (elems.data_baru) {
+
+                        elems.data_baru.removeAttribute('required');
+                        elems.data_baru.value = '';
+                    }
+
+                    // =========================================
+                    // SHOW UPLOAD KTP
+                    // =========================================
                     if (elems.uploadKtp) {
-                        elems.uploadKtp.style.display = 'none';
+                        elems.uploadKtp.style.display = 'block';
                     }
 
-                    if (elems.ktpLamaContainer) {
-                        elems.ktpLamaContainer.style.display = 'none';
-                    }
-
+                    // =========================================
+                    // HIDE DATA AWAL
+                    // =========================================
                     if (elems.data_awal) {
-                        elems.data_awal.closest('.mb-2').style.display = 'block';
+
+                        const parent =
+                            elems.data_awal.closest('.mb-2');
+
+                        if (parent) {
+                            parent.style.display = 'none';
+                        }
                     }
 
-                    // ==============================
-                    // MODE EDIT FOTO KTP
-                    // ==============================
-                    if (field === 'foto_ktp') {
+                    // =========================================
+                    // LOAD FOTO LAMA
+                    // =========================================
+                    forceImage(
+                        elems.ktpLamaImage,
+                        wargaData.foto,
+                        fallbackKtp
+                    );
 
-                        elems.wrapDataBaru?.classList.add('d-none');
-
-                        // HAPUS REQUIRED karena field disembunyikan
-                        if (elems.data_baru) {
-                            elems.data_baru.removeAttribute('required');
-                            elems.data_baru.value = '';
-                        }
-
-                        if (elems.uploadKtp) {
-                            elems.uploadKtp.style.display = 'block';
-                        }
-
-                        if (elems.data_awal) {
-                            elems.data_awal.closest('.mb-2').style.display = 'none';
-                        }
-
-                        const fotoKtpLama = wargaData.foto || '';
-
-                        if (elems.ktpLamaImage && elems.ktpLamaContainer) {
-                            elems.ktpLamaImage.src = fotoKtpLama;
-                            elems.ktpLamaContainer.style.display = 'block';
-                        }
-
-                        return;
+                    // =========================================
+                    // SHOW CONTAINER FOTO LAMA
+                    // =========================================
+                    if (elems.ktpLamaContainer) {
+                        elems.ktpLamaContainer.style.display = 'block';
                     }
 
-                    // ==============================
-                    // MODE EDIT DATA BIASA
-                    // ==============================
-                    let valueAwal = wargaData[field] || '';
-
-                    if (field === 'tanggal_lahir') {
-                        valueAwal = wargaData.tanggal || '';
-                    }
-
-                    setValue(elems.data_awal, valueAwal);
+                    return;
+                } else {
 
                     if (elems.data_baru) {
                         elems.data_baru.setAttribute('required', 'required');
                     }
+                }
+                let valueAwal =
+                    wargaData[field] || '';
 
-                });
-            }
-
-
-            // ============================================================
-            // PREVIEW FOTO & DOKUMEN
-            // ============================================================
-            const previewFile = (input, imgEl, fileEl, containerEl) => {
-                const file = input.files[0];
-                if (!file) return containerEl && (containerEl.style.display = 'none');
-
-                containerEl && (containerEl.style.display = 'block');
-
-                if (file.type.startsWith('image/') && imgEl) {
-                    imgEl.src = URL.createObjectURL(file);
-                    imgEl.style.display = 'block';
-                    if (fileEl) fileEl.style.display = 'none';
-                } else {
-                    if (imgEl) imgEl.style.display = 'none';
-                    if (fileEl) {
-                        fileEl.textContent = file.name;
-                        fileEl.style.display = 'block';
-                    }
+                if (field === 'tanggal_lahir') {
+                    valueAwal = wargaData.tanggal || '';
                 }
 
-                // ⚠ Penting: jangan isi data_baru untuk file,
-                // PHP nanti akan menentukan path setelah upload
-            };
-
-            elems.fotoKtpInput?.addEventListener('change', e => previewFile(e.target, elems.previewKtp, null,
-                null));
-            elems.dokumenInput?.addEventListener('change', e => previewFile(e.target, elems.previewDokumenImage,
-                elems.previewDokumenFile, elems.previewDokumenContainer));
+                setValue(
+                    elems.data_awal,
+                    valueAwal
+                );
+            });
 
             // ============================================================
-            // SUBMIT FORM UPDATE SELFIE
+            // FILE EVENT
             // ============================================================
+
+            elems.fotoKtpInput?.addEventListener('change', (e) => {
+
+                previewFile(
+                    e.target,
+                    elems.previewKtp
+                );
+            });
+
+            elems.dokumenInput?.addEventListener('change', (e) => {
+
+                previewFile(
+                    e.target,
+                    elems.previewDokumenImage,
+                    elems.previewDokumenFile,
+                    elems.previewDokumenContainer
+                );
+            });
+
+            // ============================================================
+            // FORM SELFIE
+            // ============================================================
+
             elems.formEditSelfie?.addEventListener('submit', () => {
+
                 Swal.fire({
                     title: 'Mohon Tunggu',
-                    text: 'Foto sedang diupdate',
+                    text: 'Sedang upload foto...',
+                    allowOutsideClick: false,
                     showConfirmButton: false,
-                    allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
             });
 
             // ============================================================
-            // AJAX SUBMIT PENGAJUAN
+            // AJAX SUBMIT
             // ============================================================
-            elems.formPengajuan?.addEventListener('submit', e => {
+
+            elems.formPengajuan?.addEventListener('submit', async (e) => {
+
                 e.preventDefault();
-                const formData = new FormData(elems.formPengajuan);
+
+                const formData =
+                    new FormData(elems.formPengajuan);
+
                 Swal.fire({
-                    title: 'Mengirim Pengajuan...',
-                    text: 'Mohon tunggu',
+                    title: 'Mengirim Pengajuan',
+                    text: 'Mohon tunggu...',
                     allowOutsideClick: false,
+                    showConfirmButton: false,
                     didOpen: () => Swal.showLoading()
                 });
-                fetch(elems.formPengajuan.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token
-                        },
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(res => {
-                        Swal.close();
-                        if (res.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: res.message
-                            });
 
-                            elems.formPengajuan.reset();
-                            modalEdit.hide(); // close modal
-                            // reload page supaya status terbaru muncul
-                            location.reload();
-                        } else Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: 'Terjadi kesalahan'
-                        });
-                    })
-                    .catch(() => {
-                        Swal.close();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Server error'
-                        });
+                try {
+
+                    const controller =
+                        new AbortController();
+
+                    const timeout =
+                        setTimeout(() => {
+                            controller.abort();
+                        }, 60000);
+
+                    const response = await fetch(
+                        elems.formPengajuan.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': token,
+                                'Accept': 'application/json'
+                            },
+                            body: formData,
+                            signal: controller.signal
+                        }
+                    );
+
+                    clearTimeout(timeout);
+
+                    const res =
+                        await response.json();
+
+                    Swal.close();
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            res.message ||
+                            'Server Error'
+                        );
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: res.message ||
+                            'Data berhasil dikirim'
                     });
+
+                    elems.formPengajuan.reset();
+
+                    modalEdit?.hide();
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+
+                } catch (err) {
+
+                    Swal.close();
+
+                    console.log(err);
+
+                    let pesan =
+                        'Terjadi kesalahan';
+
+                    if (err.name === 'AbortError') {
+
+                        pesan =
+                            'Upload timeout. Coba ulang lagi.';
+                    } else {
+
+                        pesan =
+                            err.message ||
+                            'Koneksi bermasalah';
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Gagal',
+                        text: pesan
+                    });
+                }
             });
 
             // ============================================================
-            // RESET FORM EDIT MODAL
+            // RESET MODAL
             // ============================================================
+
             modalEditEl?.addEventListener('hidden.bs.modal', () => {
 
-                if (elems.selectPerihal) elems.selectPerihal.value = '';
-                if (elems.data_awal) elems.data_awal.value = '';
-                if (elems.data_baru) elems.data_baru.value = '';
+                elems.formPengajuan?.reset();
 
-                // RESET SELFIE (WAJIB)
+                resetImage(elems.previewKtp);
+
                 if (elems.preview_selfie) {
-                    elems.preview_selfie.src = "{{ asset('frontend/data_warga/image/sample/user.png') }}";
+                    elems.preview_selfie.src = fallbackSelfie;
                 }
 
-                // RESET INPUT FILE
-                const fileInput = document.querySelector('input[name="foto_selfie"]');
-                if (fileInput) fileInput.value = '';
+                if (elems.previewDokumenContainer) {
+                    elems.previewDokumenContainer.style.display = 'none';
+                }
+
+                document.querySelectorAll(
+                    'input[type="file"]'
+                ).forEach(input => {
+                    input.value = '';
+                });
             });
 
         });
@@ -961,17 +1275,39 @@ KELUARGA TAMBAHAN
         // ============================================================
         // SUBMIT TAMBAH ANGGOTA
         // ============================================================
+
         function submitTambahAnggota() {
-            const kkId = document.getElementById('kk_id').value;
-            const hubungan = document.querySelector('input[name="hubungan"]:checked');
+
+            const kkId =
+                document.getElementById('kk_id')?.value;
+
+            const hubungan =
+                document.querySelector(
+                    'input[name="hubungan"]:checked'
+                );
+
             if (!hubungan) {
-                alert('Pilih hubungan keluarga terlebih dahulu');
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih Hubungan',
+                    text: 'Silakan pilih hubungan keluarga'
+                });
+
                 return;
             }
 
-            const url = hubungan.value === 'Anak' ?
-                "{{ route('tamabhDataAnak') }}?kk_id=" + encodeURIComponent(kkId) :
-                "{{ route('warga.create', ':kkId') }}".replace(':kkId', encodeURIComponent(kkId)) + "?hubungan=" +
+            const url =
+                hubungan.value === 'Anak'
+
+                ?
+                "{{ route('tamabhDataAnak') }}?kk_id=" +
+                encodeURIComponent(kkId)
+
+                :
+                "{{ route('warga.create', ':kkId') }}"
+                .replace(':kkId', encodeURIComponent(kkId)) +
+                "?hubungan=" +
                 encodeURIComponent(hubungan.value);
 
             window.location.href = url;
@@ -980,22 +1316,73 @@ KELUARGA TAMBAHAN
         // ============================================================
         // PREVIEW SELFIE
         // ============================================================
+
         function previewSelfie(event) {
-            const file = event.target.files[0];
-            const img = document.getElementById('preview_selfie');
+
+            const file =
+                event.target.files[0];
+
+            const img =
+                document.getElementById('preview_selfie');
+
+            const fallback =
+                "{{ asset('frontend/data_warga/image/sample/user.png') }}";
 
             if (!file) {
-                img.src = "{{ asset('frontend/data_warga/image/sample/user.png') }}";
+
+                img.src = fallback;
+
                 return;
             }
 
-            if (!file.type.startsWith('image/')) {
-                alert('File harus berupa gambar');
+            const allowedTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/jpg',
+                'image/webp'
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Format Tidak Didukung',
+                    text: 'Gunakan JPG, PNG atau WEBP'
+                });
+
                 event.target.value = '';
+
                 return;
             }
 
-            img.src = URL.createObjectURL(file);
+            if (file.size > 5 * 1024 * 1024) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Ukuran Terlalu Besar',
+                    text: 'Ukuran maksimal 5MB'
+                });
+
+                event.target.value = '';
+
+                return;
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload = function(e) {
+
+                img.src = e.target.result;
+
+                img.onerror = function() {
+
+                    this.onerror = null;
+                    this.src = fallback;
+                };
+            };
+
+            reader.readAsDataURL(file);
         }
     </script>
 

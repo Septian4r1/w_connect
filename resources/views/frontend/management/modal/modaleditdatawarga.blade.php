@@ -237,14 +237,16 @@
 
                                                     <img id="preview_selfie"
                                                         src="{{ asset('frontend/data_warga/image/sample/user.png') }}"
+                                                        onerror="this.src='{{ asset('frontend/data_warga/image/sample/user.png') }}'"
                                                         class="rounded-circle border shadow-sm"
                                                         style="width:120px;height:120px;object-fit:cover">
 
                                                 </div>
 
                                                 <input type="file" name="foto_selfie"
-                                                    class="form-control form-control-sm" accept="image/*"
-                                                    onchange="previewSelfie(event)">
+                                                    class="form-control form-control-sm"
+                                                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                                                    capture="environment" onchange="previewSelfie(event)">
 
                                                 <div class="small text-muted mt-1">
                                                     Upload foto selfie terbaru
@@ -364,6 +366,7 @@
                                                     <!-- Preview Image -->
                                                     <div class="mt-2">
                                                         <img id="previewKtp"
+                                                        onerror="this.src='{{ asset('frontend/data_warga/image/sample/user.png') }}"
                                                             style="
                                                         display:none;
                                                         width:100%;
@@ -403,7 +406,7 @@
 
                                                     <input type="file" name="dokumen" id="dokumenInput"
                                                         class="form-control form-control-sm"
-                                                        accept=".jpg,.jpeg,.png,.pdf">
+                                                        accept="image/jpeg,image/png,image/jpg,application/pdf">
 
                                                     <small class="text-muted">
                                                         Upload dokumen seperti KTP / KK / Ijazah
