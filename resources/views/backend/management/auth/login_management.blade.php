@@ -102,12 +102,18 @@
                                     </div>
                                 </div>
 
-                                <div class="col-12 d-flex justify-content-between align-items-center">
+                                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div class="form-check form-switch mb-0">
                                         <input class="form-check-input" type="checkbox" id="flexSwitchCheckRemember">
-                                        <label class="form-check-label">Remember Me</label>
+                                        <label class="form-check-label" for="flexSwitchCheckRemember">
+                                            Remember Me
+                                        </label>
                                     </div>
-                                    <a href="#" class="small">Forgot Password?</a>
+
+                                    <a href="{{ route('password.request') }}"
+                                        class="small text-decoration-none fw-semibold">
+                                        Forgot Password?
+                                    </a>
                                 </div>
 
                                 <div class="col-12">

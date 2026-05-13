@@ -42,12 +42,12 @@ class PengurusWilayah extends Model
 
     public function rw()
     {
-        return $this->belongsTo(RW::class);
+        return $this->belongsTo(Rw::class);
     }
 
     public function rt()
     {
-        return $this->belongsTo(RT::class);
+        return $this->belongsTo(Rt::class);
     }
 
     /*
@@ -57,25 +57,25 @@ class PengurusWilayah extends Model
     */
 
     // hanya pengurus aktif
-    public function scopeActive(Builder $query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'aktif');
     }
 
     // filter berdasarkan RW
-    public function scopeByRw(Builder $query, $rwId)
+    public function scopeByRw(Builder $query, int $rwId): Builder
     {
         return $query->where('rw_id', $rwId);
     }
 
     // filter berdasarkan RT
-    public function scopeByRt(Builder $query, $rtId)
+    public function scopeByRt(Builder $query, int $rtId): Builder
     {
         return $query->where('rt_id', $rtId);
     }
 
     // cari berdasarkan role
-    public function scopeByRole(Builder $query, $roleId)
+    public function scopeByRole(Builder $query, int $roleId): Builder
     {
         return $query->where('role_id', $roleId);
     }
@@ -86,22 +86,22 @@ class PengurusWilayah extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function isRw()
+    public function isRw(): bool
     {
         return $this->role?->name === 'rw';
     }
 
-    public function isRt()
+    public function isRt(): bool
     {
         return $this->role?->name === 'rt';
     }
 
-    public function isSekretaris()
+    public function isSekretaris(): bool
     {
         return $this->role?->name === 'sekretaris';
     }
 
-    public function isBendahara()
+    public function isBendahara(): bool
     {
         return $this->role?->name === 'bendahara';
     }

@@ -58,6 +58,7 @@ use App\Http\Controllers\Management\LaporanKeuanganController;
 use App\Http\Controllers\Management\SuratPengantarController;
 use App\Http\Controllers\Management\SuratKeteranganController;
 use App\Http\Controllers\Management\ArsipSuratController;
+use App\Http\Controllers\Management\ForgotPasswordController as ManagementForgotPasswordController;
 use App\Http\Controllers\Management\ManagementSettingPasswordController;
 use App\Http\Controllers\Management\ManagementTambahDataBedaKKController;
 use App\Http\Controllers\Management\ManagementTambahDataSatukkController;
@@ -213,6 +214,7 @@ Route::get('/pengurus', fn() => view('backend.management.splash_management'))->n
 Route::get('/showlogin_management', [LoginManagementController::class, 'showLogin_management'])->middleware('redirect.management')->name('showlogin_management');
 Route::post('/management/login', [LoginManagementController::class, 'login_management'])->name('management.login.process');
 Route::post('/management/verify-otp', [LoginManagementController::class, 'verifyOtp'])->name('management.verify.otp');
+Route::get('/forgot-password', [ManagementForgotPasswordController::class, 'index'])->name('password.request');
 
 
 /*
@@ -234,7 +236,6 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::get('/dashboard', [DashboardManagementController::class, 'index'])->middleware('permission:dashboard.view')->name('management.dashboard');
         /*------------------------------------------------------------------------ END DASHBOARD ------------------------------------------------------------------------------- */
 
-
         Route::get('/statistik-warga', [StatistikWargaController::class, 'index'])->middleware('permission:statistik.warga')->name('management.dashboard.statistik_warga');
         Route::get('/statistik-keuangan', fn() => app(UnderConstructionController::class)->index('Dashboard Statistik Keuangan'))->middleware('permission:statistik.keuangan')->name('management.dashboard.statistik_keuangan');
         Route::get('/grafik-iuran', fn() => app(UnderConstructionController::class)->index('Dashboard Grafik Iuran'))->middleware('permission:keuangan.view')->name('management.dashboard.grafik_iuran');
@@ -254,16 +255,13 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::post('/permissions/store', [MenuController::class, 'StorePermission'])->middleware('permission:permissions.create')->name('management.permissions.store');
         Route::put('/permissions/{id}', [MenuController::class, 'updatePermission'])->middleware('permission:permissions.update')->name('management.permissions.update');
         Route::delete('/permissions/{id}', [MenuController::class, 'destroyPermission'])->middleware('permission:permissions.delete')->name('management.permissions.delete');
-
         /*------------------------------------------------------------------------ END MANAGEMENT MENU ------------------------------------------------------------------------------- */
-
 
 
         /*--------------------------------------------------- PERMISSION ---------------------------------------------------------- */
         Route::get('/role/permissions', [RolePermissionsController::class, 'index'])->middleware('permission:rolepermissions.view')->name('management.role_permissions.index');
         Route::get('/role-permissions/tree/{role}', [RolePermissionsController::class, 'getTree'])->middleware('permission:rolepermissions.view');
         Route::post('/role-permissions/sync', [RolePermissionsController::class, 'sync'])->middleware('permission:rolepermissions.update');
-
         /*--------------------------------------------------- END PERMISSION ---------------------------------------------------------- */
 
 
@@ -289,13 +287,11 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     |----------------------------------------------------------------------
     */
     Route::prefix('/')->group(function () {
-
         Route::get('/warga', [ManagementWargaController::class, 'index'])->middleware('permission:managementwarga.view')->name('management.warga.index');
         Route::get('/view/warga/{warga}', [ManagementWargaController::class, 'show'])->middleware('permission:datawarga.view')->name('management.warga.view');
         /* TAMBAH WARGA */
         Route::get('/warga/tambah', [ManagementTambahWargaController::class, 'create'])->middleware('permission:datawarga.create')->name('management.warga.tambah');
         Route::post('/store', [ManagementTambahWargaController::class, 'store_management_warga'])->middleware('permission:datawarga.store')->name('store_management_warga');
-
         /* KELUARGA */
         Route::get('/view/tambah/keluargas', [ManagementTambahKeluargaController::class, 'ShowKeluarga'])->middleware('permission:keluarga_satu_kk.create')->name('management.warga.tambah_keluarga');
         Route::post('/store/keluargas', [ManagementTambahKeluargaController::class, 'store_management_Keluarga'])->middleware('permission:keluarga_satu_kk.store')->name('management.warga.store_keluarga');
@@ -310,35 +306,22 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::post('/store/bedaKK', [ManagementTambahDataBedaKKController::class, 'storDataBedaKK'])->middleware('permission:wargabedakk.store')->name('management.warga.StoreBedaKK');
         Route::get('/tambah/keluarga/BedaKK/{id}', [ManagementTambahKeluargaBedaKKController::class, 'create'])->middleware('permission:wargabedakk.create')->name('management.warga.tambahKeluargaBedaKK');
         Route::post('/Management/Data_warga/Store/beda_KK', [ManagementTambahKeluargaBedaKKController::class, 'DataWargaBedakkStore'])->middleware('permission:wargabedakk.store')->name('management.warga.Store_Data_warga_bedaKK');
-
-
-        /* LAINNYA */
+        /* DATA KK */
         Route::get('/kartu-keluarga', fn() => app(UnderConstructionController::class)->index('Manajemen KK'))->middleware('permission:keluarga.view')->name('management.kk.index');
+
+
         Route::get('/mutasi-warga', fn() => app(UnderConstructionController::class)->index('Mutasi Warga'))->middleware('permission:warga.update')->name('management.mutasi.index');
     });
-
     /*
     |----------------------------------------------------------------------
     | KEUANGAN
     |----------------------------------------------------------------------
     */
     Route::prefix('/')->group(function () {
-
-        Route::get('/iuran', fn() => app(UnderConstructionController::class)->index('Manajemen Iuran'))
-            ->middleware('permission:keuangan.view')
-            ->name('management.iuran.index');
-
-        Route::get('/kas', fn() => app(UnderConstructionController::class)->index('Manajemen Kas'))
-            ->middleware('permission:keuangan.view')
-            ->name('management.kas.index');
-
-        Route::get('/pengeluaran', fn() => app(UnderConstructionController::class)->index('Manajemen Pengeluaran'))
-            ->middleware('permission:keuangan.view')
-            ->name('management.pengeluaran.index');
-
-        Route::get('/laporan-keuangan', fn() => app(UnderConstructionController::class)->index('Laporan Keuangan'))
-            ->middleware('permission:keuangan.view')
-            ->name('management.laporan.keuangan');
+        Route::get('/iuran', fn() => app(UnderConstructionController::class)->index('Manajemen Iuran'))->middleware('permission:keuangan.view')->name('management.iuran.index');
+        Route::get('/kas', fn() => app(UnderConstructionController::class)->index('Manajemen Kas'))->middleware('permission:keuangan.view')->name('management.kas.index');
+        Route::get('/pengeluaran', fn() => app(UnderConstructionController::class)->index('Manajemen Pengeluaran'))->middleware('permission:keuangan.view')->name('management.pengeluaran.index');
+        Route::get('/laporan-keuangan', fn() => app(UnderConstructionController::class)->index('Laporan Keuangan'))->middleware('permission:keuangan.view')->name('management.laporan.keuangan');
     });
 
     /*
@@ -347,43 +330,28 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     |----------------------------------------------------------------------
     */
     Route::prefix('/')->group(function () {
-
-        Route::get('/surat-pengantar', fn() => app(UnderConstructionController::class)->index('Surat Pengantar'))
-            ->middleware('permission:surat.view')
-            ->name('management.surat_pengantar.index');
-
-        Route::get('/surat-keterangan', fn() => app(UnderConstructionController::class)->index('Surat Keterangan'))
-            ->middleware('permission:surat.view')
-            ->name('management.surat_keterangan.index');
-
-        Route::get('/arsip-surat', fn() => app(UnderConstructionController::class)->index('Arsip Surat'))
-            ->middleware('permission:surat.view')
-            ->name('management.arsip_surat.index');
+        Route::get('/surat-pengantar', fn() => app(UnderConstructionController::class)->index('Surat Pengantar'))->middleware('permission:surat.view')->name('management.surat_pengantar.index');
+        Route::get('/surat-keterangan', fn() => app(UnderConstructionController::class)->index('Surat Keterangan'))->middleware('permission:surat.view')->name('management.surat_keterangan.index');
+        Route::get('/arsip-surat', fn() => app(UnderConstructionController::class)->index('Arsip Surat'))->middleware('permission:surat.view')->name('management.arsip_surat.index');
     });
-
     /*
     |----------------------------------------------------------------------
     | LOGOUT
     |----------------------------------------------------------------------
     */
     Route::post('/logout', [LoginManagementController::class, 'logout_management'])->name('management.logout');
-
     /*
-|--------------------------------------------------------------------------
-| PROFILE / SECURITY ACTION
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | PROFILE / SECURITY ACTION
+    |--------------------------------------------------------------------------
+    */
 
     Route::prefix('/')->group(function () {
-
         // halaman ganti password management
         Route::get('/change-password', [ManagementSettingPasswordController::class, 'index'])->name('management.change_password');
         Route::post('/verify-change-password', [ManagementSettingPasswordController::class, 'verifyCaptcha'])->name('management.verify.captcha');
         Route::post('/management/verify-otp', [ManagementSettingPasswordController::class, 'verifyOtpResetPassword'])->name('management.verify.otp');
         Route::get('/input-password-baru', [ManagementSettingPasswordController::class, 'inputPassword'])->name('management.input.password');
         Route::post('/update-password-baru', [ManagementSettingPasswordController::class, 'updatePassword'])->name('management.password.update');
-
-
-
     });
 });
