@@ -214,7 +214,20 @@ Route::get('/pengurus', fn() => view('backend.management.splash_management'))->n
 Route::get('/showlogin_management', [LoginManagementController::class, 'showLogin_management'])->middleware('redirect.management')->name('showlogin_management');
 Route::post('/management/login', [LoginManagementController::class, 'login_management'])->name('management.login.process');
 Route::post('/management/verify-otp', [LoginManagementController::class, 'verifyOtp'])->name('management.verify.otp');
+
+/*------------------------------------------------------------------------ FORGOT PASSWORD ------------------------------------------------------------------------------- */
 Route::get('/forgot-password', [ManagementForgotPasswordController::class, 'index'])->name('password.request');
+Route::post('/forgot-password/check', [ManagementForgotPasswordController::class, 'checkName'])->name('password.check');
+Route::get('/forgot-password/checkData/{id}', [ManagementForgotPasswordController::class, 'checkData'])->name('password.checkData');
+Route::post('/forgot-password/checkData/{id}', [ManagementForgotPasswordController::class, 'verifyCheckData'])->name('password.verifyCheckData');
+Route::post('/forgot-password/verifyOtp/{id}', [ManagementForgotPasswordController::class, 'verifyOtp'])->name('password.verify.otp');
+Route::get('/forgot-password/inputPassword/{id}', [ManagementForgotPasswordController::class, 'inputPassword'])->name('password.input.password');
+Route::post('/forgot-password/updatePassword/{id}', [ManagementForgotPasswordController::class, 'updatePassword'])->name('password.update.password');
+
+
+/*------------------------------------------------------------------------ END FORGOT PASSWORD ------------------------------------------------------------------------------- */
+
+
 
 
 /*

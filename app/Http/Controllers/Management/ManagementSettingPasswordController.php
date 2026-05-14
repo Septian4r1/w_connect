@@ -25,9 +25,7 @@ class ManagementSettingPasswordController extends Controller
      */
     public function index()
     {
-        return view(
-            'backend.layouts.settingpassword.index'
-        );
+        return view('backend.layouts.settingpassword.index');
     }
 
     /**
@@ -90,7 +88,7 @@ class ManagementSettingPasswordController extends Controller
         $this->otpService->generateAndSendOtp(
             $user,
             $request,
-            'reset_password'
+            OtpService::TYPE_RESET_PASSWORD
         );
 
         /**

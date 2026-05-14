@@ -91,8 +91,6 @@
             z-index: 10000001 !important;
         }
     </style>
-
-
 @endsection
 
 @include('backend.layouts.settingpassword.script_settingPassword')

@@ -4,16 +4,29 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserOtp;
+use App\Mail\SendOtpMail;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use App\Mail\SendOtpMail;
-use Illuminate\Http\Request;
 
 class OtpService
 {
     /**
-     * Generate & kirim OTP
+     * =========================================================
+     * OTP TYPES (CONSTANTS)
+     * =========================================================
+     * Gunakan ini di semua controller agar konsisten
+     * =========================================================
+     */
+    public const TYPE_LOGIN                 = 'login';
+    public const TYPE_RESET_PASSWORD        = 'reset_password';
+    public const TYPE_RESET_FORGOT_PASSWORD = 'reset_forgot_password';
+
+    /**
+     * =========================================================
+     * GENERATE & SEND OTP
+     * =========================================================
      */
     public function generateAndSendOtp(
         User $user,
@@ -22,35 +35,43 @@ class OtpService
     ): void {
 
         /**
-         * 🔥 DEFAULT TYPE
+         * =========================================
+         * DEFAULT TYPE
+         * =========================================
          */
-        $type = $type ?? 'login';
+        $type = $type ?? self::TYPE_LOGIN;
 
         /**
-         * 🔥 GENERATE OTP
+         * =========================================
+         * GENERATE OTP 6 DIGIT
+         * =========================================
          */
         $otp = random_int(100000, 999999);
 
         $hashedOtp = Hash::make($otp);
 
         /**
-         * 🔥 DEVICE FINGERPRINT
+         * =========================================
+         * DEVICE FINGERPRINT
+         * =========================================
          */
         $fingerprint = hash(
             'sha256',
             $request->ip() .
                 $request->userAgent() .
-                $request->header('accept-language')
+                ($request->header('accept-language') ?? '')
         );
 
         /**
-         * 🔥 SAVE OTP
+         * =========================================
+         * STORE / UPDATE OTP
+         * =========================================
          */
         UserOtp::updateOrCreate(
 
             [
                 'user_id' => $user->id,
-                'type'    => $type
+                'type'    => $type,
             ],
 
             [
@@ -61,7 +82,9 @@ class OtpService
         );
 
         /**
-         * 🔥 SEND EMAIL
+         * =========================================
+         * SEND EMAIL OTP
+         * =========================================
          */
         Mail::to($user->email)->send(
             new SendOtpMail(
@@ -73,7 +96,9 @@ class OtpService
     }
 
     /**
-     * 🔥 VERIFY OTP
+     * =========================================================
+     * VERIFY OTP
+     * =========================================================
      */
     public function verifyOtp(
         string $email,
@@ -81,20 +106,35 @@ class OtpService
         ?string $type = null
     ): User {
 
-        $type = $type ?? 'login';
+        /**
+         * =========================================
+         * DEFAULT TYPE
+         * =========================================
+         */
+        $type = $type ?? self::TYPE_LOGIN;
 
-        $user = User::where('email', $email)
-            ->firstOrFail();
+        /**
+         * =========================================
+         * FIND USER
+         * =========================================
+         */
+        $user = User::where('email', $email)->firstOrFail();
 
+        /**
+         * =========================================
+         * RATE LIMIT KEY
+         * =========================================
+         */
         $key = 'otp-attempt:' . $user->id;
 
         /**
-         * 🔥 RATE LIMIT
+         * =========================================
+         * RATE LIMIT CHECK
+         * =========================================
          */
         if (RateLimiter::tooManyAttempts($key, 3)) {
 
             $seconds = RateLimiter::availableIn($key);
-
             $minutes = ceil($seconds / 60);
 
             abort(
@@ -104,7 +144,9 @@ class OtpService
         }
 
         /**
-         * 🔥 AMBIL OTP BERDASARKAN TYPE
+         * =========================================
+         * GET OTP BY TYPE
+         * =========================================
          */
         $otpData = UserOtp::where('user_id', $user->id)
             ->where('type', $type)
@@ -115,31 +157,39 @@ class OtpService
         }
 
         /**
-         * 🔥 EXPIRED
+         * =========================================
+         * CHECK EXPIRED
+         * =========================================
          */
         if ($otpData->expired_at < now()) {
             abort(401, 'OTP expired');
         }
 
         /**
-         * 🔥 OTP SALAH
+         * =========================================
+         * CHECK OTP MATCH
+         * =========================================
          */
         if (!Hash::check($otp, $otpData->otp)) {
 
-            RateLimiter::hit($key, 900);
+            RateLimiter::hit($key, 900); // 15 menit penalty
 
             abort(401, 'OTP salah');
         }
 
         /**
-         * ✅ HAPUS OTP
+         * =========================================
+         * SUCCESS → DELETE OTP
+         * =========================================
          */
         $otpData->delete();
 
         RateLimiter::clear($key);
 
         /**
-         * 🔥 OPTIONAL
+         * =========================================
+         * OPTIONAL: MARK EMAIL VERIFIED
+         * =========================================
          */
         $user->forceFill([
             'email_verified_at' => now()

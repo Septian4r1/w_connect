@@ -3,111 +3,91 @@
 
 <head>
 
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- 🔥 WAJIB UNTUK AJAX -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- loader-->
-    <link href="{{ asset('tamplate_management/assets/css/pace.min.css') }}" rel="stylesheet" />
-    <script src="{{ asset('tamplate_management/assets/js/pace.min.js') }}"></script>
+    <title>Forgot Password | W_connect</title>
+    <link rel="icon" type="image/gif" href="{{ asset('images/logo_w_connect_web.gif') }}">
 
-    <!--plugins-->
-    <link href="{{ asset('tamplate_management/assets/plugins/perfect-scrollbar/css/perfect-scrollbar.css') }}"
-        rel="stylesheet" />
-    <link href="{{ asset('tamplate_management/assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
-    <link href="{{ asset('tamplate_management/assets/plugins/metismenu/css/metisMenu.min.css') }}" rel="stylesheet" />
-
-    <!-- CSS Files -->
+    <!-- Bootstrap -->
     <link href="{{ asset('tamplate_management/assets/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('tamplate_management/assets/css/bootstrap-extended.css') }}" rel="stylesheet">
-    <link href="{{ asset('tamplate_management/assets/css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('tamplate_management/assets/css/icons.css') }}" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-
-    <!--Theme Styles-->
-    <link href="{{ asset('tamplate_management/assets/css/dark-theme.css') }}" rel="stylesheet" />
-    <link href="{{ asset('tamplate_management/assets/css/semi-dark.css') }}" rel="stylesheet" />
-    <link href="{{ asset('tamplate_management/assets/css/header-colors.css') }}" rel="stylesheet" />
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <title>Forgot Password - W_connect Management</title>
-
     <style>
         :root {
-            --auth-radius: 22px;
+            --primary: #198754;
+            --radius: 22px;
             --input-radius: 14px;
-            --primary-color: #198754;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             margin: 0;
             padding: 0;
             font-family: 'Roboto', sans-serif;
-            overflow: hidden;
+            background:
+                linear-gradient(135deg,
+                    #0f172a,
+                    #1e293b,
+                    #334155);
+
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* =========================================
-            OVERLAY
-        ========================================== */
+        /* ========================================
+           OVERLAY
+        ======================================== */
         .auth-overlay {
-            position: fixed;
-            inset: 0;
-
-            z-index: 999999;
+            min-height: 100vh;
 
             display: flex;
             justify-content: center;
             align-items: center;
 
-            padding: 18px;
+            padding: 20px;
 
-            overflow-y: auto;
-
-            /* BACKGROUND BLUR TANPA GAMBAR */
-            background: rgba(15, 23, 42, 0.55);
-
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            position: relative;
         }
 
-        /* =========================================
-            CARD
-        ========================================== */
+        /* ========================================
+           CARD
+        ======================================== */
         .auth-card {
             width: 100%;
             max-width: 460px;
 
-            border-radius: var(--auth-radius);
+            border-radius: var(--radius);
 
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.96);
 
-            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
 
             border: 1px solid rgba(255, 255, 255, 0.2);
 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.15);
 
-            position: relative;
+            overflow: hidden;
 
-            z-index: 9999999;
-
-            animation: fadeInUp .35s ease;
+            animation: fadeIn .35s ease;
         }
 
-        @keyframes fadeInUp {
-
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(15px);
             }
 
             to {
@@ -116,13 +96,13 @@
             }
         }
 
-        .auth-card .card-body {
-            padding: 32px;
+        .auth-body {
+            padding: 36px;
         }
 
-        /* =========================================
-            ICON
-        ========================================== */
+        /* ========================================
+           ICON
+        ======================================== */
         .password-icon {
             width: 78px;
             height: 78px;
@@ -137,7 +117,8 @@
 
             font-size: 34px;
 
-            background: linear-gradient(135deg,
+            background:
+                linear-gradient(135deg,
                     #d1fae5,
                     #bbf7d0);
 
@@ -145,46 +126,68 @@
                 0 10px 25px rgba(34, 197, 94, .15);
         }
 
-        /* =========================================
-            INPUT
-        ========================================== */
+        /* ========================================
+           TYPOGRAPHY
+        ======================================== */
+        .title-auth {
+            font-size: clamp(22px, 3vw, 30px);
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .desc-auth {
+            font-size: clamp(13px, 2vw, 15px);
+            line-height: 1.7;
+            color: #6b7280;
+        }
+
+        .form-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        /* ========================================
+           INPUT
+        ======================================== */
         .custom-input {
-            height: 54px;
+            height: 50px;
 
             border-radius: var(--input-radius);
 
-            border: 1px solid #dcdcdc;
+            border: 1px solid #d1d5db;
+
+            padding: 0 16px;
+
+            font-size: 14px;
 
             transition: .25s ease;
-
-            font-size: 15px;
-
-            padding-left: 14px;
-
-            background: #fff;
         }
 
         .custom-input:focus {
-            border-color: var(--primary-color);
+            border-color: var(--primary);
 
             box-shadow:
                 0 0 0 4px rgba(25, 135, 84, .12);
+
+            outline: none;
         }
 
         .custom-input::placeholder {
-            color: #adb5bd;
-            font-size: 14px;
+            color: #9ca3af;
+            font-size: 13px;
         }
 
-        /* =========================================
-            BUTTON
-        ========================================== */
+        /* ========================================
+           BUTTON
+        ======================================== */
         .custom-btn {
             height: 48px;
 
             border-radius: var(--input-radius);
 
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: 600;
 
             transition: .2s ease;
         }
@@ -193,117 +196,117 @@
             transform: translateY(-1px);
         }
 
-        .custom-btn:disabled {
-            opacity: .8;
-            cursor: not-allowed;
+        .btn-success {
+            background: var(--primary);
+            border: none;
         }
 
-        /* =========================================
-            SWEET ALERT
-        ========================================== */
-        .swal2-container.swal2-center,
-        .swal2-container.swal2-backdrop-show {
-            z-index: 99999999 !important;
+        /* ========================================
+           SMALL TEXT
+        ======================================== */
+        .small-text {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* ========================================
+           SWEET ALERT
+        ======================================== */
+        .swal2-container {
+            z-index: 999999999 !important;
         }
 
         .swal2-popup {
-            border-radius: 20px !important;
+            border-radius: 18px !important;
         }
 
-        /* =========================================
-            TABLET
-        ========================================== */
+        /* ========================================
+           TABLET
+        ======================================== */
         @media (max-width: 768px) {
 
-            .auth-overlay {
-                padding: 16px;
-            }
-
-            .auth-card {
-                max-width: 100%;
-            }
-
-            .auth-card .card-body {
-                padding: 26px;
+            .auth-body {
+                padding: 28px;
             }
 
             .password-icon {
                 width: 72px;
                 height: 72px;
-
                 font-size: 30px;
-            }
-
-            h3 {
-                font-size: 24px;
             }
         }
 
-        /* =========================================
-            MOBILE
-        ========================================== */
+        /* ========================================
+           MOBILE
+        ======================================== */
         @media (max-width: 576px) {
 
             .auth-overlay {
                 padding: 14px;
-                align-items: flex-start;
+                align-items: center;
             }
 
             .auth-card {
-                margin-top: 20px;
-                border-radius: 20px;
+                border-radius: 18px;
             }
 
-            .auth-card .card-body {
+            .auth-body {
                 padding: 22px 18px;
             }
 
             .password-icon {
-                width: 66px;
-                height: 66px;
-
-                font-size: 28px;
+                width: 62px;
+                height: 62px;
+                font-size: 26px;
             }
 
-            h3 {
-                font-size: 21px;
+            .title-auth {
+                font-size: 22px;
             }
 
-            .text-muted.small {
-                font-size: 13px !important;
-                line-height: 1.6;
+            .desc-auth {
+                font-size: 13px;
             }
 
             .custom-input {
-                height: 50px;
-                font-size: 14px;
+                height: 46px;
+                font-size: 13px;
             }
 
             .custom-btn {
-                height: 45px;
-                font-size: 14px;
+                height: 44px;
+                font-size: 13px;
+            }
+
+            .form-label {
+                font-size: 13px;
             }
         }
 
-        /* =========================================
-            EXTRA SMALL DEVICE
-        ========================================== */
+        /* ========================================
+           EXTRA SMALL DEVICE
+        ======================================== */
         @media (max-width: 380px) {
 
-            .auth-card .card-body {
-                padding: 18px 15px;
+            .auth-body {
+                padding: 18px 14px;
             }
 
-            h3 {
-                font-size: 19px;
+            .title-auth {
+                font-size: 20px;
+            }
+
+            .desc-auth {
+                font-size: 12px;
             }
 
             .custom-input {
-                height: 48px;
+                height: 44px;
+                padding: 0 14px;
             }
 
             .custom-btn {
-                height: 45px;
+                height: 42px;
             }
         }
     </style>
@@ -312,67 +315,105 @@
 
 <body>
 
-    {{-- =========================================
-        FULL SCREEN FORGOT PASSWORD OVERLAY
-    ========================================== --}}
     <div class="auth-overlay">
 
-        <div class="auth-card shadow-lg">
+        <div class="auth-card">
 
-            <div class="card-body p-4 p-md-5">
+            <div class="auth-body">
 
-                {{-- =========================================
-                    HEADER
-                ========================================== --}}
+                <!-- HEADER -->
                 <div class="text-center mb-4">
 
                     <div class="password-icon mb-3">
-                        📧
+
+                        <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="Security Safe"
+                            style="
+            width:42px;
+            height:42px;
+            object-fit:contain;
+        ">
+
                     </div>
 
-                    <h3 class="fw-bold mb-2">
+                    <h3 class="title-auth mb-2">
                         Forgot Password
                     </h3>
 
-                    <p class="text-muted small mb-0">
-                        Masukkan alamat email yang terdaftar.
-                        Kami akan mengirimkan link reset password ke email Anda.
+                    <p class="desc-auth mb-0">
+                        Masukkan Nama Anda .
+                        Kami akan Chek Sebelum Anda Di Izinkan Merubah Password Anda.
                     </p>
 
                 </div>
 
-                {{-- =========================================
-                    FORM
-                ========================================== --}}
+                <!-- FORM -->
+                <!-- FORM -->
                 <form id="formForgotPassword">
 
                     @csrf
 
-                    {{-- EMAIL --}}
+                    <!-- NAMA LENGKAP -->
                     <div class="mb-4">
 
                         <label class="form-label fw-semibold">
-                            Alamat Email
+                            Nama Lengkap
                         </label>
 
-                        <input type="email" id="email" class="form-control custom-input"
-                            placeholder="Masukkan email Anda">
+                        <input type="text" id="name" class="form-control custom-input"
+                            placeholder="Masukkan nama lengkap Anda">
 
-                        <small class="text-muted">
-                            Contoh: user@gmail.com
-                        </small>
+                        <div class="small-text mt-2">
+                            Contoh: John Doe
+                        </div>
 
                     </div>
 
-                    {{-- BUTTON SUBMIT --}}
-                    <button type="button" id="btnSubmit" class="btn btn-success custom-btn w-100 fw-semibold"
-                        onclick="submitForgotPassword()">
+                    <!-- CAPTCHA PENJUMLAHAN -->
+                    <div class="mb-4">
 
-                        Kirim Link Reset Password
+                        <label class="form-label fw-semibold">
+                            Verifikasi Penjumlahan
+                        </label>
+
+                        <div class="d-flex align-items-center gap-2">
+
+                            <div id="math-question" class="form-control custom-input d-flex align-items-center fw-bold"
+                                style="
+                    background:#f8fafc;
+                    user-select:none;
+                    pointer-events:none;
+                ">
+                            </div>
+
+                            <button type="button" onclick="generateMath()" class="btn btn-light border"
+                                style="
+                    height:50px;
+                    border-radius:14px;
+                    min-width:50px;
+                ">
+                                🔄
+                            </button>
+
+                        </div>
+
+                        <input type="number" id="answer" onkeyup="checkAnswer()"
+                            class="form-control custom-input mt-3" placeholder="Masukkan hasil penjumlahan">
+
+                        <div class="small-text mt-2">
+                            Jawab hasil penjumlahan di atas
+                        </div>
+
+                    </div>
+
+                    <!-- BUTTON SUBMIT -->
+                    <button type="button" id="btnVerify" onclick="verify()" class="btn btn-success custom-btn w-100"
+                        disabled>
+
+                        Verifikasi & Lanjut
 
                     </button>
 
-                    {{-- BUTTON CANCEL --}}
+                    <!-- BUTTON BACK -->
                     <a href="{{ route('showlogin_management') }}"
                         class="btn btn-light border custom-btn w-100 mt-2 d-flex align-items-center justify-content-center">
 
@@ -383,185 +424,145 @@
                 </form>
 
             </div>
+
         </div>
 
     </div>
 
-    {{-- =========================================
-        SCRIPT
-    ========================================== --}}
     <script>
-        /**
-         * =========================================
-         * ELEMENT
-         * =========================================
-         */
-        const emailInput =
-            document.getElementById('email');
+        let a, b, c;
 
-        const btnSubmit =
-            document.getElementById('btnSubmit');
+        function randomNumber() {
 
-        /**
-         * =========================================
-         * ENTER SUBMIT
-         * =========================================
-         */
-        document.addEventListener('keydown', function(e) {
+            return Math.floor(Math.random() * 900) + 1;
+        }
 
-            if (e.key === 'Enter') {
+        function shuffle(arr) {
 
-                e.preventDefault();
-
-                submitForgotPassword();
-            }
-        });
-
-        /**
-         * =========================================
-         * BUTTON LOADING
-         * =========================================
-         */
-        function setLoading(state = true) {
-
-            btnSubmit.disabled = state;
-
-            btnSubmit.innerHTML = state ?
-
-                `
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Mengirim...
-            ` :
-
-                'Kirim Link Reset Password';
+            return arr.sort(() => Math.random() - 0.5);
         }
 
         /**
-         * =========================================
-         * VALIDATE EMAIL
-         * =========================================
+         * GENERATE SOAL PENJUMLAHAN
          */
-        function validateEmail(email) {
+        function generateMath() {
 
-            const regex =
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            a = randomNumber();
+            b = randomNumber();
+            c = randomNumber();
 
-            return regex.test(email);
+            document.getElementById("math-question").innerText =
+                shuffle([a, b, c]).join(" + ");
+
+            document.getElementById("answer").value = "";
+
+            document.getElementById("btnVerify").disabled = true;
         }
 
         /**
-         * =========================================
-         * SUBMIT FORGOT PASSWORD
-         * =========================================
+         * ENABLE BUTTON
          */
-        async function submitForgotPassword() {
+        function checkAnswer() {
 
-            if (btnSubmit.disabled) {
+            const answer =
+                document.getElementById("answer").value.trim();
+
+            document.getElementById("btnVerify").disabled =
+                answer === "";
+        }
+
+        /**
+         * VERIFY
+         */
+        async function verify() {
+
+            const name =
+                document.getElementById("name").value.trim();
+
+            const answer =
+                document.getElementById("answer").value.trim();
+
+            if (!name) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Nama lengkap wajib diisi'
+                });
+
                 return;
             }
 
-            const email =
-                emailInput.value.trim();
+            if (!answer) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Jawaban penjumlahan wajib diisi'
+                });
+
+                return;
+            }
 
             /**
-             * VALIDASI
+             * LOADING
              */
-            if (!email) {
+            const btn =
+                document.getElementById("btnVerify");
 
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Email wajib diisi'
-                });
+            btn.disabled = true;
 
-                return;
-            }
-
-            if (!validateEmail(email)) {
-
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Format email tidak valid'
-                });
-
-                return;
-            }
-
-            setLoading(true);
+            btn.innerHTML = `
+            <span class="spinner-border spinner-border-sm"></span>
+            Memverifikasi...
+        `;
 
             try {
 
-                const response = await fetch(
-                    "", {
-
-                        method: 'POST',
+                /**
+                 * FETCH API
+                 */
+                const res = await fetch(
+                    "{{ route('password.check') }}", {
+                        method: "POST",
 
                         headers: {
-                            'Content-Type': 'application/json',
-
-                            'X-CSRF-TOKEN': document
-                                .querySelector(
-                                    'meta[name="csrf-token"]'
-                                )
-                                .getAttribute('content'),
-
-                            'X-Requested-With': 'XMLHttpRequest',
-
-                            'Accept': 'application/json'
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
                         },
 
                         body: JSON.stringify({
-                            email: email
+
+                            /**
+                             * DATA USER
+                             */
+                            name: name,
+
+                            /**
+                             * DATA CAPTCHA
+                             */
+                            number_1: a,
+                            number_2: b,
+                            number_3: c,
+
+                            /**
+                             * JAWABAN USER
+                             */
+                            answer: answer
                         })
-                    });
+                    }
+                );
 
-                let data;
+                const data = await res.json();
 
-                try {
-
-                    data =
-                        await response.json();
-
-                } catch {
-
-                    throw new Error(
-                        'Response server tidak valid'
-                    );
-                }
-
-                /**
-                 * VALIDATION ERROR
-                 */
-                if (response.status === 422) {
-
-                    let errors = '';
-
-                    Object.values(data.errors)
-                        .forEach(error => {
-
-                            errors +=
-                                `• ${error[0]}<br>`;
-                        });
-
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Validasi Gagal',
-                        html: errors
-                    });
-
-                    return;
-                }
-
-                /**
-                 * ERROR
-                 */
-                if (!response.ok || !data.status) {
+                if (!res.ok || !data.status) {
 
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal',
                         text: data.message ||
-                            'Terjadi kesalahan'
+                            'Data tidak ditemukan'
                     });
+
+                    generateMath();
 
                     return;
                 }
@@ -572,28 +573,40 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil',
-                    text: 'Link reset password berhasil dikirim ke email Anda',
-                    confirmButtonText: 'OK'
+                    text: data.message ||
+                        'Verifikasi berhasil',
+                    timer: 1800,
+                    showConfirmButton: false
                 });
 
-                emailInput.value = '';
+                setTimeout(() => {
 
-            } catch (error) {
+                    window.location.href =
+                        data.redirect;
 
-                console.error(error);
+                }, 1800);
+
+            } catch (err) {
 
                 Swal.fire({
                     icon: 'error',
                     title: 'Server Error',
-                    text: error.message ||
-                        'Tidak dapat terhubung ke server'
+                    text: 'Tidak dapat menghubungi server'
                 });
 
             } finally {
 
-                setLoading(false);
+                btn.disabled = false;
+
+                btn.innerHTML =
+                    'Verifikasi & Lanjut';
             }
         }
+
+        /**
+         * AUTO GENERATE
+         */
+        generateMath();
     </script>
 
 </body>

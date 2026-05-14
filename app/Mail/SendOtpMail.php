@@ -41,31 +41,49 @@ class SendOtpMail extends Mailable
     public function build()
     {
         /**
-         * 🔥 DEFAULT
+         * DEFAULT VALUE (LOGIN OTP)
          */
         $subject = 'Kode OTP Login';
-
-        $view = 'emails.otp';
+        $view    = 'emails.otp';
 
         /**
-         * 🔥 RESET PASSWORD
+         * =========================================
+         * SWITCH OTP TYPE
+         * =========================================
          */
-        if ($this->type === 'reset_password') {
+        switch ($this->type) {
 
-            $subject = 'Kode OTP Reset Password';
+            /**
+             * RESET PASSWORD
+             */
+            case 'reset_password':
+                $subject = 'Kode OTP Reset Password';
+                $view    = 'emails.otp_reset_password';
+                break;
 
-            $view = 'emails.otp_reset_password';
+            /**
+             * FORGOT PASSWORD
+             */
+            case 'reset_forgot_password':
+                $subject = 'Kode OTP Forgot Password';
+                $view    = 'emails.otp_forgot_password';
+                break;
+
+            /**
+             * LOGIN (DEFAULT)
+             */
+            default:
+                $subject = 'Kode OTP Login';
+                $view    = 'emails.otp';
+                break;
         }
 
         return $this
             ->subject($subject)
             ->view($view)
             ->with([
-
                 'otp'  => $this->otp,
-
                 'user' => $this->user,
-
                 'type' => $this->type,
             ]);
     }
