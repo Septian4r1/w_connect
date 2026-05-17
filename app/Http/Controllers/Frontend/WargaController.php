@@ -57,7 +57,7 @@ class WargaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nik' => 'required|string|max:20|unique:wargas,nik',
+            // 'nik' => 'required|string|max:20|unique:wargas,nik',
             'nama' => 'required|string|max:255',
             'jenis_kelamin' => 'required|string',
             'hubungan' => 'required|string',
@@ -65,7 +65,7 @@ class WargaController extends Controller
             'pendidikan' => 'required|string',
             'provinsi' => 'required|string|max:255',
             'tempat_lahir' => 'required|string|max:255',
-            'foto_ktp' => 'required|image|max:20480',
+            // 'foto_ktp' => 'required|image|max:20480',
             'foto' => 'required|image|max:20480',
         ]);
 
@@ -82,7 +82,7 @@ class WargaController extends Controller
             }
 
             // proses foto
-            $fotoKtpDb = $this->processImage($request->file('foto_ktp'), $basePath, $namaSlug . '_KTP_' . $now);
+            // $fotoKtpDb = $this->processImage($request->file('foto_ktp'), $basePath, $namaSlug . '_KTP_' . $now);
             $fotoSelfieDb = $this->processImage($request->file('foto'), $basePath, $namaSlug . '_SELFIE_' . $now);
 
             $keluarga = Keluarga::where('id', $request->keluarga_id)
@@ -92,7 +92,7 @@ class WargaController extends Controller
             // simpan database
             $warga = Warga::create([
                 'keluarga_id' => $keluarga->id,
-                'nik' => $request->nik,
+                // 'nik' => $request->nik,
                 'nama' => $request->nama,
                 'jenis_kelamin' => $request->jenis_kelamin,
                 'hubungan' => $request->hubungan,
@@ -106,7 +106,7 @@ class WargaController extends Controller
                 'no_hp' => $request->no_hp,
                 'email' => $request->email,
                 'golongan_darah' => $request->golongan_darah,
-                'foto_ktp' => $fotoKtpDb,
+                // 'foto_ktp' => $fotoKtpDb,
                 'foto' => $fotoSelfieDb,
                 'status' => 'aktif',
             ]);

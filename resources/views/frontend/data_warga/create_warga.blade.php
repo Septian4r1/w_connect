@@ -123,11 +123,11 @@
             <input type="hidden" name="keluarga_id" value="{{ $keluarga->id }}">
 
             <!-- NIK -->
-            <label class="label">
+            {{-- <label class="label">
                 NIK <small style="font-weight:400;font-size:11px;color:#ff0000;">
                     (17th Keatas Wajib Di isi ) </small>
             </label>
-            <input type="number" name="nik" class="input" id="nik">
+            <input type="number" name="nik" class="input" id="nik"> --}}
 
             <!-- Nama -->
             <label class="label">Nama</label>
@@ -231,7 +231,7 @@
             </select>
 
             <label class="label">No HP</label>
-            <input type="number" name="no_hp" class="input" >
+            <input type="number" name="no_hp" class="input">
 
             <label class="label">Email</label>
             <input type="email" name="email" class="input" placeholder="Optional, Sebaiknya Di isi">
@@ -245,12 +245,12 @@
                 <option value="O">O</option>
             </select>
 
-            <label class="label">Foto KTP</label>
+            {{-- <label class="label">Foto KTP</label>
             <div class="filebox">
                 <input type="file" name="foto_ktp" accept="image/*" capture="environment"
                     onchange="previewImage(this,'preview_ktp')" required>
                 <img id="preview_ktp" class="preview" style="display:none;max-width:200px;margin-top:8px;">
-            </div>
+            </div> --}}
 
             <label class="label">Foto Selfie</label>
             <div class="filebox">
@@ -279,42 +279,89 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // =========================
-            // 1️⃣ Konfigurasi API Provinsi & Kota
-            // =========================
-            const apiProvinsi = "{{ config('wilayah.provinsi') }}"; // JSON provinsi
-            const apiKotaBase = "{{ config('wilayah.kota') }}"; // base URL JSON kota per provinsi
+            // =========================================================
+            // 1️⃣ KONFIGURASI API WILAYAH
+            // =========================================================
+            // API provinsi dan kota diambil dari config Laravel
+            // contoh:
+            // config/wilayah.php
+            //
+            // 'provinsi' => 'https://...',
+            // 'kota'     => 'https://...'
+            //
+            // =========================================================
+
+            const apiProvinsi = "{{ config('wilayah.provinsi') }}";
+            const apiKotaBase = "{{ config('wilayah.kota') }}";
+
+            // =========================================================
+            // 2️⃣ ELEMENT FORM
+            // =========================================================
 
             const selectProvinsi = document.getElementById('provinsi');
             const selectKota = document.getElementById('tempat_lahir');
 
-            const provinsiMap = {}; // mapping nama provinsi → id untuk fetch kota
+            // Mapping:
+            // nama provinsi => id provinsi
+            //
+            // contoh:
+            // {
+            //   "JAWA BARAT": 32
+            // }
+            //
+            const provinsiMap = {};
 
-            // =========================
-            // 2️⃣ Load Provinsi dari API
-            // =========================
+            // =========================================================
+            // 3️⃣ LOAD DATA PROVINSI
+            // =========================================================
+            // Mengambil daftar provinsi dari API
+            // lalu dimasukkan ke select option
+            // =========================================================
+
             if (selectProvinsi) {
-                fetch(apiProvinsi)
-                    .then(res => res.ok ? res.json() : Promise.reject('Server provinsi tidak merespon'))
-                    .then(data => {
-                        const fragment = document.createDocumentFragment();
-                        data.forEach(prov => {
-                            // Simpan mapping nama → id untuk fetch kota nanti
-                            provinsiMap[prov.name] = prov.id;
 
+                fetch(apiProvinsi)
+
+                    .then(response => {
+
+                        // Jika response gagal
+                        if (!response.ok) {
+                            throw new Error('Server provinsi tidak merespon');
+                        }
+
+                        return response.json();
+                    })
+
+                    .then(data => {
+
+                        const fragment = document.createDocumentFragment();
+
+                        data.forEach(provinsi => {
+
+                            // Simpan mapping nama => id
+                            provinsiMap[provinsi.name] = provinsi.id;
+
+                            // Buat option
                             const option = document.createElement('option');
-                            option.value = prov.name; // value tetap nama (sesuai permintaan)
-                            option.text = prov.name;
+
+                            option.value = provinsi.name;
+                            option.textContent = provinsi.name;
+
                             fragment.appendChild(option);
                         });
+
+                        // Masukkan ke select
                         selectProvinsi.appendChild(fragment);
                     })
-                    .catch(err => {
-                        console.error(err);
+
+                    .catch(error => {
+
+                        console.error('Error Provinsi:', error);
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal memuat provinsi',
-                            text: 'Periksa koneksi internet atau server sedang sibuk!',
+                            text: 'Periksa koneksi internet atau server sedang sibuk.',
                             confirmButtonColor: '#3085d6',
                             customClass: {
                                 title: 'swal-title-small',
@@ -325,36 +372,68 @@
                     });
             }
 
-            // =========================
-            // 3️⃣ Load Kota saat Provinsi dipilih
-            // =========================
+            // =========================================================
+            // 4️⃣ LOAD KOTA BERDASARKAN PROVINSI
+            // =========================================================
+            // Saat user memilih provinsi,
+            // sistem akan mengambil data kota dari API
+            // =========================================================
+
             if (selectProvinsi && selectKota) {
+
                 selectProvinsi.addEventListener('change', function() {
-                    const provName = this.value;
-                    selectKota.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>'; // reset
-                    if (!provName) return;
 
-                    const provId = provinsiMap[provName]; // ambil ID dari nama provinsi
-                    if (!provId) return;
+                    const namaProvinsi = this.value;
 
-                    fetch(`${apiKotaBase}/${provId}.json`)
-                        .then(res => res.ok ? res.json() : Promise.reject('Server kota tidak merespon'))
+                    // Reset kota
+                    selectKota.innerHTML =
+                        '<option value="">Pilih Kota/Kabupaten</option>';
+
+                    // Jika belum pilih provinsi
+                    if (!namaProvinsi) return;
+
+                    // Ambil ID provinsi dari mapping
+                    const provinsiId = provinsiMap[namaProvinsi];
+
+                    if (!provinsiId) return;
+
+                    // Fetch kota
+                    fetch(`${apiKotaBase}/${provinsiId}.json`)
+
+                        .then(response => {
+
+                            if (!response.ok) {
+                                throw new Error('Server kota tidak merespon');
+                            }
+
+                            return response.json();
+                        })
+
                         .then(data => {
+
                             const fragment = document.createDocumentFragment();
+
                             data.forEach(kota => {
+
                                 const option = document.createElement('option');
-                                option.value = kota.name; // simpan nama kota
-                                option.text = kota.name;
+
+                                option.value = kota.name;
+                                option.textContent = kota.name;
+
                                 fragment.appendChild(option);
                             });
+
                             selectKota.appendChild(fragment);
                         })
-                        .catch(err => {
-                            console.error(err);
+
+                        .catch(error => {
+
+                            console.error('Error Kota:', error);
+
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Gagal memuat kota',
-                                text: 'Periksa koneksi internet atau server sedang sibuk!',
+                                text: 'Periksa koneksi internet atau server sedang sibuk.',
                                 confirmButtonColor: '#3085d6',
                                 customClass: {
                                     title: 'swal-title-small',
@@ -366,52 +445,160 @@
                 });
             }
 
-            // =========================
-            // 4️⃣ Preview Gambar sebelum Upload
-            // =========================
+            // =========================================================
+            // 5️⃣ PREVIEW GAMBAR SEBELUM UPLOAD
+            // =========================================================
+            // Fungsi ini digunakan untuk:
+            // - foto KTP
+            // - foto KK
+            // - foto profile
+            // - selfie
+            // - dll
+            //
+            // Aman walaupun:
+            // - preview image dihapus
+            // - input file di-hide
+            // - tidak ada img preview
+            // =========================================================
+
             function previewImage(fileInput, previewId) {
+
+                // Validasi input file
+                if (
+                    !fileInput ||
+                    !fileInput.files ||
+                    !fileInput.files[0]
+                ) {
+                    return;
+                }
+
+                // Ambil element preview image
+                const previewImageElement =
+                    document.getElementById(previewId);
+
+                // Jika img preview tidak ada
+                // stop tanpa error
+                if (!previewImageElement) {
+                    return;
+                }
+
                 const file = fileInput.files[0];
-                if (!file) return;
-                const img = document.getElementById(previewId);
-                if (!img) return;
+
+                // Validasi tipe file gambar
+                if (!file.type.startsWith('image/')) {
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'File tidak valid',
+                        text: 'File harus berupa gambar.',
+                        confirmButtonColor: '#f39c12',
+                        customClass: {
+                            title: 'swal-title-small',
+                            content: 'swal-text-small',
+                            confirmButton: 'swal-btn-small'
+                        }
+                    });
+
+                    fileInput.value = '';
+                    return;
+                }
 
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                }
+
+                reader.onload = function(event) {
+
+                    previewImageElement.src = event.target.result;
+
+                    // Tampilkan preview
+                    previewImageElement.style.display = 'block';
+                };
+
                 reader.readAsDataURL(file);
             }
 
-            // Auto-preview setiap file input yang berubah
-            document.addEventListener('change', function(e) {
-                const target = e.target;
-                if (target.tagName === 'INPUT' && target.type === 'file') {
-                    const nextImg = target.nextElementSibling;
-                    if (nextImg && nextImg.tagName === 'IMG') {
-                        previewImage(target, nextImg.id);
+            // =========================================================
+            // 6️⃣ AUTO PREVIEW SAAT FILE DIPILIH
+            // =========================================================
+            // Otomatis mencari IMG setelah input file
+            //
+            // contoh:
+            //
+            // <input type="file">
+            // <img id="previewKtp">
+            //
+            // =========================================================
+
+            document.addEventListener('change', function(event) {
+
+                const target = event.target;
+
+                // Pastikan element adalah input file
+                if (
+                    target &&
+                    target.tagName === 'INPUT' &&
+                    target.type === 'file'
+                ) {
+
+                    // Cari img setelah input
+                    const nextImage = target.nextElementSibling;
+
+                    // Jalankan preview jika img ditemukan
+                    if (
+                        nextImage &&
+                        nextImage.tagName === 'IMG'
+                    ) {
+                        previewImage(target, nextImage.id);
                     }
                 }
             });
 
-            // =========================
-            // 5️⃣ AJAX Submit Form dengan SweetAlert
-            // =========================
-            window.submitForm = function(action) {
-                const form = document.querySelector('form');
-                if (!form) return;
+            // =========================================================
+            // 7️⃣ AJAX SUBMIT FORM
+            // =========================================================
+            // Submit form tanpa reload halaman
+            //
+            // action:
+            // - tambah
+            // - simpan
+            // =========================================================
 
-                // Tambahkan input action_type jika belum ada
-                let hiddenInput = form.querySelector('input[name="action_type"]');
+            window.submitForm = function(action) {
+
+                const form = document.querySelector('form');
+
+                if (!form) {
+                    console.error('Form tidak ditemukan');
+                    return;
+                }
+
+                // =====================================================
+                // Tambahkan hidden input action_type
+                // =====================================================
+
+                let hiddenInput =
+                    form.querySelector('input[name="action_type"]');
+
                 if (!hiddenInput) {
+
                     hiddenInput = document.createElement('input');
+
                     hiddenInput.type = 'hidden';
                     hiddenInput.name = 'action_type';
+
                     form.appendChild(hiddenInput);
                 }
+
                 hiddenInput.value = action;
 
+                // =====================================================
+                // FormData
+                // =====================================================
+
                 const formData = new FormData(form);
+
+                // =====================================================
+                // Loading SweetAlert
+                // =====================================================
 
                 Swal.fire({
                     title: 'Sedang menyimpan...',
@@ -419,45 +606,87 @@
                     didOpen: () => Swal.showLoading(),
                     customClass: {
                         title: 'swal-title-small',
-                        content: 'swal-text-small',
+                        content: 'swal-text-small'
                     }
                 });
+
+                // =====================================================
+                // Fetch Submit
+                // =====================================================
 
                 fetch(form.action, {
                         method: 'POST',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
+                            'X-CSRF-TOKEN': form.querySelector(
+                                'input[name="_token"]'
+                            ).value
                         },
                         body: formData
                     })
-                    .then(res => res.json())
-                    .then(res => {
+
+                    .then(response => response.json())
+
+                    .then(response => {
+
                         Swal.close();
-                        if (res.status === 'success') {
+
+                        // =================================================
+                        // SUCCESS
+                        // =================================================
+
+                        if (response.status === 'success') {
+
                             Swal.fire({
-                                icon: 'success',
-                                title: res.message,
-                                confirmButtonColor: '#3085d6',
-                                customClass: {
-                                    title: 'swal-title-small',
-                                    content: 'swal-text-small',
-                                    confirmButton: 'swal-btn-small'
-                                }
-                            }).then(() => {
-                                if (res.action === 'tambah') {
-                                    form.reset();
-                                    document.querySelectorAll('.preview').forEach(p => p.style
-                                        .display = 'none');
-                                } else {
-                                    window.location.href = "{{ route('homeWarga') }}";
-                                }
-                            });
-                        } else {
+                                    icon: 'success',
+                                    title: response.message,
+                                    confirmButtonColor: '#3085d6',
+                                    customClass: {
+                                        title: 'swal-title-small',
+                                        content: 'swal-text-small',
+                                        confirmButton: 'swal-btn-small'
+                                    }
+                                })
+
+                                .then(() => {
+
+                                    // =========================================
+                                    // Jika tambah data lagi
+                                    // =========================================
+
+                                    if (response.action === 'tambah') {
+
+                                        form.reset();
+
+                                        // Hide semua preview image
+                                        document
+                                            .querySelectorAll('.preview')
+                                            .forEach(preview => {
+
+                                                preview.style.display = 'none';
+                                                preview.src = '';
+                                            });
+
+                                    } else {
+
+                                        // Redirect
+                                        window.location.href =
+                                            "{{ route('homeWarga') }}";
+                                    }
+                                });
+
+                        }
+
+                        // =================================================
+                        // FAILED
+                        // =================================================
+                        else {
+
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Gagal',
-                                text: res.message,
+                                text: response.message ||
+                                    'Data gagal disimpan.',
                                 confirmButtonColor: '#d33',
                                 customClass: {
                                     title: 'swal-title-small',
@@ -467,9 +696,17 @@
                             });
                         }
                     })
-                    .catch(err => {
+
+                    // =====================================================
+                    // ERROR SERVER / NETWORK
+                    // =====================================================
+
+                    .catch(error => {
+
                         Swal.close();
-                        console.error('Error:', err);
+
+                        console.error('Submit Error:', error);
+
                         Swal.fire({
                             icon: 'error',
                             title: 'Terjadi Kesalahan',
@@ -482,11 +719,17 @@
                             }
                         });
                     });
-            }
+            };
 
-            // =========================
-            // 6️⃣ SweetAlert dari session Laravel
-            // =========================
+            // =========================================================
+            // 8️⃣ SWEETALERT SESSION LARAVEL
+            // =========================================================
+            // Menampilkan alert dari session:
+            //
+            // session('status')
+            // session('message')
+            // =========================================================
+
             @if (session('status'))
                 Swal.fire({
                     icon: "{{ session('status') }}",
