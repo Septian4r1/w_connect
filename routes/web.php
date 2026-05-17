@@ -320,6 +320,7 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::post('/store/bedaKK', [ManagementTambahDataBedaKKController::class, 'storDataBedaKK'])->middleware('permission:wargabedakk.store')->name('management.warga.StoreBedaKK');
         Route::get('/tambah/keluarga/BedaKK/{id}', [ManagementTambahKeluargaBedaKKController::class, 'create'])->middleware('permission:wargabedakk.create')->name('management.warga.tambahKeluargaBedaKK');
         Route::post('/Management/Data_warga/Store/beda_KK', [ManagementTambahKeluargaBedaKKController::class, 'DataWargaBedakkStore'])->middleware('permission:wargabedakk.store')->name('management.warga.Store_Data_warga_bedaKK');
+
         /* DATA RUMAH & KK */
         Route::get('/kartu-keluarga', [ManagementRumahDanKK::class, 'index'])->middleware('permission:keluarga.view')->name('management.kk.index');
 

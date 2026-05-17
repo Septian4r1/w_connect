@@ -160,8 +160,16 @@ class WargaController extends Controller
          * =========================================================
          */
         $wargas = $query
+
+            ->orderBy($sortBy, $sortDir)
+
             ->paginate(10)
-            ->withQueryString(); // 🔥 supaya search + sort tetap kebawa
+
+            ->appends([
+                'search'   => $search,
+                'sort_by'  => $sortBy,
+                'sort_dir' => $sortDir,
+            ]);
 
 
         /**

@@ -280,7 +280,7 @@
                         dari {{ $wargas->total() }} data
                     </small>
 
-                    {{ $wargas->appends(request()->query())->links('pagination::bootstrap-5') }}
+                    {{ $wargas->appends(request()->except('auth_user_id'))->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>

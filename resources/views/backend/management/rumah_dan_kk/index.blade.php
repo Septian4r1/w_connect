@@ -391,7 +391,7 @@
 
                     </small>
 
-                    {{ $rumahs->appends(request()->query())->links('pagination::bootstrap-5') }}
+                  {{ $rumahs->links('pagination::bootstrap-5') }}
 
                 </div>
 

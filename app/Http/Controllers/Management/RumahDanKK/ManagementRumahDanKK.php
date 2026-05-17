@@ -318,9 +318,13 @@ class ManagementRumahDanKK extends Controller
 
             ->orderBy($sortBy, $sortDir)
 
-            ->paginate(15)
+            ->paginate(10)
 
-            ->withQueryString();
+            ->appends([
+                'search'   => $search,
+                'sort_by'  => $sortBy,
+                'sort_dir' => $sortDir,
+            ]);
 
         /*
         |----------------------------------------------------------------------
