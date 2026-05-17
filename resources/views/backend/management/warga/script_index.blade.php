@@ -28,18 +28,26 @@
             if (input.length && form.length) {
 
                 let debounceTimer;
-                let lastValue = input.val();
+                let lastValue = input.val().trim();
 
-                input.on('keyup', function() {
+                input.on('input', function() {
+
                     clearTimeout(debounceTimer);
 
                     debounceTimer = setTimeout(() => {
-                        if (input.val() === lastValue) return;
-                        lastValue = input.val();
+
+                        const currentValue = input.val().trim();
+
+                        if (currentValue === lastValue) return;
+
+                        lastValue = currentValue;
 
                         showLoading();
+
                         form.submit();
+
                     }, 500);
+
                 });
 
                 input.on('search', function() {
@@ -255,7 +263,8 @@
                             url = "{{ route('management.warga.tambahSatuKK', ':id') }}".replace(
                                 ':id', wargaId);
                         } else if (type === 'beda_kk') {
-                            url = "{{ route('management.warga.tambahBedaKK', ':id') }}".replace(':id',
+                            url = "{{ route('management.warga.tambahBedaKK', ':id') }}".replace(
+                                ':id',
                                 wargaId);
                         }
 

@@ -755,4 +755,165 @@ PREVIEW FOTO KK (RESPONSIVE)
     .is-invalid {
         border: 1px solid red !important;
     }
+
+     /* =========================================================
+    MANAGEMENT RUMAH DAN KK
+    ========================================================= */
+
+
+
+    .modern-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        padding: 10px 12px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 72px;
+        transition: .25s ease;
+        box-shadow:
+            0 2px 10px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .modern-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 6px 18px rgba(0, 0, 0, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .modern-card::before {
+        content: '';
+        position: absolute;
+        right: -20px;
+        bottom: -20px;
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+    }
+
+    .icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.16);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        backdrop-filter: blur(3px);
+    }
+
+    .card-info {
+        position: relative;
+        z-index: 2;
+        overflow: hidden;
+    }
+
+    .card-info small {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        opacity: .92;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .card-info h4 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: .3px;
+    }
+
+    /* CUSTOM GRID */
+    @media (min-width: 1200px) {
+        .col-xl-2-custom {
+            flex: 0 0 auto;
+            width: 16.66666667%;
+        }
+    }
+
+    /* WARNA */
+    .bg-blue {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+    }
+
+    .bg-pink {
+        background: linear-gradient(135deg, #ec4899, #be185d);
+    }
+
+    .bg-orange {
+        background: linear-gradient(135deg, #f59e0b, #b45309);
+    }
+
+    .bg-purple {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    .bg-teal {
+        background: linear-gradient(135deg, #14b8a6, #0f766e);
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .bg-success {
+        background: linear-gradient(135deg, #22c55e, #15803d);
+    }
+
+    .bg-danger {
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+    }
+
+    .bg-warning {
+        background: linear-gradient(135deg, #facc15, #ca8a04);
+        color: #1f2937;
+    }
+
+    .bg-info {
+        background: linear-gradient(135deg, #06b6d4, #0e7490);
+    }
+
+    .bg-secondary {
+        background: linear-gradient(135deg, #6b7280, #374151);
+    }
+
+    .bg-dark {
+        background: linear-gradient(135deg, #1f2937, #111827);
+    }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+
+        .modern-card {
+            min-height: 68px;
+            padding: 8px 10px;
+            border-radius: 14px;
+        }
+
+        .icon-box {
+            width: 36px;
+            height: 36px;
+            font-size: 15px;
+            border-radius: 10px;
+        }
+
+        .card-info small {
+            font-size: 10px;
+        }
+
+        .card-info h4 {
+            font-size: 17px;
+        }
+    }
 </style>

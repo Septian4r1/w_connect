@@ -6,10 +6,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable; // <- diganti
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+
 use App\Models\Keluarga;
 use App\Models\Warga;
 
@@ -39,7 +42,7 @@ class Rumah extends Authenticatable
     ];
 
     // Mutator untuk hash password otomatis
-    public function setPasswordAttribute($value)
+    public function setPasswordAttribute(string $value): void
     {
         if ($value) {
             $this->attributes['password'] = Hash::make($value);
@@ -56,6 +59,12 @@ class Rumah extends Authenticatable
     {
         return $this->hasOne(Keluarga::class);
     }
+
+    public function keluargas(): HasMany
+    {
+        return $this->hasMany(Keluarga::class, 'rumah_id');
+    }
+
 
     public function kepalaKeluarga(): HasOneThrough
     {
@@ -104,6 +113,17 @@ class Rumah extends Authenticatable
             $this->desa,
             $this->kelurahan,
             $this->kode_pos
+        );
+    }
+    public function wargas()
+    {
+        return $this->hasManyThrough(
+            Warga::class,
+            Keluarga::class,
+            'rumah_id',
+            'keluarga_id',
+            'id',
+            'id'
         );
     }
 }

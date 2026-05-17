@@ -70,6 +70,7 @@ use App\Http\Controllers\Management\Menus\RolePermissionsController;
 use App\Http\Controllers\Management\MManagementTambahDataWargaController;
 use App\Http\Controllers\Management\PengurusController;
 use App\Http\Controllers\Management\Roles\ManagementRolseController;
+use App\Http\Controllers\Management\RumahDanKK\ManagementRumahDanKK;
 use App\Http\Controllers\Management\RWController;
 use App\Http\Controllers\Management\StatistikWargaController;
 use App\Http\Controllers\Management\StruktureManagementController;
@@ -319,8 +320,8 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::post('/store/bedaKK', [ManagementTambahDataBedaKKController::class, 'storDataBedaKK'])->middleware('permission:wargabedakk.store')->name('management.warga.StoreBedaKK');
         Route::get('/tambah/keluarga/BedaKK/{id}', [ManagementTambahKeluargaBedaKKController::class, 'create'])->middleware('permission:wargabedakk.create')->name('management.warga.tambahKeluargaBedaKK');
         Route::post('/Management/Data_warga/Store/beda_KK', [ManagementTambahKeluargaBedaKKController::class, 'DataWargaBedakkStore'])->middleware('permission:wargabedakk.store')->name('management.warga.Store_Data_warga_bedaKK');
-        /* DATA KK */
-        Route::get('/kartu-keluarga', fn() => app(UnderConstructionController::class)->index('Manajemen KK'))->middleware('permission:keluarga.view')->name('management.kk.index');
+        /* DATA RUMAH & KK */
+        Route::get('/kartu-keluarga', [ManagementRumahDanKK::class, 'index'])->middleware('permission:keluarga.view')->name('management.kk.index');
 
 
         Route::get('/mutasi-warga', fn() => app(UnderConstructionController::class)->index('Mutasi Warga'))->middleware('permission:warga.update')->name('management.mutasi.index');
