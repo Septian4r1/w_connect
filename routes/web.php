@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Accounting\ManagementAccountingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -338,6 +339,17 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::get('/pengeluaran', fn() => app(UnderConstructionController::class)->index('Manajemen Pengeluaran'))->middleware('permission:keuangan.view')->name('management.pengeluaran.index');
         Route::get('/laporan-keuangan', fn() => app(UnderConstructionController::class)->index('Laporan Keuangan'))->middleware('permission:keuangan.view')->name('management.laporan.keuangan');
     });
+
+    /*
+    |----------------------------------------------------------------------
+    | ACCOUNTING
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('/accounting')->group(function () {
+        Route::get('/coa/view',[ManagementAccountingController::class, 'index'])->middleware('permission:coa.view')->name('management.coa.index');
+
+    });
+
 
     /*
     |----------------------------------------------------------------------
