@@ -756,7 +756,7 @@ PREVIEW FOTO KK (RESPONSIVE)
         border: 1px solid red !important;
     }
 
-     /* =========================================================
+    /* =========================================================
     MANAGEMENT RUMAH DAN KK
     ========================================================= */
 
@@ -915,5 +915,105 @@ PREVIEW FOTO KK (RESPONSIVE)
         .card-info h4 {
             font-size: 17px;
         }
+    }
+
+    /* =========================================================
+ACTION BUTTON TABLE
+========================================================= */
+
+    .action-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    .action-group form {
+        margin: 0;
+    }
+
+    .action-btn {
+        width: 26px;
+        height: 26px;
+
+        border: none;
+        border-radius: 7px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        text-decoration: none;
+
+        transition: all .18s ease;
+
+        padding: 0;
+    }
+
+    .action-btn i {
+        font-size: 11px;
+        line-height: 1;
+    }
+
+    /* DETAIL */
+    .action-detail {
+        background: #e0f2fe;
+        color: #0284c7;
+    }
+
+    /* EDIT */
+    .action-edit {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    /* DELETE */
+    .action-delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* HOVER */
+    .action-btn:hover {
+        transform: translateY(-1px);
+        opacity: .9;
+    }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+
+        .action-group {
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+
+        .action-btn i {
+            font-size: 10px;
+        }
+    }
+
+    .text-pink {
+        color: #d63384;
+    }
+
+    .bg-blue {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .bg-pink {
+        background: #d63384;
+        color: white;
+    }
+
+    .bg-orange {
+        background: #fd7e14;
+        color: white;
     }
 </style>

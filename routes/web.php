@@ -324,6 +324,10 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
 
         /* DATA RUMAH & KK */
         Route::get('/kartu-keluarga', [ManagementRumahDanKK::class, 'index'])->middleware('permission:keluarga.view')->name('management.kk.index');
+        Route::get('/management/rumah/{id}', [ManagementRumahDanKK::class, 'show'])->middleware('permission:keluarga.detail')->name('management.rumah.show');
+        Route::get('/management/rumah/{id}/edit', [ManagementRumahDanKK::class, 'edit'])->middleware('permission:keluarga.update')->name('management.rumah.edit');
+        Route::put('/management/rumah/{id}',[ManagementRumahDanKK::class, 'update'])->middleware('permission:keluarga.update') ->name('management.rumah.update');
+        Route::delete('/management/rumah/{id}', [ManagementRumahDanKK::class, 'destroy'])->middleware('permission:keluarga.delete')->name('management.rumah.destroy');
 
 
         Route::get('/mutasi-warga', fn() => app(UnderConstructionController::class)->index('Mutasi Warga'))->middleware('permission:warga.update')->name('management.mutasi.index');
@@ -347,6 +351,11 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     */
     Route::prefix('/accounting')->group(function () {
         Route::get('/coa/view',[ManagementAccountingController::class, 'index'])->middleware('permission:coa.view')->name('management.coa.index');
+        Route::post('/coa/store',[ManagementAccountingController::class, 'store'])->middleware('permission:coa.store')->name('management.coa.store');
+        Route::put('/coa/edit/{id}',[ManagementAccountingController::class, 'update'])->middleware('permission:coa.update')->name('management.coa.update');
+        Route::post('/coa/status/{id}',[ManagementAccountingController::class, 'toggleStatus'])->middleware('permission:coa.togglestatus')->name('management.coa.toggle-status');
+        Route::get('/coa/detail/{id}',[ManagementAccountingController::class, 'detail'])->middleware('permission:coa.detail')->name('management.coa.detail');
+
 
     });
 

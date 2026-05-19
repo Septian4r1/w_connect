@@ -248,6 +248,7 @@
                                 <th>Total KK</th>
                                 <th>Total Warga</th>
                                 <th>Keterangan </th>
+                                <th width="140">Action</th>
 
                             </tr>
 
@@ -353,6 +354,48 @@
 
                                     </td>
 
+                                    <td>
+
+                                        <div class="action-group">
+
+                                            {{-- DETAIL --}}
+                                            {{-- <a href="{{ route('management.rumah.show', $item->id) }}"
+                                                class="action-btn action-detail">
+
+                                                <i class="bi bi-eye-fill"></i>
+                                            </a> --}}
+
+                                            {{-- EDIT --}}
+                                            <button type="button" class="action-btn action-edit btn-edit-rumah"
+                                                data-id="{{ $item->id }}" data-nomor="{{ $item->nomor_rumah }}"
+                                                data-status="{{ $item->status_hunian }}">
+
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+
+                                            {{-- DELETE --}}
+                                            <form action="{{ route('management.rumah.destroy', $item->id) }}"
+                                                method="POST" class="form-delete-rumah m-0 p-0"
+                                                data-nama="{{ $item->kepala_keluarga ?? 'Belum Ada Kepala Keluarga' }}"
+                                                data-rumah="{{ $item->nomor_rumah }}">
+
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit" class="action-btn action-delete">
+
+                                                    <i class="bi bi-trash-fill"></i>
+
+                                                </button>
+
+                                            </form>
+
+                                        </div>
+
+                                    </td>
+
+
+
                                 </tr>
 
                             @empty
@@ -391,7 +434,7 @@
 
                     </small>
 
-                  {{ $rumahs->links('pagination::bootstrap-5') }}
+                    {{ $rumahs->links('pagination::bootstrap-5') }}
 
                 </div>
 
@@ -404,27 +447,311 @@
     {{-- STYLE --}}
     @include('backend.management.warga.style')
 
-    <style>
-        .text-pink {
-            color: #d63384;
-        }
 
-        .bg-blue {
-            background: #0d6efd;
-            color: white;
-        }
+    {{-- MODAL EDIT RUMAH --}}
+    <div class="modal fade" id="modalEditRumah" tabindex="-1" aria-hidden="true">
 
-        .bg-pink {
-            background: #d63384;
-            color: white;
-        }
+        <div class="modal-dialog modal-dialog-centered">
 
-        .bg-orange {
-            background: #fd7e14;
-            color: white;
-        }
-    </style>
+            <div class="modal-content border-0 shadow-lg">
+
+                <form id="formEditRumah" method="POST">
+
+                    @csrf
+                    @method('PUT')
+
+                    <div class="modal-header bg-danger text-white">
+
+                        <h5 class="modal-title">
+                            Edit Data Rumah
+                        </h5>
+
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        {{-- NOMOR RUMAH --}}
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+                                Nomor Rumah
+                            </label>
+
+                            <input type="text" name="nomor_rumah" id="edit_nomor_rumah" class="form-control"
+                                required>
+
+                        </div>
+
+                        {{-- STATUS HUNIAN --}}
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+                                Status Hunian
+                            </label>
+
+                            <select name="status_hunian" id="edit_status_hunian" class="form-select" required>
+
+                                <option value="huni milik sendiri">
+                                    Huni Milik Sendiri
+                                </option>
+
+                                <option value="sewa">
+                                    Sewa
+                                </option>
+
+                                <option value="belum huni">
+                                    Belum Huni
+                                </option>
+
+                                <option value="kosong">
+                                    Kosong
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+
+                            Batal
+                        </button>
+
+                        <button type="submit" class="btn btn-danger">
+
+                            Simpan Perubahan
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
 @endsection
 
-{{-- SCRIPT --}}
-@include('backend.management.warga.script_index')
+@push('scripts')
+    {{-- ===========================
+    SWEET ALERT SUCCESS
+    ============================ --}}
+    @if (session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: @json(session('success')),
+                timer: 1800,
+                showConfirmButton: false
+            });
+        </script>
+    @endif
+
+    {{-- ===========================
+    SWEET ALERT ERROR
+    ============================ --}}
+    @if (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: @json(session('error')),
+            });
+        </script>
+    @endif
+
+    <script>
+        // ===========================
+        // OPEN MODAL EDIT RUMAH
+        // ===========================
+        $(document).on('click', '.btn-edit-rumah', function() {
+
+            const id = $(this).data('id');
+            const nomor = $(this).data('nomor');
+            const status = $(this).data('status');
+
+            // SET VALUE
+            $('#edit_nomor_rumah').val(nomor);
+            $('#edit_status_hunian').val(status);
+
+            // SET ACTION FORM
+            const updateUrl =
+                "{{ route('management.rumah.update', ':id') }}"
+                .replace(':id', id);
+
+            $('#formEditRumah').attr('action', updateUrl);
+
+            // SHOW MODAL
+            $('#modalEditRumah').modal('show');
+        });
+
+        // ===========================
+        // SUBMIT EDIT RUMAH AJAX
+        // ===========================
+        $(document).on('submit', '#formEditRumah', function(e) {
+
+            e.preventDefault();
+
+            const form = $(this);
+
+            const action = form.attr('action');
+
+            const formData = form.serialize();
+
+            // CLOSE MODAL
+            $('#modalEditRumah').modal('hide');
+
+            // LOADING SWEET ALERT
+            Swal.fire({
+                title: 'Menyimpan Perubahan...',
+                html: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+
+                url: action,
+                type: 'POST',
+                data: formData,
+
+                success: function(res) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: res.message ??
+                            'Data rumah berhasil diperbarui',
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1200);
+                },
+
+                error: function(xhr) {
+
+                    let message =
+                        'Terjadi kesalahan saat update data';
+
+                    if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message
+                    });
+                }
+
+            });
+
+        });
+
+        // ===========================
+        // DELETE RUMAH SWEET ALERT
+        // ===========================
+        $(document).on('submit', '.form-delete-rumah', function(e) {
+
+            e.preventDefault();
+
+            const form = $(this);
+
+            const nama = form.data('nama');
+            const rumah = form.data('rumah');
+
+            Swal.fire({
+
+                title: 'Hapus Data Rumah?',
+
+                html: `
+                <div style="font-size:13px; line-height:1.6">
+
+                    Apakah anda yakin ingin menghapus data keluarga:
+
+                    <br><br>
+
+                    <div style="
+                        background:#f8fafc;
+                        border-radius:10px;
+                        padding:10px;
+                        text-align:left;
+                    ">
+
+                        <div>
+                            <b>Kepala Keluarga:</b><br>
+                            ${nama}
+                        </div>
+
+                        <div class="mt-2">
+                            <b>No Rumah:</b><br>
+                            ${rumah}
+                        </div>
+
+                    </div>
+
+                    <br>
+
+                    <span style="color:#dc2626;font-size:12px">
+                        <b>
+                        Seluruh Data Rumah, KK, dan Warga
+                        yang dihapus tidak dapat dikembalikan
+                        </b>
+                    </span>
+
+                </div>
+                `,
+
+                icon: 'warning',
+
+                showCancelButton: true,
+
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+
+                reverseButtons: true,
+
+                width: window.innerWidth < 576 ? '90%' : '430px',
+
+                customClass: {
+                    popup: 'swal-popup-mini',
+                    title: 'swal-title-mini'
+                }
+
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+
+                    // LOADING
+                    Swal.fire({
+                        title: 'Menghapus Data...',
+                        html: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // SUBMIT KE CONTROLLER
+                    form[0].submit();
+                }
+
+            });
+
+        });
+    </script>
+@endpush

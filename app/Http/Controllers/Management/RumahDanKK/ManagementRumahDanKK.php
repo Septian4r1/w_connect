@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\Rumah;
 use App\Models\Keluarga;
@@ -616,5 +618,187 @@ class ManagementRumahDanKK extends Controller
                 'statistikUmur'
             )
         );
+    }
+
+
+
+    /*
+|--------------------------------------------------------------------------
+| DELETE RUMAH
+|--------------------------------------------------------------------------
+*/
+
+    public function destroy(string $id)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            /*
+        |------------------------------------------------------------------
+        | AMBIL DATA RUMAH + RELASI
+        |------------------------------------------------------------------
+        */
+
+            $rumah = Rumah::with([
+                'keluargas.wargas'
+            ])->findOrFail($id);
+
+            $nomorRumah = $rumah->nomor_rumah;
+
+            /*
+        |------------------------------------------------------------------
+        | LOOP KELUARGA
+        |------------------------------------------------------------------
+        */
+
+            foreach ($rumah->keluargas as $keluarga) {
+
+                /*
+            |--------------------------------------------------------------
+            | LOOP WARGA
+            |--------------------------------------------------------------
+            */
+
+                foreach ($keluarga->wargas as $warga) {
+
+                    /*
+                |----------------------------------------------------------
+                | HAPUS FOTO KTP
+                |----------------------------------------------------------
+                */
+
+                    if (
+                        !empty($warga->foto_ktp) &&
+                        file_exists(public_path($warga->foto_ktp))
+                    ) {
+
+                        unlink(public_path($warga->foto_ktp));
+                    }
+
+                    /*
+                |----------------------------------------------------------
+                | HAPUS FOTO SELFIE
+                |----------------------------------------------------------
+                */
+
+                    if (
+                        !empty($warga->foto) &&
+                        file_exists(public_path($warga->foto))
+                    ) {
+
+                        unlink(public_path($warga->foto));
+                    }
+
+                    /*
+                |----------------------------------------------------------
+                | HAPUS DATA WARGA
+                |----------------------------------------------------------
+                */
+
+                    $warga->delete();
+                }
+
+                /*
+            |--------------------------------------------------------------
+            | HAPUS FOTO KK
+            |--------------------------------------------------------------
+            */
+
+                if (
+                    !empty($keluarga->foto_kk) &&
+                    file_exists(public_path($keluarga->foto_kk))
+                ) {
+
+                    unlink(public_path($keluarga->foto_kk));
+                }
+
+                /*
+            |--------------------------------------------------------------
+            | HAPUS DATA KELUARGA
+            |--------------------------------------------------------------
+            */
+
+                $keluarga->delete();
+            }
+
+            /*
+        |------------------------------------------------------------------
+        | HAPUS RUMAH
+        |------------------------------------------------------------------
+        */
+
+            $rumah->delete();
+
+            DB::commit();
+
+            /*
+        |------------------------------------------------------------------
+        | SUCCESS
+        |------------------------------------------------------------------
+        */
+
+            return redirect()
+                ->back()
+                ->with(
+                    'success',
+                    "Data rumah {$nomorRumah} beserta seluruh KK dan warga berhasil dihapus"
+                );
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            Log::error('Gagal hapus rumah', [
+                'error' => $e->getMessage(),
+                'id'    => $id
+            ]);
+
+            return redirect()
+                ->back()
+                ->with(
+                    'error',
+                    'Terjadi kesalahan saat menghapus data rumah'
+                );
+        }
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| UPDATE RUMAH
+|--------------------------------------------------------------------------
+*/
+
+    public function update(Request $request, string $id)
+    {
+        try {
+
+            $request->validate([
+                'nomor_rumah'  => 'required|max:50',
+                'status_hunian' => 'required'
+            ]);
+
+            $rumah = Rumah::findOrFail($id);
+
+            $rumah->update([
+                'nomor_rumah'  => $request->nomor_rumah,
+                'status_hunian' => $request->status_hunian,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data rumah berhasil diperbarui'
+            ]);
+        } catch (\Throwable $e) {
+
+            Log::error('Gagal update rumah', [
+                'error' => $e->getMessage(),
+                'id'    => $id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui data rumah'
+            ], 500);
+        }
     }
 }

@@ -120,80 +120,121 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+    {{-- <script>
+        (function() {
 
             // =====================================
-            // DISABLE RIGHT CLICK
+            // CONFIG
+            // =====================================
+            let devtoolsOpen = false;
+
+            // =====================================
+            // HELPER ALERT
+            // =====================================
+            function block(msg) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Ditolak',
+                        text: msg,
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert(msg);
+                }
+            }
+
+            // =====================================
+            // RIGHT CLICK BLOCK
             // =====================================
             document.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
+                block('Klik kanan dinonaktifkan');
+            });
 
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Akses Dibatasi',
-                    text: 'Klik kanan dinonaktifkan'
+            // =====================================
+            // COPY / CUT / PASTE BLOCK
+            // =====================================
+            ['copy', 'cut', 'paste'].forEach(evt => {
+                document.addEventListener(evt, function(e) {
+                    e.preventDefault();
+                    block(evt + ' tidak diizinkan');
                 });
             });
 
             // =====================================
-            // BLOCK SHORTCUT DEVTOOLS
+            // DRAG + SELECT BLOCK
+            // =====================================
+            document.addEventListener('dragstart', e => e.preventDefault());
+            document.addEventListener('selectstart', e => e.preventDefault());
+
+            // =====================================
+            // KEYBOARD SHORTCUT BLOCK
             // =====================================
             document.addEventListener('keydown', function(e) {
 
-                // F12
-                if (e.key === 'F12') {
+                const key = e.key.toLowerCase();
+
+                // DEVTOOLS
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(key)) ||
+                    (e.ctrlKey && key === 'u')
+                ) {
                     e.preventDefault();
+                    block('Developer tools diblokir');
+                    return;
                 }
 
-                // Ctrl+Shift+I
-                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'I') {
+                // SAVE / PRINT / REFRESH
+                if (
+                    (e.ctrlKey && key === 's') ||
+                    (e.ctrlKey && key === 'p') ||
+                    (e.ctrlKey && key === 'r') ||
+                    e.key === 'F5'
+                ) {
                     e.preventDefault();
+                    block('Action diblokir');
+                    return;
                 }
 
-                // Ctrl+Shift+J
-                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'J') {
+                // COPY / SELECT ALL
+                if (
+                    (e.ctrlKey && key === 'c') ||
+                    (e.ctrlKey && key === 'a')
+                ) {
                     e.preventDefault();
+                    block('Action diblokir');
+                    return;
                 }
 
-                // Ctrl+Shift+C
-                if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === 'C') {
+                // ALT F4 (optional)
+                if (e.altKey && e.key === 'F4') {
                     e.preventDefault();
-                }
-
-                // Ctrl+U
-                if (e.ctrlKey && e.key.toUpperCase() === 'U') {
-                    e.preventDefault();
-                }
-
-                // Ctrl+S
-                if (e.ctrlKey && e.key.toUpperCase() === 'S') {
-                    e.preventDefault();
+                    block('Action diblokir');
+                    return;
                 }
 
             });
 
             // =====================================
-            // DETECT DEVTOOLS
+            // DEVTOOLS DETECTION (ANTI INSPECT)
             // =====================================
-            let devtools = false;
-
             setInterval(() => {
 
-                const widthThreshold =
-                    window.outerWidth - window.innerWidth > 160;
+                const widthDiff = window.outerWidth - window.innerWidth > 160;
+                const heightDiff = window.outerHeight - window.innerHeight > 160;
 
-                const heightThreshold =
-                    window.outerHeight - window.innerHeight > 160;
+                const detected = widthDiff || heightDiff;
 
-                if (widthThreshold || heightThreshold) {
+                if (detected && !devtoolsOpen) {
 
-                    if (!devtools) {
+                    devtoolsOpen = true;
 
-                        devtools = true;
+                    document.body.style.filter = "blur(10px)";
 
-                        document.body.style.filter = "blur(10px)";
-
+                    if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'warning',
                             title: 'Inspect Terdeteksi',
@@ -201,20 +242,19 @@
                             allowOutsideClick: false,
                             allowEscapeKey: false
                         });
-
                     }
 
-                } else {
+                }
 
-                    devtools = false;
+                if (!detected && devtoolsOpen) {
+                    devtoolsOpen = false;
                     document.body.style.filter = "none";
-
                 }
 
             }, 1000);
 
-        });
-    </script>
+        })();
+    </script> --}}
 
 
 </body>

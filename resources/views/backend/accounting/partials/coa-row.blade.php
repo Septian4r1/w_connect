@@ -1,107 +1,141 @@
 @php
-    $children = $accounts[$account->id] ?? [];
-    $hasChildren = count($children) > 0;
 
-    // indent level tree
-    $indent = $level * 26;
+    $children = $accounts->get($account->id, collect());
 
-    // status helper
+    $hasChildren = $children->isNotEmpty();
+
     $isActive = (bool) $account->is_active;
+
+    $type = strtolower($account->type);
+
+    $balanceType = strtolower($account->normal_balance);
+
 @endphp
 
-<tr data-id="{{ $account->id }}" data-parent="{{ $account->parent_id ?? 0 }}" class="coa-row level-{{ $level }}">
+<tr data-id="{{ $account->id }}" data-parent="{{ $account->parent_id }}" data-level="{{ $level }}"
+    class="coa-row level-{{ $level }}">
 
-    {{-- ================= CODE ================= --}}
+    {{-- CODE --}}
     <td class="coa-code-cell">
 
-        <div class="coa-tree-wrap">
+        <div class="coa-code-wrap level-{{ $level }}">
 
-            <div class="coa-code-wrap" style="padding-left: {{ $indent }}px;">
+            {{-- TREE --}}
+            <span class="tree-lines">
 
-                {{-- LINE VISUAL --}}
-                <span class="tree-line"></span>
+                @for ($i = 0; $i < $level; $i++)
+                    <span class="v-line"></span>
+                @endfor
 
-                {{-- TOGGLE --}}
-                @if ($hasChildren)
-                    <button type="button" class="coa-toggle-btn" data-state="open">
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                @else
-                    <span class="coa-leaf-dot"></span>
-                @endif
+            </span>
 
-                <span class="coa-code-text">
-                    {{ $account->code }}
-                </span>
+            {{-- TOGGLE --}}
+            @if ($hasChildren)
+                <button type="button" class="coa-toggle-btn" data-state="open">
 
-            </div>
+                    <i class="bi bi-chevron-down"></i>
+
+                </button>
+            @else
+                <span class="coa-leaf-dot"></span>
+            @endif
+
+            {{-- CODE --}}
+            <span class="coa-code-text">
+
+                {{ $account->code }}
+
+            </span>
 
         </div>
 
     </td>
-    {{-- ================= NAME ================= --}}
-    <td class="coa-name-cell">
+
+    {{-- NAME --}}
+    <td>
+
         <div class="coa-name-text">
+
             {{ $account->name }}
+
         </div>
+
     </td>
 
-    {{-- ================= TYPE ================= --}}
-    @php
-        $type = strtolower($account->type);
-    @endphp
-
+    {{-- TYPE --}}
     <td>
+
         <span class="coa-type-badge type-{{ $type }}">
-            {{ $account->type }}
+
+            {{ ucfirst($type) }}
+
         </span>
+
     </td>
 
-    {{-- ================= BALANCE ================= --}}
-    @php
-        $balanceType = strtolower($account->normal_balance);
-    @endphp
-
+    {{-- BALANCE --}}
     <td>
+
         <span class="coa-balance-badge {{ $balanceType }}">
-            {{ strtoupper($account->normal_balance) }}
+
+            {{ strtoupper($balanceType) }}
+
         </span>
+
     </td>
 
-    {{-- ================= STATUS ================= --}}
+    {{-- STATUS --}}
     <td>
-        @if ($isActive)
-            <span class="coa-status active">Active</span>
-        @else
-            <span class="coa-status inactive">Inactive</span>
-        @endif
+
+        <span class="coa-status {{ $isActive ? 'active' : 'inactive' }}">
+
+            {{ $isActive ? 'Active' : 'Inactive' }}
+
+        </span>
+
     </td>
 
-    {{-- ================= ACTION ================= --}}
-    <td class="coa-action-cell text-end">
+    {{-- ACTION --}}
+    <td class="text-center">
 
         <div class="coa-action-group">
 
-            <button class="coa-icon-btn edit" title="Edit">
-                <i class="bi bi-pencil"></i>
-            </button>
+            <div class="coa-action-group">
 
-            <button class="coa-icon-btn view" title="View">
-                <i class="bi bi-eye"></i>
-            </button>
+                {{-- 👁 VIEW DETAIL --}}
+                <button type="button" class="coa-icon-btn view coa-btn-view" title="View Detail COA"
+                    data-id="{{ $account->id }}" data-name="{{ $account->name }}">
 
-            <button class="coa-icon-btn danger" title="Delete">
-                <i class="bi bi-trash"></i>
-            </button>
+                    <i class="bi bi-eye"></i>
 
-        </div>
+                </button>
+                <button type="button" class="coa-icon-btn edit btn-edit-account btn-warning-soft" title="Edit Account"
+                    data-id="{{ $account->id }}" data-account_id="{{ $account->id }}"
+                    data-parent_id="{{ $account->parent_id }}" data-code="{{ $account->code }}"
+                    data-name="{{ $account->name }}" data-type="{{ $account->type }}"
+                    data-is_header="{{ $account->is_header }}">
+                    <i class="bi bi-pencil"></i>
+                </button>
+
+                <button type="button"
+                    class="coa-icon-btn toggle-status-btn {{ $account->is_active == 1 ? 'success' : 'danger' }}"
+                    title="{{ $account->is_active == 1 ? 'Active' : 'Inactive' }}"
+                    data-id="{{ Crypt::encryptString($account->id) }}" data-status="{{ $account->is_active }}"
+                    data-name="{{ $account->name }}">
+                    <i
+                        class="bi {{ $account->is_active == 1 ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill' }}">
+                    </i>
+                </button>
+
+            </div>
 
     </td>
 
 </tr>
 
-{{-- ================= CHILDREN ================= --}}
+{{-- RECURSIVE --}}
 @if ($hasChildren)
+
     @foreach ($children as $child)
         @include('backend.accounting.partials.coa-row', [
             'account' => $child,
@@ -109,4 +143,5 @@
             'level' => $level + 1,
         ])
     @endforeach
+
 @endif
