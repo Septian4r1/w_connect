@@ -188,13 +188,19 @@
                     </div>
                 </div>
             </div>
+
+
+
             {{-- ========================================= --}}
-            {{-- FUNDING ACCOUNT --}}
+            {{-- FUND ACCOUNT MAPPINGS --}}
             {{-- ========================================= --}}
             <div class="col-lg-8">
 
                 <div class="card coa-card border-0 shadow-sm h-100">
 
+                    {{-- ========================================= --}}
+                    {{-- HEADER --}}
+                    {{-- ========================================= --}}
                     <div class="card-header coa-card-header">
 
                         <div class="d-flex align-items-center justify-content-between">
@@ -206,118 +212,230 @@
                                 </div>
 
                                 <div>
-                                    <h5 class="mb-0">Funding Account</h5>
+                                    <h5 class="mb-0">
+                                        Fund Account Mapping
+                                    </h5>
 
                                     <small>
-                                        Daftar rekening dana
+                                        Mapping akun dana & COA accounting
                                     </small>
                                 </div>
 
                             </div>
 
-                            <button class="btn btn-sm btn-primary">
+                            <a href="#" class="btn btn-sm btn-primary">
+
                                 <i class="bi bi-plus-lg"></i>
-                            </button>
+
+                                <span class="ms-1">
+                                    Add Mapping
+                                </span>
+                            </a>
 
                         </div>
 
                     </div>
 
+                    {{-- ========================================= --}}
+                    {{-- BODY --}}
+                    {{-- ========================================= --}}
                     <div class="card-body p-0 d-flex flex-column">
 
                         <div class="table-responsive coa-table-scroll">
 
-                            <table class="table align-middle mb-0">
+                            <table class="table align-middle mb-0 coa-fund-table">
 
+                                {{-- ========================================= --}}
+                                {{-- TABLE HEADER --}}
+                                {{-- ========================================= --}}
                                 <thead>
+
                                     <tr>
-                                        <th>Code</th>
-                                        <th>Funding Name</th>
-                                        <th>Type</th>
-                                        <th>RW / RT</th>
-                                        <th>Status</th>
+
+                                        <th width="120">
+                                            Fund Code
+                                        </th>
+
+                                        <th width="220">
+                                            Fund Name
+                                        </th>
+
+                                        <th>
+                                            COA Mapping
+                                        </th>
+
+                                        <th width="120">
+                                            Default
+                                        </th>
+
+                                        <th width="120">
+                                            Status
+                                        </th>
+
+                                        <th width="120">
+                                            Action
+                                        </th>
+
                                     </tr>
+
                                 </thead>
 
+                                {{-- ========================================= --}}
+                                {{-- TABLE BODY --}}
+                                {{-- ========================================= --}}
                                 <tbody>
 
-                                    <tr>
-                                        <td>
-                                            <strong>RW016</strong>
-                                        </td>
+                                    @forelse($fundMappings as $mapping)
+                                        <tr>
 
-                                        <td>
-                                            Dana RW 016
-                                        </td>
+                                            {{-- CODE --}}
+                                            <td>
+                                                <strong>
+                                                    {{ $mapping->fundType?->code }}
+                                                </strong>
+                                            </td>
 
-                                        <td>
-                                            <span class="badge bg-primary">
-                                                Dana RW
-                                            </span>
-                                        </td>
+                                            {{-- FUND NAME --}}
+                                            <td>
 
-                                        <td>
-                                            RW 016
-                                        </td>
+                                                <div class="fw-semibold">
+                                                    {{ $mapping->fundType?->name }}
+                                                </div>
 
-                                        <td>
-                                            <span class="badge bg-success">
-                                                Active
-                                            </span>
-                                        </td>
-                                    </tr>
+                                                @if ($mapping->notes)
+                                                    <small class="text-muted">
+                                                        {{ $mapping->notes }}
+                                                    </small>
+                                                @endif
 
-                                    <tr>
-                                        <td>
-                                            <strong>RT001</strong>
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            Dana RT 001
-                                        </td>
+                                            {{-- ACCOUNT INFO --}}
+                                            <td>
 
-                                        <td>
-                                            <span class="badge bg-info">
-                                                Dana RT
-                                            </span>
-                                        </td>
+                                                <div class="small">
 
-                                        <td>
-                                            RW 016 / RT 001
-                                        </td>
+                                                    {{-- CASH --}}
+                                                    <div class="mb-1">
+                                                        <span class="fw-semibold">
+                                                            Cash:
+                                                        </span>
 
-                                        <td>
-                                            <span class="badge bg-success">
-                                                Active
-                                            </span>
-                                        </td>
-                                    </tr>
+                                                        {{ $mapping->cashAccount?->code }}
+                                                        -
+                                                        {{ $mapping->cashAccount?->name }}
+                                                    </div>
 
-                                    <tr>
-                                        <td>
-                                            <strong>SMP001</strong>
-                                        </td>
+                                                    {{-- REVENUE --}}
+                                                    <div class="mb-1">
+                                                        <span class="fw-semibold">
+                                                            Revenue:
+                                                        </span>
 
-                                        <td>
-                                            Dana Sampah
-                                        </td>
+                                                        {{ $mapping->revenueAccount?->code }}
+                                                        -
+                                                        {{ $mapping->revenueAccount?->name }}
+                                                    </div>
 
-                                        <td>
-                                            <span class="badge bg-warning text-dark">
-                                                Sampah
-                                            </span>
-                                        </td>
+                                                    {{-- EXPENSE --}}
+                                                    <div class="mb-1">
+                                                        <span class="fw-semibold">
+                                                            Expense:
+                                                        </span>
 
-                                        <td>
-                                            RW 016
-                                        </td>
+                                                        {{ $mapping->expenseAccount?->code }}
+                                                        -
+                                                        {{ $mapping->expenseAccount?->name }}
+                                                    </div>
 
-                                        <td>
-                                            <span class="badge bg-success">
-                                                Active
-                                            </span>
-                                        </td>
-                                    </tr>
+                                                </div>
+
+                                            </td>
+
+                                            {{-- DEFAULT --}}
+                                            <td>
+
+                                                @if ($mapping->is_default)
+                                                    <span class="badge bg-primary">
+                                                        Default
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">
+                                                        Optional
+                                                    </span>
+                                                @endif
+
+                                            </td>
+
+                                            {{-- STATUS --}}
+                                            <td>
+
+                                                @if ($mapping->is_active)
+                                                    <span class="badge bg-success">
+                                                        Active
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger">
+                                                        Inactive
+                                                    </span>
+                                                @endif
+
+                                            </td>
+
+                                            <td>
+
+                                                <div class="coa-action-group">
+
+                                                    {{-- EDIT --}}
+                                                    <button type="button" class="coa-icon-btn warning btnEditFundType"
+                                                        title="Edit">
+
+                                                        <i class="bi bi-pencil-square"></i>
+
+                                                    </button>
+
+                                                    {{-- ===================================================== --}}
+                                                    {{-- DELETE BUTTON --}}
+                                                    {{-- ===================================================== --}}
+                                                    <form
+                                                       >
+
+                                                        @csrf
+                                                        @method('DELETE')
+
+                                                        <button type="submit" class="coa-icon-btn danger"
+                                                            title="Delete">
+
+                                                            <i class="bi bi-trash"></i>
+
+                                                        </button>
+
+                                                    </form>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="5" class="text-center py-4">
+
+                                                <div class="text-muted">
+
+                                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+
+                                                    Belum ada mapping dana.
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+                                    @endforelse
 
                                 </tbody>
 
@@ -336,160 +454,10 @@
     </div>
 
     @include('backend.accounting.components.modal_tambah_funding-types')
+    @include('backend.accounting.components.modal_edit_funding_types')
 
-    {{-- ===================================================== --}}
-    {{-- MODAL EDIT FUND TYPE --}}
-    {{-- ===================================================== --}}
-    <div class="coa-modal" id="editFundTypeModal">
 
-        {{-- OVERLAY --}}
-        <div class="coa-modal-overlay closeEditFundTypeModal"></div>
 
-        {{-- MODAL BOX --}}
-        <div class="coa-modal-box">
-
-            {{-- ========================================= --}}
-            {{-- MODAL HEADER --}}
-            {{-- ========================================= --}}
-            <div class="coa-modal-header">
-
-                <div class="coa-modal-title">
-
-                    <div class="coa-modal-icon">
-                        <i class="bi bi-pencil-square"></i>
-                    </div>
-
-                    <div>
-
-                        <h4>
-                            Edit Funding Type
-                        </h4>
-
-                        <p>
-                            Update data funding type
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <button type="button" class="coa-modal-close closeEditFundTypeModal">
-
-                    <i class="bi bi-x-lg"></i>
-
-                </button>
-
-            </div>
-
-            {{-- ========================================= --}}
-            {{-- FORM --}}
-            {{-- ========================================= --}}
-            <form id="editFundTypeForm" method="POST">
-
-                @csrf
-                @method('PUT')
-
-                <div class="form-grid">
-
-                    {{-- CODE --}}
-                    <div class="form-group">
-
-                        <label>
-                            Code
-                        </label>
-
-                        <input type="text" name="code" id="edit_code" class="form-control"
-                            placeholder="Contoh: RW-OPS" required>
-
-                        <small class="form-hint">
-                            Gunakan kode unik funding
-                        </small>
-
-                    </div>
-
-                    {{-- STATUS --}}
-                    <div class="form-group">
-
-                        <label>
-                            Status
-                        </label>
-
-                        <select name="is_active" id="edit_is_active" class="form-select">
-
-                            <option value="1">
-                                Active
-                            </option>
-
-                            <option value="0">
-                                Inactive
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    {{-- NAME --}}
-                    <div class="form-group full">
-
-                        <label>
-                            Funding Name
-                        </label>
-
-                        <input type="text" name="name" id="edit_name" class="form-control"
-                            placeholder="Contoh: Dana RW" required>
-
-                    </div>
-
-                    {{-- DESCRIPTION --}}
-                    <div class="form-group full">
-
-                        <label>
-                            Description
-                        </label>
-
-                        <textarea name="description" id="edit_description" rows="4" class="form-control"
-                            placeholder="Deskripsi funding type..."></textarea>
-
-                    </div>
-
-                </div>
-
-                {{-- ACTION --}}
-                <div class="modal-actions">
-
-                    {{-- CANCEL --}}
-                    <button type="button" class="coa-action-btn cancel-btn closeEditFundTypeModal">
-
-                        <span class="btn-icon">
-                            <i class="bi bi-x-lg"></i>
-                        </span>
-
-                        <span>
-                            Batal
-                        </span>
-
-                    </button>
-
-                    {{-- SUBMIT --}}
-                    <button type="submit" class="coa-action-btn submit-btn">
-
-                        <span class="btn-icon">
-                            <i class="bi bi-check2"></i>
-                        </span>
-
-                        <span>
-                            Update Funding Type
-                        </span>
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
 
 
     @include('backend.accounting.funding-types.style-funding-types')

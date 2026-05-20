@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting\FundType;
+use App\Models\Accounting\FundAccountMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 
@@ -29,8 +30,20 @@ class ManagementFundingTypesController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->get('search'));
+        /*
+        |--------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------
+        */
+        $search = trim(
+            (string) $request->get('search')
+        );
 
+        /*
+        |--------------------------------------------------------
+        | FUND TYPES
+        |--------------------------------------------------------
+        */
         $fundTypes = FundType::query()
 
             ->select([
@@ -42,14 +55,26 @@ class ManagementFundingTypesController extends Controller
                 'created_at',
             ])
 
-            ->when($search, function ($query) use ($search) {
+            ->when(
+                $search,
+                function ($query) use ($search) {
 
-                $query->where(function ($q) use ($search) {
+                    $query->where(function ($q) use ($search) {
 
-                    $q->where('code', 'LIKE', "%{$search}%")
-                        ->orWhere('name', 'LIKE', "%{$search}%");
-                });
-            })
+                        $q->where(
+                            'code',
+                            'LIKE',
+                            "%{$search}%"
+                        )
+
+                            ->orWhere(
+                                'name',
+                                'LIKE',
+                                "%{$search}%"
+                            );
+                    });
+                }
+            )
 
             ->orderBy('code')
 
@@ -57,9 +82,68 @@ class ManagementFundingTypesController extends Controller
 
             ->withQueryString();
 
+        /*
+        |--------------------------------------------------------
+        | FUND ACCOUNT MAPPINGS
+        |--------------------------------------------------------
+        */
+        $fundMappings = FundAccountMapping::query()
+
+            ->with([
+
+                /*
+                |------------------------------------------------
+                | FUND TYPE
+                |------------------------------------------------
+                */
+                'fundType:id,code,name,is_active',
+
+                /*
+                |------------------------------------------------
+                | CHART OF ACCOUNTS
+                |------------------------------------------------
+                */
+                'cashAccount:id,code,name',
+
+                'revenueAccount:id,code,name',
+
+                'expenseAccount:id,code,name',
+
+                'payableAccount:id,code,name',
+
+                'receivableAccount:id,code,name',
+            ])
+
+            ->select([
+                'id',
+                'fund_type_id',
+
+                'cash_account_id',
+                'revenue_account_id',
+                'expense_account_id',
+                'payable_account_id',
+                'receivable_account_id',
+
+                'is_default',
+                'is_active',
+                'notes',
+            ])
+
+            ->orderByDesc('id')
+
+            ->get();
+
+        /*
+        |--------------------------------------------------------
+        | RETURN VIEW
+        |--------------------------------------------------------
+        */
         return view(
             'backend.accounting.funding-types.index',
-            compact('fundTypes')
+            compact(
+                'fundTypes',
+                'fundMappings'
+            )
         );
     }
 
