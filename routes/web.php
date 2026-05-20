@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Accounting\ManagementAccountingController;
+use App\Http\Controllers\Accounting\ManagementFundingTypesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -350,11 +351,18 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     |----------------------------------------------------------------------
     */
     Route::prefix('/accounting')->group(function () {
+         /* CHART OF ACCOUNTS */
         Route::get('/coa/view',[ManagementAccountingController::class, 'index'])->middleware('permission:coa.view')->name('management.coa.index');
         Route::post('/coa/store',[ManagementAccountingController::class, 'store'])->middleware('permission:coa.store')->name('management.coa.store');
         Route::put('/coa/edit/{id}',[ManagementAccountingController::class, 'update'])->middleware('permission:coa.update')->name('management.coa.update');
         Route::post('/coa/status/{id}',[ManagementAccountingController::class, 'toggleStatus'])->middleware('permission:coa.togglestatus')->name('management.coa.toggle-status');
         Route::get('/coa/detail/{id}',[ManagementAccountingController::class, 'detail'])->middleware('permission:coa.detail')->name('management.coa.detail');
+
+        /* FUNDING TYPES */
+        Route::get('/funding-type/view',[ManagementFundingTypesController::class, 'index'])->middleware('permission:funding-types.view')->name('management.funding-types.index');
+        Route::post('/funding-type/store', [ManagementFundingTypesController::class, 'store'])->middleware('permission:funding-types.store')->name('management.funding-types.store');
+        Route::put('/funding-type/update/{id}',[ManagementFundingTypesController::class, 'update'])->middleware('permission:funding-types.update')->name('management.funding-types.update');
+        Route::delete('/funding-type/delete/{id}',[ManagementFundingTypesController::class, 'destroy'])->middleware('permission:funding-types.delete')->name('management.funding-types.destroy');
 
 
     });
