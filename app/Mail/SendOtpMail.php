@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Models\User;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -10,81 +12,89 @@ class SendOtpMail extends Mailable
 {
     use SerializesModels;
 
-    /**
-     * 🔥 PUBLIC PROPERTIES
-     */
-    public string $otp;
+    /*
+    |--------------------------------------------------------------------------
+    | OTP TYPES
+    |--------------------------------------------------------------------------
+    */
 
-    public ?User $user;
+    public const TYPE_LOGIN = 'login';
 
-    public string $type;
+    public const TYPE_RESET_PASSWORD = 'reset_password';
 
-    /**
-     * 🔥 CONSTRUCTOR
-     */
+    public const TYPE_RESET_FORGOT_PASSWORD = 'reset_forgot_password';
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROPERTIES
+    |--------------------------------------------------------------------------
+    */
+
     public function __construct(
-        string $otp,
-        ?User $user = null,
-        ?string $type = null
-    ) {
+        public string $otp,
+        public ?User $user = null,
+        public string $type = self::TYPE_LOGIN,
+    ) {}
 
-        $this->otp = $otp;
+    /*
+    |--------------------------------------------------------------------------
+    | CONFIG MAP
+    |--------------------------------------------------------------------------
+    */
 
-        $this->user = $user;
+    protected function resolveMailConfig(): array
+    {
+        return match ($this->type) {
 
-        $this->type = $type ?? 'login';
+            self::TYPE_RESET_PASSWORD => [
+                'subject' => 'Kode OTP Reset Password',
+                'view'    => 'emails.otp_reset_password',
+            ],
+
+            self::TYPE_RESET_FORGOT_PASSWORD => [
+                'subject' => 'Kode OTP Forgot Password',
+                'view'    => 'emails.otp_forgot_password',
+            ],
+
+            default => [
+                'subject' => 'Kode OTP Login',
+                'view'    => 'emails.otp',
+            ],
+        };
     }
 
-    /**
-     * 🔥 BUILD EMAIL
-     */
-    public function build()
+    /*
+    |--------------------------------------------------------------------------
+    | ENVELOPE
+    |--------------------------------------------------------------------------
+    */
+
+    public function envelope(): Envelope
     {
-        /**
-         * DEFAULT VALUE (LOGIN OTP)
-         */
-        $subject = 'Kode OTP Login';
-        $view    = 'emails.otp';
+        $config = $this->resolveMailConfig();
 
-        /**
-         * =========================================
-         * SWITCH OTP TYPE
-         * =========================================
-         */
-        switch ($this->type) {
+        return new Envelope(
+            subject: $config['subject'],
+        );
+    }
 
-            /**
-             * RESET PASSWORD
-             */
-            case 'reset_password':
-                $subject = 'Kode OTP Reset Password';
-                $view    = 'emails.otp_reset_password';
-                break;
+    /*
+    |--------------------------------------------------------------------------
+    | CONTENT
+    |--------------------------------------------------------------------------
+    */
 
-            /**
-             * FORGOT PASSWORD
-             */
-            case 'reset_forgot_password':
-                $subject = 'Kode OTP Forgot Password';
-                $view    = 'emails.otp_forgot_password';
-                break;
+    public function content(): Content
+    {
+        $config = $this->resolveMailConfig();
 
-            /**
-             * LOGIN (DEFAULT)
-             */
-            default:
-                $subject = 'Kode OTP Login';
-                $view    = 'emails.otp';
-                break;
-        }
-
-        return $this
-            ->subject($subject)
-            ->view($view)
-            ->with([
+        return new Content(
+            view: $config['view'],
+            with: [
                 'otp'  => $this->otp,
                 'user' => $this->user,
                 'type' => $this->type,
-            ]);
+            ],
+        );
     }
 }

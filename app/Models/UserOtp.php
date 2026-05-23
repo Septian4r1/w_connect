@@ -38,7 +38,7 @@ class UserOtp extends Model
     /**
      * Ambil OTP aktif berdasarkan user_id
      */
-    public static function getActiveOtp($userId)
+    public static function getActiveOtp(sting $userId)
     {
         return self::where('user_id', $userId)
             ->where('expired_at', '>', now())
