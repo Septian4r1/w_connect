@@ -10,29 +10,32 @@ return new class extends Migration
     {
         Schema::table('fund_account_links', function (Blueprint $table) {
 
-            // ADD COLUMN SAFELY (CEK DULU)
+            // scope_type
             if (!Schema::hasColumn('fund_account_links', 'scope_type')) {
                 $table->string('scope_type')
                     ->nullable()
                     ->after('account_role_id');
             }
 
+            // scope_id
             if (!Schema::hasColumn('fund_account_links', 'scope_id')) {
                 $table->unsignedBigInteger('scope_id')
                     ->nullable()
                     ->after('scope_type');
             }
 
-            // INDEX SAFETY (hindari duplicate index error)
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $indexes = array_map(fn($i) => $i->getName(), $sm->listTableIndexes('fund_account_links'));
-
-            if (!in_array('fund_account_links_scope_type_index', $indexes)) {
+            /**
+             * INDEX - jangan pakai check doctrine
+             * Laravel akan skip error kalau index sudah ada (atau biarkan DB handle)
+             */
+            try {
                 $table->index('scope_type');
+            } catch (\Throwable $e) {
             }
 
-            if (!in_array('fund_account_links_scope_id_index', $indexes)) {
+            try {
                 $table->index('scope_id');
+            } catch (\Throwable $e) {
             }
         });
     }
