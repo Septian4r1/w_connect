@@ -14,7 +14,7 @@ class ChartOfAccountSeeder extends Seeder
         | RESET (DEV ONLY)
         |--------------------------------------------------------------------------
         */
-        ChartOfAccount::truncate();
+        // ChartOfAccount::truncate();
 
         /*
         |--------------------------------------------------------------------------

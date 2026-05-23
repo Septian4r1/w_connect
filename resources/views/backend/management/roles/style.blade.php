@@ -858,4 +858,53 @@ MOBILE PERMISSION TABLE
             transform: scale(.9);
         }
     }
+
+    .badge-status {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        letter-spacing: .2px;
+    }
+
+    /* AKTIF */
+    .badge-active-soft {
+        background: rgba(34, 197, 94, 0.12);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    /* NON AKTIF */
+    .badge-inactive-soft {
+        background: rgba(239, 68, 68, 0.10);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .badge-soft {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* AKTIF */
+    .badge-active {
+        background: rgba(34, 197, 94, 0.12);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    /* NON AKTIF */
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.10);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
 </style>

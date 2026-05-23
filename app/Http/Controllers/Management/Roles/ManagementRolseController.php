@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Rw;
 use App\Models\Rt;
+use App\Models\Organization;
 use App\Models\User;
 use App\Models\Warga;
+use App\Models\PengurusWilayah;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 
 class ManagementRolseController extends Controller
 {
@@ -21,7 +24,11 @@ class ManagementRolseController extends Controller
 
     public function index()
     {
-        // ================= ROLES =================
+        /*
+    |--------------------------------------------------------------------------
+    | ROLES
+    |--------------------------------------------------------------------------
+    */
         $roles = Role::query()
             ->select(['id', 'name', 'guard_name'])
             ->where('guard_name', 'web')
@@ -33,73 +40,100 @@ class ManagementRolseController extends Controller
             ->latest('id')
             ->get();
 
-
-        // ================= PENGURUS WILAYAH =================
-        // ================= USER LOGIN =================
+    /*
+    |--------------------------------------------------------------------------
+    | USER LOGIN
+    |--------------------------------------------------------------------------
+    */
         /** @var User $user */
         $user = Auth::user();
-        if ($user->hasRole('super_admin')) {
-            $myPengurus = null;
+
+        $myPengurus = null;
+
+        if (!$user->hasRole('super_admin')) {
+
+            $myPengurus = DB::table('pengurus_wilayah')
+                ->where('user_id', $user->id)
+                ->where('status', 'aktif')
+                ->whereNull('end_date') // 🔥 penting untuk histori
+                ->first();
         }
 
-        // ================= CEK PENGURUS LOGIN =================
-        $myPengurus = DB::table('pengurus_wilayah')
-            ->where('user_id', $user->id)
-            ->where('status', 'aktif')
-            ->first();
-
-        // ================= PENGURUS WILAYAH =================
-        $pengurus = \App\Models\PengurusWilayah::query()
+        /*
+    |--------------------------------------------------------------------------
+    | PENGURUS WILAYAH (ERP VERSION - HISTORI SAFE)
+    |--------------------------------------------------------------------------
+    */
+        $pengurus = PengurusWilayah::query()
             ->select([
                 'id',
                 'user_id',
                 'role_id',
-                'rt_id',
+                'organization_id',
                 'rw_id',
+                'rt_id',
                 'status',
+                'start_date',   // ✅ TAMBAH INI
+                'end_date',     // ✅ TAMBAH INI
                 'created_at'
             ])
-            ->where('status', 'aktif')
 
-            // 🔥 FILTER: exclude super_admin
+            // 🔥 ACTIVE ONLY (HISTORI SAFE)
+            // ->where('status', 'aktif')
+            // ->whereNull('end_date')
+
+            // exclude super admin
             ->whereHas('role', function ($q) {
                 $q->where('name', '!=', 'super_admin');
             })
 
-            // ================= FILTER BERDASARKAN RT LOGIN =================
+            // FILTER RT LOGIN (legacy support)
             ->when($myPengurus && $myPengurus->rt_id !== null, function ($q) use ($myPengurus) {
-
-                // Jika login sebagai RT
                 $q->where('rt_id', $myPengurus->rt_id);
             })
 
-            // Jika rt_id null = pengurus RW
-            // tidak difilter → tampil semua
-
             ->with([
-
-                // USER
                 'user:id,warga_id,name,email',
 
-                // WARGA
                 'user.warga:id,keluarga_id,nama,no_hp,foto',
-
-                // KELUARGA
                 'user.warga.keluarga:id,rumah_id',
-
-                // RUMAH
                 'user.warga.keluarga.rumah:id,nomor_rumah',
 
-                // RELASI
                 'role:id,name',
+
+                'organization:id,type,code,name,parent_id,is_active',
+
                 'rt:id,nama_rt',
                 'rw:id,nama_rw',
             ])
 
-            ->latest()
+            ->latest('start_date') // 🔥 lebih logis daripada created_at
             ->get();
 
-        // ================= 🔥 WARGA UNTUK MODAL =================
+        /*
+    |--------------------------------------------------------------------------
+    | ORGANIZATIONS
+    |--------------------------------------------------------------------------
+    */
+        $organizations = Organization::query()
+            ->select([
+                'id',
+                'type',
+                'code',
+                'name',
+                'parent_id',
+                'is_active'
+            ])
+            ->where('is_active', 1)
+            ->orderBy('type')
+            ->orderBy('id')
+            ->get();
+
+        /*
+    |--------------------------------------------------------------------------
+    | WARGA
+    |--------------------------------------------------------------------------
+    */
         $wargas = Warga::query()
             ->select([
                 'id',
@@ -117,6 +151,11 @@ class ManagementRolseController extends Controller
             ->latest()
             ->get();
 
+        /*
+    |--------------------------------------------------------------------------
+    | RW & RT
+    |--------------------------------------------------------------------------
+    */
         $rws = Rw::query()
             ->select('id', 'nama_rw')
             ->where('status', 'aktif')
@@ -127,12 +166,18 @@ class ManagementRolseController extends Controller
             ->where('status', 'aktif')
             ->get();
 
+        /*
+    |--------------------------------------------------------------------------
+    | RETURN VIEW
+    |--------------------------------------------------------------------------
+    */
         return view('backend.management.roles.index', compact(
             'roles',
             'pengurus',
             'wargas',
             'rws',
-            'rts'
+            'rts',
+            'organizations'
         ));
     }
 
@@ -260,97 +305,221 @@ class ManagementRolseController extends Controller
     public function AksesStore(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:wargas,id'],
-            'email'   => ['required', 'email'],
-            'role_id' => ['required', 'exists:roles,id'],
-            'rw_id'   => ['nullable', 'exists:rws,id'],
-            'rt_id'   => ['nullable', 'exists:rts,id'],
-            'status'  => ['required', 'in:aktif,nonaktif'],
+            'user_id'          => ['required', 'exists:wargas,id'],
+            'email'            => ['required', 'email'],
+            'role_id'          => ['required', 'exists:roles,id'],
+            'organization_id'  => ['nullable', 'exists:organizations,id'],
+            'rw_id'            => ['nullable', 'exists:rws,id'],
+            'rt_id'            => ['nullable', 'exists:rts,id'],
+            'status'           => ['required', 'in:aktif,nonaktif'],
+
+            // 🔥 TAMBAHAN JABATAN
+            'start_date'       => ['nullable', 'date'],
+            'end_date'         => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
         try {
-
             DB::beginTransaction();
 
-            // ===========================
-            // 1. AMBIL DATA WARGA
-            // ===========================
-            $warga = Warga::findOrFail($validated['user_id']);
+            /*
+        |-----------------------------------------
+        | CHECK WARGA
+        |-----------------------------------------
+        */
+            $warga = Warga::find($validated['user_id']);
 
-            // ===========================
-            // 2. CEK USER BERDASARKAN warga_id
-            // ===========================
+            if (!$warga) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Warga tidak ditemukan'
+                ], 422);
+            }
+
+            /*
+        |-----------------------------------------
+        | CEK DUPLIKAT PENGURUS AKTIF
+        |-----------------------------------------
+        */
+            $exists = DB::table('pengurus_wilayah')
+                ->where('user_id', $validated['user_id'])
+                ->where('status', 'aktif')
+                ->exists();
+
+            if ($exists) {
+                DB::rollBack();
+
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'User sudah menjabat sebagai pengurus aktif'
+                ], 422);
+            }
+
+            /*
+        |-----------------------------------------
+        | USER CREATE / UPDATE
+        |-----------------------------------------
+        */
             $user = User::where('warga_id', $warga->id)->first();
 
             if (!$user) {
-
-                // ===========================
-                // 3. BUAT USER BARU
-                // ===========================
                 $user = User::create([
-                    'warga_id' => $warga->id,
-                    'name'     => $warga->nama,
-                    'email'    => $validated['email'],
-                    'password' => bcrypt('ManagementCitraSwarnaRiverside_RW016'),
+                    'warga_id'          => $warga->id,
+                    'name'              => $warga->nama,
+                    'email'             => $validated['email'],
+                    'password'          => bcrypt('default_password'),
                     'email_verified_at' => now()
                 ]);
             } else {
-
-                // ===========================
-                // 4. UPDATE EMAIL (JIKA SUDAH ADA USER)
-                // ===========================
                 $user->update([
                     'email' => $validated['email']
                 ]);
             }
 
-            // ===========================
-            // 5. ASSIGN ROLE (SPATIE)
-            // ===========================
-            $role = Role::findById($validated['role_id']);
-            $user->syncRoles([$role->name]);
+            /*
+        |-----------------------------------------
+        | ROLE CHECK
+        |-----------------------------------------
+        */
+            $role = Role::find($validated['role_id']);
 
-            // ===========================
-            // 6. CEK DUPLIKASI PENGURUS
-            // ===========================
-            $cekPengurus = DB::table('pengurus_wilayah')
-                ->where('user_id', $user->id)
-                ->exists();
+            if (!$role) {
+                DB::rollBack();
 
-            if ($cekPengurus) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'User sudah terdaftar sebagai pengurus'
+                    'status'  => 'error',
+                    'message' => 'Role tidak ditemukan'
                 ], 422);
             }
 
-            // ===========================
-            // 7. SIMPAN KE PENGURUS WILAYAH
-            // ===========================
+            $user->syncRoles([$role->name]);
+
+            /*
+        |-----------------------------------------
+        | INSERT PENGURUS WILAYAH
+        |-----------------------------------------
+        */
             DB::table('pengurus_wilayah')->insert([
-                'user_id' => $user->id,
-                'role_id' => $validated['role_id'],
-                'rw_id'   => $validated['rw_id'],
-                'rt_id'   => $validated['rt_id'],
-                'status'  => $validated['status'],
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_id'          => $user->id,
+                'role_id'          => $role->id,
+                'organization_id'  => $validated['organization_id'] ?? null,
+                'rw_id'            => $validated['rw_id'] ?? null,
+                'rt_id'            => $validated['rt_id'] ?? null,
+                'status'           => $validated['status'],
+
+                // 🔥 JABATAN PERIOD
+                'start_date'       => $validated['start_date'] ?? now(),
+                'end_date'         => $validated['end_date'] ?? null,
+
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ]);
 
             DB::commit();
 
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => 'Akses user berhasil ditambahkan'
             ]);
         } catch (\Throwable $e) {
-
             DB::rollBack();
 
             return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage() // debug dulu
+                'status'  => 'error',
+                'message' => 'Terjadi kesalahan sistem',
+                // 🔥 optional debug (hapus di production)
+                // 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function DeleteAkses(string $id)
+    {
+        $data = PengurusWilayah::find($id);
+
+        if (!$data) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'DATA TIDAK DITEMUKAN'
+            ]);
+        }
+
+        $data->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'TERHAPUS',
+            'id' => $id
+        ]);
+    }
+
+
+    public function toggleStatus(string $id)
+    {
+        $data = PengurusWilayah::find($id);
+
+        if (!$data) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+
+        $now = now();
+
+        // ===========================
+        // STATUS TOGGLE LOGIC
+        // ===========================
+        if ($data->status === 'aktif') {
+
+            $data->status = 'nonaktif';
+
+            // 🔥 SET END DATE SAAT DINONAKTIFKAN
+            $data->end_date = $now;
+        } else {
+
+            $data->status = 'aktif';
+
+            // 🔥 RESET END DATE KALAU DIHIDUPKAN LAGI
+            $data->end_date = null;
+
+            // 🔥 SET START DATE JIKA BELUM ADA
+            if (!$data->start_date) {
+                $data->start_date = $now;
+            }
+        }
+
+        $data->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status berhasil diubah',
+            'new_status' => $data->status,
+            'start_date' => $data->start_date,
+            'end_date' => $data->end_date,
+        ]);
+    }
+
+    public function updateUserAkses(Request $request, string $id)
+    {
+        $request->validate([
+            'user_id' => 'required',
+            'role_id' => 'required',
+            'status' => 'required',
+        ]);
+
+        $data = PengurusWilayah::findOrFail($id);
+
+        $data->update([
+            'user_id' => $request->user_id,
+            'role_id' => $request->role_id,
+            'organization_id' => $request->organization_id,
+            'rw_id' => $request->rw_id,
+            'rt_id' => $request->rt_id,
+            'status' => $request->status,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+        ]);
+
+        return redirect()->back()->with('success', 'Data berhasil diupdate');
     }
 }

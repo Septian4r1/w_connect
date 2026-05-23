@@ -1,72 +1,91 @@
-    {{-- ===================================================== --}}
-    {{-- MODAL CREATE FUND TYPE --}}
-    {{-- ===================================================== --}}
-    <div class="coa-modal" id="createFundTypeModal">
+{{-- ===================================================== --}}
+{{-- MODAL CREATE FUND TYPE --}}
+{{-- ===================================================== --}}
+<div class="coa-modal fund-type-modal" id="createFundTypeModal">
 
-        {{-- OVERLAY --}}
-        <div class="coa-modal-overlay closeCreateFundTypeModal"></div>
+    {{-- OVERLAY --}}
+    <div class="coa-modal-overlay closeCreateFundTypeModal"></div>
 
-        {{-- MODAL BOX --}}
-        <div class="coa-modal-box">
+    {{-- MODAL BOX --}}
+    <div class="coa-modal-box fund-type-modal-box">
 
-            {{-- ========================================= --}}
-            {{-- MODAL HEADER --}}
-            {{-- ========================================= --}}
-            <div class="coa-modal-header">
+        {{-- ========================================= --}}
+        {{-- MODAL HEADER --}}
+        {{-- ========================================= --}}
+        <div class="coa-modal-header">
 
-                <div class="coa-modal-title">
+            <div class="coa-modal-title">
 
-                    <div class="coa-modal-icon">
-                        <i class="bi bi-tags"></i>
-                    </div>
+                <div class="coa-modal-icon">
+                    <i class="bi bi-tags"></i>
+                </div>
 
-                    <div>
+                <div>
 
-                        <h4>
-                            Tambah Funding Type
-                        </h4>
+                    <h4>
+                        Tambah Funding Type
+                    </h4>
 
-                        <p>
-                            Tambahkan master jenis funding baru
-                        </p>
-
-                    </div>
+                    <p>
+                        Tambahkan master jenis funding baru untuk kebutuhan accounting,
+                        operasional RW / RT, dana sosial, kas, donasi, dan transaksi lainnya.
+                    </p>
 
                 </div>
 
-                <button type="button" class="coa-modal-close closeCreateFundTypeModal">
-
-                    <i class="bi bi-x-lg"></i>
-
-                </button>
-
             </div>
 
-            {{-- ========================================= --}}
-            {{-- FORM --}}
-            {{-- ========================================= --}}
-            <form action="{{ route('management.funding-types.store') }}" method="POST">
+            {{-- CLOSE --}}
+            <button type="button" class="coa-modal-close closeCreateFundTypeModal">
 
-                @csrf
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        {{-- ========================================= --}}
+        {{-- FORM --}}
+        {{-- ========================================= --}}
+        <form action="{{ route('management.funding-types.store') }}" method="POST">
+
+            @csrf
+
+            {{-- ========================================= --}}
+            {{-- BODY --}}
+            {{-- ========================================= --}}
+            <div class="fund-type-modal-body">
 
                 <div class="form-grid">
 
+                    {{-- ========================================= --}}
                     {{-- CODE --}}
+                    {{-- ========================================= --}}
                     <div class="form-group">
 
                         <label>
-                            Code
+                            Funding Code
                         </label>
 
-                        <input type="text" name="code" class="form-control" placeholder="Contoh: RW-OPS" required>
+                        <input type="text" name="code" class="form-control" placeholder="Contoh: SOSIAL-RW"
+                            required>
 
                         <small class="form-hint">
-                            Gunakan kode unik funding
+
+                            Gunakan kode unik untuk membedakan jenis dana.
+                            Contoh:
+                            RW-OPS,
+                            RT-SOSIAL,
+                            INFRA,
+                            DONASI
+
                         </small>
 
                     </div>
 
+                    {{-- ========================================= --}}
                     {{-- STATUS --}}
+                    {{-- ========================================= --}}
                     <div class="form-group">
 
                         <label>
@@ -74,72 +93,107 @@
                         </label>
 
                         <div class="coa-auto-status">
+
                             <i class="bi bi-check-circle-fill"></i>
+
                             Active
+
                         </div>
+
+                        <small class="form-hint">
+                            Funding aktif dapat digunakan pada transaksi dan mapping COA.
+                        </small>
 
                         <input type="hidden" name="is_active" value="1">
 
                     </div>
 
+                    {{-- ========================================= --}}
                     {{-- NAME --}}
-                    <div class="form-group full">
+                    {{-- ========================================= --}}
+                    <div class="form-group">
 
                         <label>
                             Funding Name
                         </label>
 
-                        <input type="text" name="name" class="form-control" placeholder="Contoh: Dana RW"
+                        <input type="text" name="name" class="form-control" placeholder="Contoh: Dana Sosial RW"
                             required>
+
+                        <small class="form-hint">
+
+                            Nama funding akan muncul pada:
+                            transaksi,
+                            laporan,
+                            jurnal,
+                            mapping akun,
+                            dan dashboard accounting.
+
+                        </small>
 
                     </div>
 
+                    {{-- ========================================= --}}
                     {{-- DESCRIPTION --}}
-                    <div class="form-group full">
+                    {{-- ========================================= --}}
+                    <div class="form-group">
 
                         <label>
                             Description
                         </label>
 
-                        <textarea name="description" rows="4" class="form-control" placeholder="Deskripsi funding type..."></textarea>
+                        <textarea name="description" rows="5" class="form-control"
+                            placeholder="Contoh:
+Dana digunakan untuk kegiatan sosial, santunan warga, bantuan darurat, dan kebutuhan kemasyarakatan lainnya."></textarea>
+
+                        <small class="form-hint">
+
+                            Isi penjelasan detail fungsi dana agar mudah dipahami
+                            oleh admin, bendahara, dan pengurus RW / RT.
+
+                        </small>
 
                     </div>
 
                 </div>
 
-                {{-- ACTION --}}
-                <div class="modal-actions">
+            </div>
 
-                    {{-- CANCEL --}}
-                    <button type="button" class="coa-action-btn btn-sm cancel-btn closeCreateFundTypeModal">
+            {{-- ========================================= --}}
+            {{-- ACTION --}}
+            {{-- ========================================= --}}
+            <div class="modal-actions">
 
-                        <span class="btn-icon">
-                            <i class="bi bi-x-lg"></i>
-                        </span>
+                {{-- CANCEL --}}
+                <button type="button" class="coa-action-btn btn-sm cancel-btn closeCreateFundTypeModal">
 
-                        <span>
-                            Batal
-                        </span>
+                    <span class="btn-icon">
+                        <i class="bi bi-x-lg"></i>
+                    </span>
 
-                    </button>
+                    <span>
+                        Batal
+                    </span>
 
-                    {{-- SUBMIT --}}
-                    <button type="submit" class="coa-action-btn btn-sm submit-btn">
+                </button>
 
-                        <span class="btn-icon">
-                            <i class="bi bi-check2"></i>
-                        </span>
+                {{-- SUBMIT --}}
+                <button type="submit" class="coa-action-btn btn-sm submit-btn">
 
-                        <span>
-                            Simpan Funding Type
-                        </span>
+                    <span class="btn-icon">
+                        <i class="bi bi-check2"></i>
+                    </span>
 
-                    </button>
+                    <span>
+                        Simpan Funding Type
+                    </span>
 
-                </div>
+                </button>
 
-            </form>
+            </div>
 
-        </div>
+        </form>
 
     </div>
+
+</div>

@@ -283,9 +283,15 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
 
         /*------------------------------------------------------------------------ ROLES ------------------------------------------------------------------------------ */
         Route::get('/roles', [ManagementRolseController::class, 'index'])->middleware('permission:aksesuser.view')->name('management.roles.index');
+        Route::post('/roles/akses/store', [ManagementRolseController::class, 'AksesStore'])->middleware('permission:aksesuser.create')->name('management.roles_akses.store');
+        Route::delete('/pengurus-wilayah/delete/{id}',[ManagementRolseController::class, 'DeleteAkses'])->middleware('permission:aksesuser.delete')->name('management.pengurus_wilayah.delete');
+        Route::post('/pengurus-wilayah/toggle-status/{id}',[ManagementRolseController::class, 'toggleStatus'])->middleware('permission:aksesuser.update')->name('management.pengurus_wilayah.toggle');
+        Route::put('/management/roles_akses/{id}', [ManagementRolseController::class, 'updateUserAkses'])->middleware('permission:aksesuser.update')->name('management.roles_akses.update');
+
         Route::post('/roles/create', [ManagementRolseController::class, 'store'])->middleware('permission:daftarstrukture.create')->name('management.roles.store');
         Route::put('/roles/update/{id}', [ManagementRolseController::class, 'update'])->middleware('permission:daftarstrukture.update')->name('management.roles.update');
-        Route::post('/roles/akses/store', [ManagementRolseController::class, 'AksesStore'])->middleware('permission:aksesuser.create')->name('management.roles_akses.store');
+
+
         /*------------------------------------------------------------------------ END ROLES ------------------------------------------------------------------------------- */
 
 
@@ -327,7 +333,7 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::get('/kartu-keluarga', [ManagementRumahDanKK::class, 'index'])->middleware('permission:keluarga.view')->name('management.kk.index');
         Route::get('/management/rumah/{id}', [ManagementRumahDanKK::class, 'show'])->middleware('permission:keluarga.detail')->name('management.rumah.show');
         Route::get('/management/rumah/{id}/edit', [ManagementRumahDanKK::class, 'edit'])->middleware('permission:keluarga.update')->name('management.rumah.edit');
-        Route::put('/management/rumah/{id}',[ManagementRumahDanKK::class, 'update'])->middleware('permission:keluarga.update') ->name('management.rumah.update');
+        Route::put('/management/rumah/{id}', [ManagementRumahDanKK::class, 'update'])->middleware('permission:keluarga.update')->name('management.rumah.update');
         Route::delete('/management/rumah/{id}', [ManagementRumahDanKK::class, 'destroy'])->middleware('permission:keluarga.delete')->name('management.rumah.destroy');
 
 
@@ -351,20 +357,24 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     |----------------------------------------------------------------------
     */
     Route::prefix('/accounting')->group(function () {
-         /* CHART OF ACCOUNTS */
-        Route::get('/coa/view',[ManagementAccountingController::class, 'index'])->middleware('permission:coa.view')->name('management.coa.index');
-        Route::post('/coa/store',[ManagementAccountingController::class, 'store'])->middleware('permission:coa.store')->name('management.coa.store');
-        Route::put('/coa/edit/{id}',[ManagementAccountingController::class, 'update'])->middleware('permission:coa.update')->name('management.coa.update');
-        Route::post('/coa/status/{id}',[ManagementAccountingController::class, 'toggleStatus'])->middleware('permission:coa.togglestatus')->name('management.coa.toggle-status');
-        Route::get('/coa/detail/{id}',[ManagementAccountingController::class, 'detail'])->middleware('permission:coa.detail')->name('management.coa.detail');
+        /* CHART OF ACCOUNTS */
+        Route::get('/coa/view', [ManagementAccountingController::class, 'index'])->middleware('permission:coa.view')->name('management.coa.index');
+        Route::post('/coa/store', [ManagementAccountingController::class, 'store'])->middleware('permission:coa.store')->name('management.coa.store');
+        Route::put('/coa/edit/{id}', [ManagementAccountingController::class, 'update'])->middleware('permission:coa.update')->name('management.coa.update');
+        Route::post('/coa/status/{id}', [ManagementAccountingController::class, 'toggleStatus'])->middleware('permission:coa.togglestatus')->name('management.coa.toggle-status');
+        Route::get('/coa/detail/{id}', [ManagementAccountingController::class, 'detail'])->middleware('permission:coa.detail')->name('management.coa.detail');
 
         /* FUNDING TYPES */
-        Route::get('/funding-type/view',[ManagementFundingTypesController::class, 'index'])->middleware('permission:funding-types.view')->name('management.funding-types.index');
+        Route::get('/funding-type/view', [ManagementFundingTypesController::class, 'index'])->middleware('permission:funding-types.view')->name('management.funding-types.index');
         Route::post('/funding-type/store', [ManagementFundingTypesController::class, 'store'])->middleware('permission:funding-types.store')->name('management.funding-types.store');
-        Route::put('/funding-type/update/{id}',[ManagementFundingTypesController::class, 'update'])->middleware('permission:funding-types.update')->name('management.funding-types.update');
-        Route::delete('/funding-type/delete/{id}',[ManagementFundingTypesController::class, 'destroy'])->middleware('permission:funding-types.delete')->name('management.funding-types.destroy');
+        Route::put('/funding-type/update/{id}', [ManagementFundingTypesController::class, 'update'])->middleware('permission:funding-types.update')->name('management.funding-types.update');
+        Route::delete('/funding-type/delete/{id}', [ManagementFundingTypesController::class, 'destroy'])->middleware('permission:funding-types.delete')->name('management.funding-types.destroy');
 
-
+        /* FETCH DATA */
+        Route::get('/fund-account/{fundId}/coas', [ManagementFundingTypesController::class, 'getCoas'])->middleware('permission:fundingaccount.view')->name('management.funding-types.coas');
+        Route::delete('/funding-type/delete/account/{fundTypeId}/{organizationId}', [ManagementFundingTypesController::class, 'destroyAccount'])->middleware('permission:fundingaccount.delete')->name('management.funding-account.destroy');
+        Route::get('/funding-account-link/{id}/edit', [ManagementFundingTypesController::class, 'editAccountMapping'])->middleware('permission:fundingaccount.edit')->name('management.funding-account.edit');
+        Route::put('/funding-account-link/{id}/update',[ManagementFundingTypesController::class, 'updateAccountMapping'])->middleware('permission:fundingaccount.update')->name('management.funding-account.update');
     });
 
 

@@ -111,6 +111,9 @@
                                         <th class="text text-center">Role</th>
                                         <th class="text text-center">RT</th>
                                         <th class="text text-center">RW</th>
+                                        <th class="text text-center">Organization</th>
+                                        <th class="text text-center">Mulai Menjabat</th>
+                                        <th class="text text-center">Akhir Menjabat</th>
                                         <th class="text text-center">Status</th>
                                         <th class="text text-center">Action</th>
                                     </tr>
@@ -169,6 +172,36 @@
                                                 </span>
                                             </td>
 
+                                            <td class="text-center">
+                                                @if ($pw->organization)
+                                                    <span class="badge-soft badge-org">
+                                                        <i class="bx bx-buildings"></i>
+                                                        {{ strtoupper($pw->organization->type) }} -
+                                                        {{ $pw->organization->code }}
+                                                    </span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center start-date-cell">
+                                                {{ $pw->start_date_format }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                @if ($pw->status === 'aktif')
+                                                    <span class="badge-status badge-active-soft">
+                                                        <i class="bx bx-up-arrow-alt"></i>
+                                                        Masih Menjabat
+                                                    </span>
+                                                @else
+                                                    <span class="badge-status badge-inactive-soft">
+                                                        <i class="bx bx-down-arrow-alt"></i>
+                                                        Masa Jabatan Berakhir
+                                                    </span>
+                                                @endif
+                                            </td>
+
                                             {{-- STATUS --}}
                                             <td class="text-center">
                                                 <span
@@ -179,17 +212,55 @@
                                                 </span>
                                             </td>
 
+
+
+
+
                                             {{-- ACTION --}}
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-2">
-                                                    <a href="#" class="btn-soft view" title="Lihat">
-                                                        <i class="bx bx-show"></i>
-                                                    </a>
-                                                    <a href="#" class="btn-soft edit" title="Edit">
+                                                    {{-- EDIT --}}
+                                                    <a href="javascript:void(0);" class="btn-soft edit btn-edit-pengurus"
+                                                        data-id="{{ $pw->id }}" data-user_id="{{ $pw->user_id }}"
+                                                        data-role_id="{{ $pw->role_id }}"
+                                                        data-role_name="{{ $pw->role->name }}"
+                                                        data-org_id="{{ $pw->organization_id }}"
+                                                        data-rw_id="{{ $pw->rw_id }}" data-rt_id="{{ $pw->rt_id }}"
+                                                        data-status="{{ $pw->status }}"
+                                                        data-email="{{ $pw->user->email }}"
+                                                        data-name="{{ $pw->user->name }}"
+                                                        data-start_date="{{ $pw->start_date }}"
+                                                        data-end_date="{{ $pw->end_date }}">
                                                         <i class="bx bx-edit-alt"></i>
                                                     </a>
-                                                    <a href="#" class="btn-soft delete" title="Hapus">
-                                                        <i class="bx bx-trash"></i>
+                                                    {{-- TOGGLE STATUS --}}
+                                                    @php
+                                                        $isSuperAdmin = auth()->user()->hasRole('super_admin');
+                                                    @endphp
+
+                                                    <a href="javascript:void(0);"
+                                                        class="btn-soft btn-toggle-status {{ $pw->status == 'aktif' ? 'text-success' : 'text-danger' }} {{ $isSuperAdmin ? '' : 'disabled opacity-50' }}"
+                                                        data-id="{{ $pw->id }}" data-status="{{ $pw->status }}"
+                                                        data-user="{{ $pw->user->name ?? '-' }}"
+                                                        data-role="{{ $pw->role->name ?? '-' }}"
+                                                        data-org="{{ $pw->organization->name ?? '-' }}"
+                                                        data-rw="{{ $pw->rw->nama_rw ?? '-' }}"
+                                                        data-rt="{{ $pw->rt->nama_rt ?? '-' }}" title="Toggle Status">
+
+                                                        <i
+                                                            class="bx {{ $pw->status == 'aktif' ? 'bx-caret-up' : 'bx-caret-down' }}"></i>
+                                                    </a>
+
+                                                    <a href="javascript:void(0);"
+                                                        class="btn-soft delete btn-delete-pengurus"
+                                                        data-id="{{ $pw->id }}"
+                                                        data-user="{{ $pw->user->name ?? '-' }}"
+                                                        data-url="{{ route('management.pengurus_wilayah.delete', $pw->id) }}"
+                                                        data-role="{{ $pw->role->name ?? '-' }}"
+                                                        data-org="{{ $pw->organization->name ?? '-' }}"
+                                                        data-rw="{{ $pw->rw->nama_rw ?? '-' }}"
+                                                        data-rt="{{ $pw->rt->nama_rt ?? '-' }}" title="Hapus">
+                                                        <i class="bx bx-trash "></i>
                                                     </a>
                                                 </div>
                                             </td>
@@ -212,6 +283,11 @@
     @include('backend.management.roles.style')
     @include('backend.management.roles.modal_tambah_roles')
     @include('backend.management.roles.modal_tambah_akses_user')
+    @include('backend.management.roles.modal_edit_akses_user')
+
+
+
+
 @endsection
 
 @include('backend.management.roles.script_roles')

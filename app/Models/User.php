@@ -14,7 +14,7 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
     use HasFactory, Notifiable, HasRoles;
 
     // =========================
-    // MASS ASSIGNABLE
+    // FILLABLE
     // =========================
     protected $fillable = [
         'warga_id',
@@ -40,7 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
     ];
 
     // =========================
-    // RELASI
+    // RELATION
     // =========================
     public function warga()
     {
@@ -54,29 +54,36 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
 
     public function pengurusAktif()
     {
-        return $this->pengurusWilayah()->where('status', 'aktif');
+        return $this->hasMany(PengurusWilayah::class, 'user_id')
+            ->where('status', 'aktif');
     }
 
     // =========================
-    // WILAYAH HELPER
+    // OPTIMIZED CACHE HELPER (ANTI N+1)
     // =========================
+
     public function getWilayahIds(): array
     {
-        return [
-            'rw_ids' => $this->pengurusWilayah()
-                ->whereNotNull('rw_id')
-                ->pluck('rw_id')
-                ->unique()
-                ->values()
-                ->toArray(),
+        static $cache = [];
 
-            'rt_ids' => $this->pengurusWilayah()
-                ->whereNotNull('rt_id')
-                ->pluck('rt_id')
-                ->unique()
-                ->values()
-                ->toArray(),
+        if (isset($cache[$this->id])) {
+            return $cache[$this->id];
+        }
+
+        $data = $this->pengurusWilayah()
+            ->select('rw_id', 'rt_id')
+            ->where(function ($q) {
+                $q->whereNotNull('rw_id')
+                  ->orWhereNotNull('rt_id');
+            })
+            ->get();
+
+        $result = [
+            'rw_ids' => $data->pluck('rw_id')->filter()->unique()->values()->toArray(),
+            'rt_ids' => $data->pluck('rt_id')->filter()->unique()->values()->toArray(),
         ];
+
+        return $cache[$this->id] = $result;
     }
 
     public function getRTIds()
@@ -90,15 +97,18 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
     }
 
     // =========================
-    // ROLE WILAYAH CHECK
+    // ROLE WILAYAH CHECK (OPTIMIZED)
     // =========================
+
     public function hasRoleWilayah(string $roleName, ?int $rt_id = null, ?int $rw_id = null): bool
     {
         return $this->pengurusWilayah()
             ->where('status', 'aktif')
-            ->whereHas('role', fn($q) => $q->where('name', $roleName))
-            ->when($rt_id, fn($q) => $q->where('rt_id', $rt_id))
-            ->when($rw_id, fn($q) => $q->where('rw_id', $rw_id))
+            ->whereHas('role', function ($q) use ($roleName) {
+                $q->where('name', $roleName);
+            })
+            ->when($rt_id, fn ($q) => $q->where('rt_id', $rt_id))
+            ->when($rw_id, fn ($q) => $q->where('rw_id', $rw_id))
             ->exists();
     }
 
@@ -106,15 +116,18 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
     {
         return $this->pengurusWilayah()
             ->where('status', 'aktif')
-            ->whereHas('role', fn($q) => $q->whereIn('name', $roles))
-            ->when($rt_id, fn($q) => $q->where('rt_id', $rt_id))
-            ->when($rw_id, fn($q) => $q->where('rw_id', $rw_id))
+            ->whereHas('role', function ($q) use ($roles) {
+                $q->whereIn('name', $roles);
+            })
+            ->when($rt_id, fn ($q) => $q->where('rt_id', $rt_id))
+            ->when($rw_id, fn ($q) => $q->where('rw_id', $rw_id))
             ->exists();
     }
 
     // =========================
-    // JWT
+    // JWT (SAFE + LIGHTWEIGHT)
     // =========================
+
     public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
@@ -123,7 +136,9 @@ class User extends Authenticatable implements MustVerifyEmail, JWTSubject
     public function getJWTCustomClaims(): array
     {
         return [
-            'roles' => $this->getRoleNames(),
+            'roles' => $this->relationLoaded('roles')
+                ? $this->getRoleNames()
+                : $this->roles()->pluck('name'),
         ];
     }
 }

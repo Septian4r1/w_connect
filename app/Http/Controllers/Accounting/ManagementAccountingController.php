@@ -677,38 +677,50 @@ class ManagementAccountingController extends Controller
 
     public function detail(string $id)
     {
-        $account = ChartOfAccount::with('childrenRecursive')
-            ->findOrFail($id);
+        $account = ChartOfAccount::with([
+            'childrenRecursive'
+        ])->findOrFail($id);
 
         return response()->json([
+
             'id' => $account->id,
             'code' => $account->code,
             'name' => $account->name,
             'type' => $account->type,
+
             'is_header' => (bool) $account->is_header,
+
             'normal_balance' => $account->normal_balance,
+
             'is_active' => (bool) $account->is_active,
+
             'level' => $account->level,
+
             'parent_path' => $account->parent_path,
-            'tree' => $this->buildTree($account)
+
+            'tree' => $this->buildTree($account),
+
         ]);
     }
-
-
     // =============================================================
     // RECURSIVE TREE BUILDER (SAFE + CLEAN)
     // =============================================================
-    private function buildTree($account)
+    private function buildTree($account): array
     {
         return [
+
             'code' => $account->code,
+
             'name' => $account->name,
 
             'children' => $account->childrenRecursive
-                ? $account->childrenRecursive->map(function ($child) {
+                ->map(function ($child) {
+
                     return $this->buildTree($child);
-                })->values()
-                : []
+                })
+                ->values()
+                ->toArray()
+
         ];
     }
 }
