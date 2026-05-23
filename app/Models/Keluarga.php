@@ -118,7 +118,7 @@ class Keluarga extends Model
 
 
     // Scope berdasarkan rumah
-    public function scopeByRumah($query, $rumahId)
+    public function scopeByRumah($query, string $rumahId)
     {
         return $query->where('rumah_id', $rumahId);
     }
