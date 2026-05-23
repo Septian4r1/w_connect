@@ -10,29 +10,30 @@ return new class extends Migration
     {
         Schema::table('fund_account_links', function (Blueprint $table) {
 
-            /*
-            |----------------------------------------------------------
-            | ADD NEW SCOPE STRUCTURE
-            |----------------------------------------------------------
-            */
+            // ADD COLUMN SAFELY (CEK DULU)
+            if (!Schema::hasColumn('fund_account_links', 'scope_type')) {
+                $table->string('scope_type')
+                    ->nullable()
+                    ->after('account_role_id');
+            }
 
-            $table->string('scope_type')
-                ->nullable()
-                ->after('account_role_id')
-                ->index();
+            if (!Schema::hasColumn('fund_account_links', 'scope_id')) {
+                $table->unsignedBigInteger('scope_id')
+                    ->nullable()
+                    ->after('scope_type');
+            }
 
-            $table->unsignedBigInteger('scope_id')
-                ->nullable()
-                ->after('scope_type')
-                ->index();
+            // INDEX SAFETY (hindari duplicate index error)
+            $sm = Schema::getConnection()->getDoctrineSchemaManager();
+            $indexes = array_map(fn($i) => $i->getName(), $sm->listTableIndexes('fund_account_links'));
 
-            /*
-            |----------------------------------------------------------
-            | OPTIONAL: KEEP OLD COLUMN FOR SAFETY (TEMP)
-            |----------------------------------------------------------
-            */
-            // jangan langsung drop dulu biar aman
-            // $table->dropColumn('scope');
+            if (!in_array('fund_account_links_scope_type_index', $indexes)) {
+                $table->index('scope_type');
+            }
+
+            if (!in_array('fund_account_links_scope_id_index', $indexes)) {
+                $table->index('scope_id');
+            }
         });
     }
 
@@ -40,24 +41,13 @@ return new class extends Migration
     {
         Schema::table('fund_account_links', function (Blueprint $table) {
 
-            /*
-            |----------------------------------------------------------
-            | DROP NEW STRUCTURE
-            |----------------------------------------------------------
-            */
+            if (Schema::hasColumn('fund_account_links', 'scope_type')) {
+                $table->dropColumn('scope_type');
+            }
 
-            $table->dropIndex(['scope_type']);
-            $table->dropIndex(['scope_id']);
-
-            $table->dropColumn(['scope_type', 'scope_id']);
-
-            /*
-            |----------------------------------------------------------
-            | RESTORE OLD COLUMN
-            |----------------------------------------------------------
-            */
-
-            $table->string('scope')->nullable();
+            if (Schema::hasColumn('fund_account_links', 'scope_id')) {
+                $table->dropColumn('scope_id');
+            }
         });
     }
 };
