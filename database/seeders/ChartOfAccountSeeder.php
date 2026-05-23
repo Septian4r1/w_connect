@@ -12,16 +12,41 @@ class ChartOfAccountSeeder extends Seeder
     {
         /*
         |------------------------------------
-        | SAFE RESET (NO TRUNCATE ERROR)
+        | SAFE RESET
         |------------------------------------
         */
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-
         DB::table('chart_of_accounts')->delete();
-
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $create = function (array $data) {
+        /*
+        |------------------------------------
+        | HELPER: BUILD PARENT PATH
+        |------------------------------------
+        */
+        $buildPath = function ($parentId) {
+            if (!$parentId) return null;
+
+            $parent = ChartOfAccount::find($parentId);
+
+            if (!$parent) return null;
+
+            return $parent->parent_path
+                ? $parent->parent_path . '/' . $parent->id
+                : (string) $parent->id;
+        };
+
+        /*
+        |------------------------------------
+        | CREATE FUNCTION (WITH PARENT PATH)
+        |------------------------------------
+        */
+        $create = function (array $data) use ($buildPath) {
+
+            $data['parent_path'] = isset($data['parent_id'])
+                ? $buildPath($data['parent_id'])
+                : null;
+
             return ChartOfAccount::create(array_merge([
                 'parent_id'       => null,
                 'opening_balance' => 0,
@@ -73,9 +98,6 @@ class ChartOfAccountSeeder extends Seeder
             'sort_order' => 1,
         ]);
 
-        /*
-        | BANK & CASH (FIXED DB)
-        */
         $cashAccounts = [
             ['1111', 'Kas RW'],
             ['1112', 'Bank BJB'],
@@ -96,9 +118,6 @@ class ChartOfAccountSeeder extends Seeder
             ]);
         }
 
-        /*
-        | RESTRICTED CASH
-        */
         $restrictedCash = $create([
             'parent_id' => $currentAsset->id,
             'code' => '1120',
@@ -131,9 +150,6 @@ class ChartOfAccountSeeder extends Seeder
             ]);
         }
 
-        /*
-        | RECEIVABLE
-        */
         $receivable = $create([
             'parent_id' => $currentAsset->id,
             'code' => '1200',
@@ -163,9 +179,6 @@ class ChartOfAccountSeeder extends Seeder
             ]);
         }
 
-        /*
-        | FIXED ASSET
-        */
         $fixedAsset = $create([
             'parent_id' => $asset->id,
             'code' => '1300',
@@ -188,12 +201,13 @@ class ChartOfAccountSeeder extends Seeder
                 'code' => $a[0],
                 'name' => $a[1],
                 'type' => 'asset',
+                'normal_balance' => 'debit',
             ]);
         }
 
         /*
         |====================================
-        | 2. LIABILITY
+        | LIABILITY
         |====================================
         */
         $liability = $create([
@@ -229,9 +243,6 @@ class ChartOfAccountSeeder extends Seeder
             ]);
         }
 
-        /*
-        | FUND LIABILITY
-        */
         $fundLiability = $create([
             'parent_id' => $currentLiability->id,
             'code' => '2200',
@@ -259,7 +270,7 @@ class ChartOfAccountSeeder extends Seeder
 
         /*
         |====================================
-        | 3. EQUITY
+        | EQUITY
         |====================================
         */
         $equity = $create([
@@ -287,7 +298,7 @@ class ChartOfAccountSeeder extends Seeder
 
         /*
         |====================================
-        | 4. REVENUE
+        | REVENUE
         |====================================
         */
         $revenue = $create([
@@ -318,7 +329,7 @@ class ChartOfAccountSeeder extends Seeder
 
         /*
         |====================================
-        | 5. EXPENSE
+        | EXPENSE
         |====================================
         */
         $expense = $create([
