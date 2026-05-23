@@ -1,184 +1,99 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-use App\Models\Organization;
-use App\Models\Accounting\FundType;
-use App\Models\Accounting\AccountRole;
-use App\Models\Accounting\ChartOfAccount;
-
-class FundAccountLink extends Model
-{
-    /*
-    |----------------------------------------------------------------------
-    | TABLE
-    |----------------------------------------------------------------------
-    */
-    protected $table = 'fund_account_links';
-
-    /*
-    |----------------------------------------------------------------------
-    | FILLABLE (MATCH MIGRATION)
-    |----------------------------------------------------------------------
-    */
-    protected $fillable = [
-        'fund_type_id',
-        'coa_id',
-        'account_role_id',
-        'organization_id',
-
-        'priority',
-        'is_default',
-        'is_active',
-    ];
-
-    /*
-    |----------------------------------------------------------------------
-    | CASTS
-    |----------------------------------------------------------------------
-    */
-    protected $casts = [
-        'priority'   => 'integer',
-        'is_default' => 'boolean',
-        'is_active'  => 'boolean',
-    ];
-
-    /*
-    |----------------------------------------------------------------------
-    | APPENDS
-    |----------------------------------------------------------------------
-    */
-    protected $appends = [
-        'role_code',
-        'organization_label',
-    ];
-
-    /*
-    |----------------------------------------------------------------------
-    | RELATION: FUND TYPE
-    |----------------------------------------------------------------------
-    */
-    public function fundType(): BelongsTo
+return new class extends Migration {
+    public function up(): void
     {
-        return $this->belongsTo(FundType::class);
-    }
+        Schema::create('fund_account_links', function (Blueprint $table) {
 
-    /*
-    |----------------------------------------------------------------------
-    | RELATION: COA
-    |----------------------------------------------------------------------
-    */
-    public function coa(): BelongsTo
-    {
-        return $this->belongsTo(ChartOfAccount::class, 'coa_id');
-    }
+            $table->id();
 
-    /*
-    |----------------------------------------------------------------------
-    | RELATION: ACCOUNT ROLE
-    |----------------------------------------------------------------------
-    */
-    public function accountRole(): BelongsTo
-    {
-        return $this->belongsTo(AccountRole::class);
-    }
+            /*
+            |----------------------------------------
+            | FUND TYPE
+            |----------------------------------------
+            */
+            $table->foreignId('fund_type_id')
+                ->constrained('fund_types')
+                ->cascadeOnDelete();
 
-    /*
-    |----------------------------------------------------------------------
-    | RELATION: ORGANIZATION (FIXED)
-    |----------------------------------------------------------------------
-    */
-    public function organization(): BelongsTo
-    {
-        return $this->belongsTo(Organization::class);
-    }
+            /*
+            |----------------------------------------
+            | COA (CHART OF ACCOUNT)
+            |----------------------------------------
+            */
+            $table->foreignId('coa_id')
+                ->constrained('chart_of_accounts')
+                ->cascadeOnDelete();
 
-    /*
-    |----------------------------------------------------------------------
-    | ACCESSOR: ORGANIZATION LABEL
-    |----------------------------------------------------------------------
-    */
-    public function getOrganizationLabelAttribute(): string
-    {
-        return $this->organization?->name
-            ?? $this->organization?->code
-            ?? '-';
-    }
+            /*
+            |----------------------------------------
+            | ACCOUNT ROLE (ERP CORE)
+            |----------------------------------------
+            | cash | bank | revenue | expense | payable | receivable
+            */
+            $table->foreignId('account_role_id')
+                ->constrained('account_roles')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
 
-    /*
-    |----------------------------------------------------------------------
-    | ACCESSOR: ROLE CODE
-    |----------------------------------------------------------------------
-    */
-    public function getRoleCodeAttribute(): ?string
-    {
-        return $this->accountRole?->code;
-    }
+            /*
+            |----------------------------------------
+            | SCOPE SYSTEM (RW / RT / GLOBAL)
+            |----------------------------------------
+            */
+            $table->string('scope_type')->default('rw'); // rw | rt | global
+            $table->unsignedBigInteger('scope_id')->nullable(); // id RW/RT
 
-    /*
-    |----------------------------------------------------------------------
-    | SCOPES
-    |----------------------------------------------------------------------
-    */
+            /*
+            |----------------------------------------
+            | RULE ENGINE
+            |----------------------------------------
+            */
+            $table->integer('priority')->default(0);
 
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('is_active', 1);
-    }
+            /*
+            |----------------------------------------
+            | FLAGS
+            |----------------------------------------
+            */
+            $table->boolean('is_default')->default(false);
+            $table->boolean('is_active')->default(true);
 
-    public function scopeDefault(Builder $query): Builder
-    {
-        return $query->where('is_default', 1);
-    }
+            $table->timestamps();
 
-    public function scopeByFund(Builder $query, int $fundTypeId): Builder
-    {
-        return $query->where('fund_type_id', $fundTypeId);
-    }
+            /*
+            |----------------------------------------
+            | INDEXES (IMPORTANT FOR ERP PERFORMANCE)
+            |----------------------------------------
+            */
+            $table->index(['fund_type_id', 'account_role_id']);
+            $table->index(['scope_type', 'scope_id']);
+            $table->index(['coa_id']);
 
-    public function scopeByRole(Builder $query, string $roleCode): Builder
-    {
-        return $query->whereHas('accountRole', function ($q) use ($roleCode) {
-            $q->where('code', $roleCode);
+            /*
+            |----------------------------------------
+            | UNIQUE RULE (ANTI DUPLICATE CONFIG)
+            |----------------------------------------
+            */
+            $table->unique(
+                [
+                    'fund_type_id',
+                    'account_role_id',
+                    'scope_type',
+                    'scope_id',
+                    'is_default'
+                ],
+                'fund_account_scope_unique'
+            );
         });
     }
 
-    public function scopeByOrganization(Builder $query, int $organizationId): Builder
+    public function down(): void
     {
-        return $query->where('organization_id', $organizationId);
+        Schema::dropIfExists('fund_account_links');
     }
-
-    /*
-    |----------------------------------------------------------------------
-    | CORE RESOLVE ENGINE (UPDATED)
-    |----------------------------------------------------------------------
-    |
-    | Ini pengganti scope_type/scope_id logic lama
-    | sekarang full relational organization-based
-    |
-    */
-    public static function resolve(
-        int $fundTypeId,
-        string $roleCode,
-        int $organizationId
-    ): ?self {
-
-        return self::query()
-            ->with([
-                'coa',
-                'accountRole',
-                'fundType',
-                'organization',
-            ])
-            ->active()
-            ->byFund($fundTypeId)
-            ->byRole($roleCode)
-            ->byOrganization($organizationId)
-            ->orderByDesc('priority')
-            ->first();
-    }
-}
+};

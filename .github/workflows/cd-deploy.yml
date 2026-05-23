@@ -109,7 +109,7 @@ jobs:
             # Composer Install
             # ==============================
             echo "📦 Installing composer dependencies..."
-            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts || true
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
 
             # ==============================
             # Detect PSR-4 Errors
