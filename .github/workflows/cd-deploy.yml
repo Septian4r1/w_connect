@@ -63,10 +63,14 @@ jobs:
             # Ensure Directories Exist
             # ==============================
             mkdir -p $RELEASES_PATH
-            mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
+            mkdir -p $SHARED_PATH/storage/framework/sessions
+            mkdir -p $SHARED_PATH/storage/framework/views
+            mkdir -p $SHARED_PATH/storage/framework/cache
+
             mkdir -p $SHARED_PATH/storage/app/public
-            mkdir -p $SHARED_PATH/bootstrap/cache
-            mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
+
+            mkdir -p $SHARED_PATH/frontend/data_warga/kk
+            mkdir -p $SHARED_PATH/frontend/data_warga/ktp
 
             # ==============================
             # Deploy Code: Clone or Pull
