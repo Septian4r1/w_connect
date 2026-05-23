@@ -303,7 +303,7 @@ class ChartOfAccountSeeder extends Seeder
         |--------------------------------------------------------------------------
         |
         | INI KEWAJIBAN TITIPAN DANA
-        | BUKAN PENDAPATAN
+        | BUKAN PENDAPATAN TITIPAN DANA CASH HOLDER
         |
         |--------------------------------------------------------------------------
         */
@@ -404,7 +404,7 @@ class ChartOfAccountSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | NON FUND REVENUE
+        | NON FUND REVENUE oke
         |--------------------------------------------------------------------------
         */
 
@@ -430,7 +430,7 @@ class ChartOfAccountSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | 5. EXPENSE
+        | 5. EXPENSE oke
         |--------------------------------------------------------------------------
         */
 
