@@ -9,24 +9,25 @@ class ChartOfAccountSeeder extends Seeder
 {
     public function run(): void
     {
+        ChartOfAccount::truncate();
+
         $create = function (array $data) {
             return ChartOfAccount::create(array_merge([
-                'parent_id'        => null,
-                'opening_balance'  => 0,
-                'currency'         => 'IDR',
-                'description'      => null,
-                'is_header'        => 0,
-                'is_postable'      => 1,
-                'is_active'        => 1,
+                'parent_id'       => null,
+                'opening_balance' => 0,
+                'currency'        => 'IDR',
+                'description'     => null,
+                'is_header'       => 0,
+                'is_postable'     => 1,
+                'is_active'       => 1,
             ], $data));
         };
 
         /*
-        |========================
+        |-------------------------
         | 1. ASSET
-        |========================
+        |-------------------------
         */
-
         $asset = $create([
             'code' => '1000',
             'name' => 'ASSET',
@@ -35,46 +36,62 @@ class ChartOfAccountSeeder extends Seeder
             'is_header' => 1,
             'is_postable' => 0,
             'level' => 1,
+            'sort_order' => 1,
         ]);
 
         $currentAsset = $create([
             'parent_id' => $asset->id,
             'code' => '1100',
             'name' => 'CURRENT ASSET',
+            'type' => 'asset',
+            'normal_balance' => 'debit',
+            'is_header' => 1,
+            'is_postable' => 0,
+            'level' => 2,
+            'sort_order' => 1,
         ]);
 
         $cashBank = $create([
             'parent_id' => $currentAsset->id,
             'code' => '1110',
             'name' => 'CASH & BANK',
+            'type' => 'asset',
+            'normal_balance' => 'debit',
             'is_header' => 1,
             'is_postable' => 0,
+            'level' => 3,
+            'sort_order' => 1,
         ]);
 
         $cashAccounts = [
-            ['1111', 'Kas RW', 'Kas utama operasional RW'],
-            ['1112', 'Bank BJB', 'Rekening utama RW'],
-            ['1113', 'Petty Cash', 'Kas kecil operasional'],
-            ['1114', 'Bank BCA', 'Rekening BCA RW'],
-            ['1115', 'Kas Petugas RT', 'Kas penagihan IPL'],
+            ['1111', 'Kas RW'],
+            ['1112', 'Bank BJB'],
+            ['1113', 'Petty Cash'],
+            ['1114', 'Bank BCA'],
+            ['1115', 'Kas Petugas RT'],
         ];
 
-        foreach ($cashAccounts as $i => $c) {
+        foreach ($cashAccounts as $i => $a) {
             $create([
                 'parent_id' => $cashBank->id,
-                'code' => $c[0],
-                'name' => $c[1],
-                'description' => $c[2],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'asset',
+                'normal_balance' => 'debit',
                 'level' => 4,
                 'sort_order' => $i + 1,
             ]);
         }
 
-        $restricted = $create([
+        $restrictedCash = $create([
             'parent_id' => $currentAsset->id,
             'code' => '1120',
             'name' => 'RESTRICTED CASH FUND',
+            'type' => 'asset',
+            'normal_balance' => 'debit',
             'is_header' => 1,
+            'level' => 3,
+            'sort_order' => 2,
         ]);
 
         $restrictedFunds = [
@@ -86,12 +103,15 @@ class ChartOfAccountSeeder extends Seeder
             ['1126', 'Kas Dana Rukem'],
         ];
 
-        foreach ($restrictedFunds as $i => $f) {
+        foreach ($restrictedFunds as $i => $a) {
             $create([
-                'parent_id' => $restricted->id,
-                'code' => $f[0],
-                'name' => $f[1],
+                'parent_id' => $restrictedCash->id,
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'asset',
+                'normal_balance' => 'debit',
                 'level' => 4,
+                'sort_order' => $i + 1,
             ]);
         }
 
@@ -99,6 +119,8 @@ class ChartOfAccountSeeder extends Seeder
             'parent_id' => $currentAsset->id,
             'code' => '1200',
             'name' => 'RECEIVABLE',
+            'type' => 'asset',
+            'normal_balance' => 'debit',
             'is_header' => 1,
         ]);
 
@@ -109,20 +131,23 @@ class ChartOfAccountSeeder extends Seeder
             ['1240', 'Cadangan Piutang Tak Tertagih'],
         ];
 
-        foreach ($receivables as $i => $r) {
+        foreach ($receivables as $i => $a) {
             $create([
                 'parent_id' => $receivable->id,
-                'code' => $r[0],
-                'name' => $r[1],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'asset',
+                'normal_balance' => 'debit',
                 'level' => 4,
+                'sort_order' => $i + 1,
             ]);
         }
 
-        $fixed = $create([
+        $fixedAsset = $create([
             'parent_id' => $asset->id,
             'code' => '1300',
             'name' => 'FIXED ASSET',
-            'is_header' => 1,
+            'type' => 'asset',
         ]);
 
         $fixedAssets = [
@@ -131,21 +156,19 @@ class ChartOfAccountSeeder extends Seeder
             ['1330', 'Aset Infrastruktur'],
         ];
 
-        foreach ($fixedAssets as $i => $f) {
+        foreach ($fixedAssets as $i => $a) {
             $create([
-                'parent_id' => $fixed->id,
-                'code' => $f[0],
-                'name' => $f[1],
-                'level' => 3,
+                'parent_id' => $fixedAsset->id,
+                'code' => $a[0],
+                'name' => $a[1],
             ]);
         }
 
         /*
-        |========================
-        | 2. LIABILITY
-        |========================
+        |-------------------------
+        | LIABILITY
+        |-------------------------
         */
-
         $liability = $create([
             'code' => '2000',
             'name' => 'LIABILITY',
@@ -158,7 +181,7 @@ class ChartOfAccountSeeder extends Seeder
             'parent_id' => $liability->id,
             'code' => '2100',
             'name' => 'CURRENT LIABILITY',
-            'is_header' => 1,
+            'type' => 'liability',
         ]);
 
         $liabilities = [
@@ -170,12 +193,13 @@ class ChartOfAccountSeeder extends Seeder
             ['2160', 'Hutang Settlement Vendor'],
         ];
 
-        foreach ($liabilities as $i => $l) {
+        foreach ($liabilities as $i => $a) {
             $create([
                 'parent_id' => $currentLiability->id,
-                'code' => $l[0],
-                'name' => $l[1],
-                'level' => 3,
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'liability',
+                'normal_balance' => 'credit',
             ]);
         }
 
@@ -183,7 +207,7 @@ class ChartOfAccountSeeder extends Seeder
             'parent_id' => $currentLiability->id,
             'code' => '2200',
             'name' => 'TITIPAN DANA WARGA',
-            'is_header' => 1,
+            'type' => 'liability',
         ]);
 
         $funds = [
@@ -195,25 +219,27 @@ class ChartOfAccountSeeder extends Seeder
             ['2260', 'Dana Rukem'],
         ];
 
-        foreach ($funds as $i => $f) {
+        foreach ($funds as $i => $a) {
             $create([
                 'parent_id' => $fundLiability->id,
-                'code' => $f[0],
-                'name' => $f[1],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'liability',
+                'normal_balance' => 'credit',
             ]);
         }
 
         /*
-        |========================
-        | 3. EQUITY
-        |========================
+        |-------------------------
+        | EQUITY
+        |-------------------------
         */
-
         $equity = $create([
             'code' => '3000',
             'name' => 'EQUITY',
             'type' => 'equity',
             'normal_balance' => 'credit',
+            'is_header' => 1,
         ]);
 
         $equities = [
@@ -221,25 +247,27 @@ class ChartOfAccountSeeder extends Seeder
             ['3200', 'Saldo Laba Ditahan'],
         ];
 
-        foreach ($equities as $e) {
+        foreach ($equities as $a) {
             $create([
                 'parent_id' => $equity->id,
-                'code' => $e[0],
-                'name' => $e[1],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'equity',
+                'normal_balance' => 'credit',
             ]);
         }
 
         /*
-        |========================
-        | 4. REVENUE
-        |========================
+        |-------------------------
+        | REVENUE
+        |-------------------------
         */
-
         $revenue = $create([
             'code' => '4000',
             'name' => 'REVENUE',
             'type' => 'revenue',
             'normal_balance' => 'credit',
+            'is_header' => 1,
         ]);
 
         $revenues = [
@@ -250,31 +278,34 @@ class ChartOfAccountSeeder extends Seeder
             ['4150', 'Penerimaan IPL'],
         ];
 
-        foreach ($revenues as $r) {
+        foreach ($revenues as $a) {
             $create([
                 'parent_id' => $revenue->id,
-                'code' => $r[0],
-                'name' => $r[1],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'revenue',
+                'normal_balance' => 'credit',
             ]);
         }
 
         /*
-        |========================
-        | 5. EXPENSE
-        |========================
+        |-------------------------
+        | EXPENSE
+        |-------------------------
         */
-
         $expense = $create([
             'code' => '5000',
             'name' => 'EXPENSE',
             'type' => 'expense',
             'normal_balance' => 'debit',
+            'is_header' => 1,
         ]);
 
         $operational = $create([
             'parent_id' => $expense->id,
             'code' => '5100',
             'name' => 'OPERATIONAL EXPENSE',
+            'type' => 'expense',
         ]);
 
         $expenses = [
@@ -291,11 +322,13 @@ class ChartOfAccountSeeder extends Seeder
             ['5210', 'Beban Piutang Tak Tertagih'],
         ];
 
-        foreach ($expenses as $i => $e) {
+        foreach ($expenses as $a) {
             $create([
                 'parent_id' => $operational->id,
-                'code' => $e[0],
-                'name' => $e[1],
+                'code' => $a[0],
+                'name' => $a[1],
+                'type' => 'expense',
+                'normal_balance' => 'debit',
             ]);
         }
     }
