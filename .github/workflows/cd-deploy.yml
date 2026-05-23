@@ -41,9 +41,8 @@ jobs:
           username: ${{ secrets.HOST_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          timeout: 120s
           command_timeout: 60m
-          script_stop: true
+          script_stop: false
           debug: true
           script: |
             set -e
@@ -63,14 +62,10 @@ jobs:
             # Ensure Directories Exist
             # ==============================
             mkdir -p $RELEASES_PATH
-            mkdir -p $SHARED_PATH/storage/framework/sessions
-            mkdir -p $SHARED_PATH/storage/framework/views
-            mkdir -p $SHARED_PATH/storage/framework/cache
-
+            mkdir -p $SHARED_PATH/storage/framework/{sessions,views,cache}
             mkdir -p $SHARED_PATH/storage/app/public
-
-            mkdir -p $SHARED_PATH/frontend/data_warga/kk
-            mkdir -p $SHARED_PATH/frontend/data_warga/ktp
+            mkdir -p $SHARED_PATH/bootstrap/cache
+            mkdir -p $SHARED_PATH/frontend/data_warga/{kk,ktp}
 
             # ==============================
             # Deploy Code: Clone or Pull
@@ -82,7 +77,6 @@ jobs:
               echo "⚡ Fast deploy - pulling latest code"
               cd $CURRENT_PATH
               git reset --hard
-              git clean -fd
               git pull origin main
             fi
 
@@ -114,10 +108,6 @@ jobs:
             # ==============================
             # Composer Install
             # ==============================
-
-            echo "🧹 Clearing old caches..."
-            php artisan optimize:clear || true
-
             echo "📦 Installing composer dependencies..."
             composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
 
