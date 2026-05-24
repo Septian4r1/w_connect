@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Accounting\AccountingPeriodController;
 use App\Http\Controllers\Accounting\ManagementAccountingController;
 use App\Http\Controllers\Accounting\ManagementFundingTypesController;
 use Illuminate\Support\Facades\Route;
@@ -290,8 +291,6 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
 
         Route::post('/roles/create', [ManagementRolseController::class, 'store'])->middleware('permission:daftarstrukture.create')->name('management.roles.store');
         Route::put('/roles/update/{id}', [ManagementRolseController::class, 'update'])->middleware('permission:daftarstrukture.update')->name('management.roles.update');
-
-
         /*------------------------------------------------------------------------ END ROLES ------------------------------------------------------------------------------- */
 
 
@@ -377,6 +376,16 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::put('/funding-account-link/{id}/update',[ManagementFundingTypesController::class, 'updateAccountMapping'])->middleware('permission:fundingaccount.update')->name('management.funding-account.update');
     });
 
+    Route::prefix('/accounting_periode')->group(function () {
+        /* ACCOUNTS _PERIODE */
+        Route::get('/view', [AccountingPeriodController::class, 'index'])->middleware('permission:accountingperiode.view')->name('management.accounting_periode.index');
+        Route::post('/store', [AccountingPeriodController::class, 'store'])->middleware('permission:accountingperiode.store')->name('accounting.periods.store');
+        Route::post('/{id}/close', [AccountingPeriodController::class, 'close'])->middleware('permission:accountingperiode.close')->name('accounting.periods.close');
+        Route::post('/{id}/lock', [AccountingPeriodController::class, 'lock'])->middleware('permission:accountingperiode.lock')->name('accounting.periods.lock');
+        Route::post('/{id}/current', [AccountingPeriodController::class, 'setCurrent'])->middleware('permission:accountingperiode.current')->name('accounting.periods.current');});
+
+          /* FISCAL _PERIODE */
+        Route::post('/Fiscalstore', [AccountingPeriodController::class, 'FiscalStore'])->middleware('permission:accountinfiscal.store')->name('accounting.fiscal.store');
 
     /*
     |----------------------------------------------------------------------

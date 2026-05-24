@@ -178,13 +178,18 @@
     /* PRIMARY */
     .coa-btn.primary {
         background: linear-gradient(135deg, #4f46e5, #6366f1);
-        color: #fff;
+        color: #FFFFFF;
     }
 
     /* LIGHT */
     .coa-btn.light {
         background: #fff;
         border: 1px solid #e5e7eb;
+    }
+
+    .coa-btn.warning {
+        background: linear-gradient(135deg, #FFF069, #FFE600);
+        color: #000000;
     }
 
     /* =====================================================
@@ -1180,5 +1185,11 @@
     /* icon size konsisten */
     .coa-icon-btn.view i {
         font-size: 12px;
+    }
+
+    .coa-pagination {
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
     }
 </style>

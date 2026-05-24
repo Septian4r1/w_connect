@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\AccountingPeriod;
 
 class Organization extends Model
 {
@@ -191,5 +192,19 @@ class Organization extends Model
     public function fullName(): string
     {
         return "{$this->code} - {$this->name}";
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| ACCOUNTING PERIODS
+|--------------------------------------------------------------------------
+*/
+
+    public function accountingPeriods(): HasMany
+    {
+        return $this->hasMany(
+            AccountingPeriod::class,
+            'organization_id'
+        );
     }
 }
