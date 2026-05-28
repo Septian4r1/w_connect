@@ -16,6 +16,7 @@ class Block extends Model
 
     protected $fillable = [
         'rt_id',
+        'organization_id', // FIX: hapus spasi
         'nama_blok',
         'keterangan',
         'status',
@@ -23,6 +24,7 @@ class Block extends Model
 
     protected $casts = [
         'status' => 'string',
+        'organization_id' => 'integer',
     ];
 
     /*
@@ -32,11 +34,22 @@ class Block extends Model
     */
 
     /**
-     * Block milik RT
+     * Block milik RT lama
      */
     public function rt(): BelongsTo
     {
         return $this->belongsTo(Rt::class);
+    }
+
+    /**
+     * Block milik organization RT baru
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(
+            Organization::class,
+            'organization_id'
+        );
     }
 
     /**
@@ -49,7 +62,6 @@ class Block extends Model
 
     /**
      * Optional: Block punya banyak User
-     * (jika user memang ada block_id)
      */
     public function users(): HasMany
     {
@@ -71,29 +83,47 @@ class Block extends Model
     }
 
     /**
-     * Scope filter berdasarkan RT
+     * Scope filter berdasarkan RT lama
      */
-    public function scopeByRt(Builder $query, int $rtId): Builder
-    {
+    public function scopeByRt(
+        Builder $query,
+        int $rtId
+    ): Builder {
         return $query->where('rt_id', $rtId);
     }
 
     /**
-     * Scope eager load full area (anti N+1)
+     * Scope filter berdasarkan organization
      */
-    public function scopeWithFullArea(Builder $query): Builder
-    {
+    public function scopeByOrganization(
+        Builder $query,
+        int $organizationId
+    ): Builder {
+        return $query->where(
+            'organization_id',
+            $organizationId
+        );
+    }
+
+    /**
+     * Scope eager load full area
+     */
+    public function scopeWithFullArea(
+        Builder $query
+    ): Builder {
         return $query->with([
             'rt:id,rw_id,nama_rt',
-            'rt.rw:id,nama_rw'
+            'rt.rw:id,nama_rw',
+            'organization:id,type,code,name',
         ]);
     }
 
     /**
-     * Scope eager load rumah (untuk dashboard)
+     * Scope eager load rumah
      */
-    public function scopeWithRumahs(Builder $query): Builder
-    {
+    public function scopeWithRumahs(
+        Builder $query
+    ): Builder {
         return $query->with([
             'rumahs:id,block_id,nomor_rumah,status_hunian'
         ]);

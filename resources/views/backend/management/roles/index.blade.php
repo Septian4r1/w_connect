@@ -251,7 +251,7 @@
                                                             class="bx {{ $pw->status == 'aktif' ? 'bx-caret-up' : 'bx-caret-down' }}"></i>
                                                     </a>
 
-                                                    <a href="javascript:void(0);"
+                                                    {{-- <a href="javascript:void(0);"
                                                         class="btn-soft delete btn-delete-pengurus"
                                                         data-id="{{ $pw->id }}"
                                                         data-user="{{ $pw->user->name ?? '-' }}"
@@ -261,7 +261,7 @@
                                                         data-rw="{{ $pw->rw->nama_rw ?? '-' }}"
                                                         data-rt="{{ $pw->rt->nama_rt ?? '-' }}" title="Hapus">
                                                         <i class="bx bx-trash "></i>
-                                                    </a>
+                                                    </a> --}}
                                                 </div>
                                             </td>
                                         </tr>

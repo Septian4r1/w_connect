@@ -6,6 +6,7 @@ use App\Http\Middleware\CheckLayananApproval;
 use \App\Http\Middleware\CheckDataWarga;
 use App\Http\Middleware\CheckDeviceLogin;
 use App\Http\Middleware\CheckRWExists;
+use App\Http\Middleware\EnsureAjaxRequest;
 use App\Http\Middleware\GuestRumah;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\RateLimiter;
@@ -51,6 +52,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+
+            // Safety Ajax
+            'ajax' => EnsureAjaxRequest::class,
         ]);
     })
 

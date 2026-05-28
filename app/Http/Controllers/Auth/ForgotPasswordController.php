@@ -22,26 +22,26 @@ class ForgotPasswordController extends Controller
     public function checkNik(Request $request)
     {
         $request->validate([
-            'nik' => 'required|digits_between:10,20'
+            'nama_lengkap' => 'required|string|max:255'
         ]);
 
-        $nik = trim($request->nik);
+        $namaLengkap = trim($request->nama_lengkap);
 
-        // Optimasi: ambil 1 kolom ID saja
-        $wargaId = Warga::where('nik', $nik)
+        // Cari warga berdasarkan nama lengkap
+        $wargaId = Warga::where('nama', $namaLengkap)
             ->where('status', 'aktif')
             ->value('id');
 
         if (!$wargaId) {
             return redirect()->route('forgotPassword')
-                ->with('error', 'NIK tidak ditemukan atau belum aktif');
+                ->with('error', 'Nama lengkap tidak ditemukan atau belum aktif');
         }
 
-        // Simpan ID warga di session (lebih aman daripada NIK)
+        // Simpan ID warga di session
         Session::put('reset_warga_id', $wargaId);
 
         return redirect()->route('forgotPassword.checkUnit')
-            ->with('success', 'NIK terverifikasi');
+            ->with('success', 'Nama lengkap terverifikasi');
     }
 
     public function showCheckUnit()

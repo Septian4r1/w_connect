@@ -1,671 +1,775 @@
 <style>
-    /* =====================================================
-   BUTTON COMPACT
-===================================================== */
-    .coa-btn.compact {
-        padding: 4px 8px;
-        font-size: 12px;
-        gap: 4px;
+    /* =========================================================
+   ROOT
+========================================================= */
+    :root {
+        --coa-primary: #4f46e5;
+        --coa-primary-light: #6366f1;
+
+        --coa-success: #16a34a;
+        --coa-danger: #dc2626;
+        --coa-warning: #d97706;
+        --coa-info: #2563eb;
+
+        --coa-bg: #f4f6fb;
+        --coa-card: #ffffff;
+
+        --coa-text: #111827;
+        --coa-text-soft: #6b7280;
+
+        --coa-border: #e5e7eb;
+        --coa-border-dark: #cfd8e3;
+
+        --coa-radius: 14px;
+
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, .04);
+        --shadow-md: 0 10px 25px rgba(0, 0, 0, .06);
     }
 
-    .coa-btn.compact i {
-        font-size: 12px;
+    /* =========================================================
+   RESET
+========================================================= */
+    * {
+        box-sizing: border-box;
     }
 
-    /* =====================================================
-   TYPE BADGE
-===================================================== */
-    .coa-type-badge {
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-weight: 600;
+    .coa-page * {
+        scrollbar-width: thin;
     }
 
-    .coa-type-badge.type-asset {
-        background: rgba(59, 130, 246, .12);
-        color: #2563eb;
-    }
-
-    .coa-type-badge.type-liability {
-        background: rgba(239, 68, 68, .12);
-        color: #dc2626;
-    }
-
-    .coa-type-badge.type-equity {
-        background: rgba(139, 92, 246, .12);
-        color: #7c3aed;
-    }
-
-    .coa-type-badge.type-revenue {
-        background: rgba(34, 197, 94, .12);
-        color: #16a34a;
-    }
-
-    .coa-type-badge.type-expense {
-        background: rgba(249, 115, 22, .12);
-        color: #ea580c;
-    }
-
-    /* =====================================================
-   BALANCE BADGE
-===================================================== */
-    .coa-balance-badge {
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-weight: 600;
-    }
-
-    .coa-balance-badge.debit {
-        background: rgba(59, 130, 246, .12);
-        color: #2563eb;
-        border: 1px solid rgba(59, 130, 246, .2);
-    }
-
-    .coa-balance-badge.credit {
-        background: rgba(239, 68, 68, .12);
-        color: #dc2626;
-        border: 1px solid rgba(239, 68, 68, .2);
-    }
-
-    /* =====================================================
+    /* =========================================================
    PAGE
-===================================================== */
+========================================================= */
     .coa-page {
         padding: 20px;
-        background: #f4f6fb;
+        background: var(--coa-bg);
         font-size: 13px;
-        color: #111827;
+        color: var(--coa-text);
     }
 
-    /* =====================================================
-   HEADER (EYE CATCHING VERSION)
-===================================================== */
+    /* =========================================================
+   HEADER
+========================================================= */
     .coa-header {
+        position: relative;
+
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 14px;
+
         margin-bottom: 18px;
-        padding: 14px 16px;
+        padding: 16px 18px;
+
         background: linear-gradient(135deg, #ffffff, #f8fafc);
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        position: relative;
+
+        border: 1px solid var(--coa-border);
+        border-radius: 18px;
+
         overflow: hidden;
     }
 
-    /* decorative glow line */
     .coa-header::before {
         content: "";
+
         position: absolute;
-        left: 0;
-        top: 0;
+        inset: 0 0 auto 0;
+
         height: 4px;
-        width: 100%;
-        background: linear-gradient(90deg, #4f46e5, #6366f1, #22c55e, #f59e0b);
+
+        background: linear-gradient(90deg,
+                #4f46e5,
+                #6366f1,
+                #22c55e,
+                #f59e0b);
+
         background-size: 300% 100%;
-        animation: headerGlow 6s linear infinite;
+        animation: coaGlow 6s linear infinite;
     }
 
-    /* animated gradient */
-    @keyframes headerGlow {
-        0% {
-            background-position: 0% 50%;
+    @keyframes coaGlow {
+        from {
+            background-position: 0 50%;
         }
 
-        100% {
+        to {
             background-position: 100% 50%;
         }
     }
 
-    /* TITLE */
     .coa-header h2 {
         margin: 0;
         font-size: 22px;
         font-weight: 800;
-        letter-spacing: 0.3px;
-        color: #111827;
+        color: var(--coa-text);
     }
 
-    /* SUB TEXT */
     .coa-header p {
         margin: 4px 0 0;
         font-size: 12px;
-        color: #6b7280;
+        color: var(--coa-text-soft);
     }
 
-    /* RIGHT ACTION AREA */
-    .coa-actions {
-        display: flex;
-        gap: 10px;
+    .header-badge {
+        display: inline-flex;
         align-items: center;
-    }
 
-    /* OPTIONAL: badge kecil di header kalau mau */
-    .coa-header .header-badge {
-        font-size: 11px;
-        padding: 4px 10px;
+        padding: 5px 10px;
+
         border-radius: 999px;
-        background: rgba(99, 102, 241, 0.1);
-        color: #4f46e5;
-        font-weight: 600;
+
+        font-size: 11px;
+        font-weight: 700;
+
+        background: rgba(79, 70, 229, .10);
+        color: var(--coa-primary);
     }
 
-    /* =====================================================
-   ACTION BUTTONS
-===================================================== */
+    /* =========================================================
+   ACTIONS
+========================================================= */
     .coa-actions {
         display: flex;
-        gap: 10px;
         align-items: center;
+        gap: 10px;
     }
 
-    /* BASE BUTTON */
     .coa-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
+
+        min-height: 40px;
+
         padding: 10px 14px;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 600;
+
         border: 1px solid transparent;
+        border-radius: 12px;
+
+        font-size: 13px;
+        font-weight: 700;
+
         cursor: pointer;
-        transition: .25s;
+
+        transition: .2s ease;
     }
 
-    /* PRIMARY */
+    .coa-btn:hover {
+        transform: translateY(-1px);
+    }
+
     .coa-btn.primary {
-        background: linear-gradient(135deg, #4f46e5, #6366f1);
-        color: #FFFFFF;
+        color: #fff;
+        background: linear-gradient(135deg,
+                var(--coa-primary),
+                var(--coa-primary-light));
     }
 
-    /* LIGHT */
     .coa-btn.light {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border-color: var(--coa-border);
     }
 
     .coa-btn.warning {
-        background: linear-gradient(135deg, #FFF069, #FFE600);
-        color: #000000;
+        color: #000;
+        background: linear-gradient(135deg,
+                #fff069,
+                #ffe600);
     }
 
-    /* =====================================================
-   STATS (EYE CATCHING DASHBOARD STYLE)
-===================================================== */
+    .coa-btn.compact {
+        min-height: auto;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* =========================================================
+   STATS
+========================================================= */
     .coa-stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 14px;
+
         margin-bottom: 18px;
     }
 
-    /* CARD BASE */
     .stat-card {
-        background: linear-gradient(135deg, #ffffff, #f9fafb);
-        border-radius: 18px;
-        padding: 16px;
+        position: relative;
+
         display: flex;
         align-items: center;
         gap: 14px;
-        border: 1px solid #e5e7eb;
-        transition: all 0.25s ease;
-        position: relative;
+
+        padding: 16px;
+
+        background: linear-gradient(135deg,
+                #ffffff,
+                #f9fafb);
+
+        border: 1px solid var(--coa-border);
+        border-radius: 18px;
+
         overflow: hidden;
-        cursor: pointer;
+
+        transition: .25s ease;
     }
 
-    /* soft floating hover */
     .stat-card:hover {
-        transform: translateY(-6px) scale(1.01);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
     }
 
-    /* animated glow bottom line */
     .stat-card::after {
         content: "";
+
         position: absolute;
-        bottom: 0;
-        left: 0;
+        inset: auto 0 0 0;
+
         height: 4px;
-        width: 100%;
+
         transform: scaleX(0);
         transform-origin: left;
-        transition: 0.35s ease;
+
+        transition: .25s ease;
     }
 
     .stat-card:hover::after {
         transform: scaleX(1);
     }
 
-    /* ICON STYLE (BIG + SOFT BG) */
+    .stat-card.total::after {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .stat-card.active::after {
+        background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .stat-card.inactive::after {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    .stat-card.header::after {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
     .stat-icon {
         width: 48px;
         height: 48px;
-        border-radius: 14px;
+
+        flex-shrink: 0;
+
         display: flex;
         align-items: center;
         justify-content: center;
+
+        border-radius: 14px;
+
         font-size: 20px;
+
         background: #f3f4f6;
-        transition: 0.25s ease;
     }
 
-    /* TEXT AREA */
+    .stat-card.total .stat-icon {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .12);
+    }
+
+    .stat-card.active .stat-icon {
+        color: #16a34a;
+        background: rgba(34, 197, 94, .12);
+    }
+
+    .stat-card.inactive .stat-icon {
+        color: #dc2626;
+        background: rgba(239, 68, 68, .12);
+    }
+
+    .stat-card.header .stat-icon {
+        color: #d97706;
+        background: rgba(245, 158, 11, .12);
+    }
+
     .stat-label {
         font-size: 12px;
-        color: #6b7280;
-        font-weight: 600;
+        font-weight: 700;
+        color: var(--coa-text-soft);
     }
 
     .stat-value {
         font-size: 24px;
         font-weight: 800;
-        color: #111827;
-        letter-spacing: 0.3px;
     }
 
     .stat-desc {
+        margin-top: 2px;
+
         font-size: 11px;
         color: #9ca3af;
-        margin-top: 2px;
     }
 
-    /* =====================================================
-   COLOR THEMES (MAKING EACH CARD "POP")
-===================================================== */
-
-    /* TOTAL (BLUE TECH) */
-    .stat-card.total::after {
-        background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    }
-
-    .stat-card.total .stat-icon {
-        background: rgba(59, 130, 246, 0.12);
-        color: #2563eb;
-    }
-
-    /* HEADER (AMBER PREMIUM) */
-    .stat-card.header::after {
-        background: linear-gradient(90deg, #f59e0b, #fbbf24);
-    }
-
-    .stat-card.header .stat-icon {
-        background: rgba(245, 158, 11, 0.12);
-        color: #d97706;
-    }
-
-    /* ACTIVE (GREEN SUCCESS) */
-    .stat-card.active::after {
-        background: linear-gradient(90deg, #22c55e, #4ade80);
-    }
-
-    .stat-card.active .stat-icon {
-        background: rgba(34, 197, 94, 0.12);
-        color: #16a34a;
-    }
-
-    /* INACTIVE (RED ALERT) */
-    .stat-card.inactive::after {
-        background: linear-gradient(90deg, #ef4444, #f87171);
-    }
-
-    .stat-card.inactive .stat-icon {
-        background: rgba(239, 68, 68, 0.12);
-        color: #dc2626;
-    }
-
-    /* =====================================================
-   RESPONSIVE
-===================================================== */
-    @media (max-width: 1024px) {
-        .coa-stats {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .coa-stats {
-            grid-template-columns: 1fr;
-        }
-
-        .stat-value {
-            font-size: 20px;
-        }
-    }
-
-    /* =====================================================
+    /* =========================================================
    FILTER
-===================================================== */
+========================================================= */
     .coa-filter {
-        background: #fff;
-        padding: 14px;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
         margin-bottom: 16px;
+        padding: 14px;
+
+        background: #fff;
+
+        border: 1px solid var(--coa-border);
+        border-radius: 14px;
     }
 
     .coa-filter form {
         display: flex;
-        gap: 10px;
         align-items: center;
+        gap: 10px;
     }
 
     .coa-search-wrapper {
-        flex: 1;
         position: relative;
+        flex: 1;
     }
 
     .coa-search-wrapper i {
         position: absolute;
         left: 12px;
         top: 50%;
+
         transform: translateY(-50%);
         color: #9ca3af;
     }
 
-    .coa-search-input {
+    .coa-search-input,
+    .coa-select {
         width: 100%;
         height: 44px;
-        padding-left: 38px;
+
+        border: 1px solid var(--coa-border);
         border-radius: 12px;
-        border: 1px solid #e5e7eb;
+
+        font-size: 13px;
+    }
+
+    .coa-search-input {
+        padding-left: 38px;
     }
 
     .coa-select {
-        height: 44px;
-        border-radius: 10px;
-        border: 1px solid #e5e7eb;
-        min-width: 130px;
+        min-width: 150px;
+        padding: 0 12px;
     }
 
-    /* =====================================================
-   ERP ACCOUNTING TABLE STYLE
-===================================================== */
-    .coa-table-toolbar {
-        padding: 10px 14px;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f8fafc;
+    /* =========================================================
+   TABLE CARD
+========================================================= */
+    .coa-table-card {
+        overflow: hidden;
 
+        background: #fff;
+
+        border: 1px solid #d6dde6;
+        border-radius: 16px;
+
+        box-shadow: var(--shadow-sm);
+    }
+
+    .coa-table-toolbar {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
+
+        padding: 12px 14px;
+
+        background: #f8fafc;
+        border-bottom: 1px solid var(--coa-border);
     }
 
     .table-title {
         font-size: 13px;
         font-weight: 700;
-        color: #111827;
     }
 
     .table-count {
         font-size: 11px;
-        color: #6b7280;
-        margin-left: 10px;
+        color: var(--coa-text-soft);
     }
 
-    .coa-table-card {
-        background: #fff;
-        border: 1px solid #d6dde6;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, .03);
-    }
-
-    /* SCROLL */
+    /* =========================================================
+   TABLE SCROLL
+========================================================= */
     .coa-table-scroll {
+        position: relative;
+
         max-height: 78vh;
+
         overflow: auto;
+
+        isolation: isolate;
+
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* TABLE */
+    /* =========================================================
+   TABLE
+========================================================= */
     .coa-table {
         width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
+        min-width: 1400px;
+
+        border-collapse: separate;
+        border-spacing: 0;
+
+        table-layout: auto;
+
         font-size: 12px;
         color: #1f2937;
     }
 
-    /* HEADER */
+    /* =========================================================
+   TABLE HEADER FIX STICKY
+========================================================= */
+    .coa-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+    }
+
     .coa-table thead th {
         position: sticky;
         top: 0;
-        z-index: 20;
 
-        background: linear-gradient(to bottom, #f8fafc, #e9eef5);
+        z-index: 50;
+
+        padding: 9px 10px;
+
+        text-align: left;
+        white-space: nowrap;
+
+        font-size: 11px;
+        font-weight: 800;
+        color: #374151;
+
+        background: #eef2f7 !important;
 
         border-bottom: 1px solid #cfd8e3;
         border-right: 1px solid #dde5ee;
 
-        padding: 7px 10px;
+        background-clip: padding-box;
 
-        text-align: left;
-        font-size: 11px;
-        font-weight: 700;
-        color: #374151;
-
-        white-space: nowrap;
+        box-shadow:
+            inset 0 -1px 0 #cfd8e3,
+            0 1px 0 rgba(255, 255, 255, .7);
     }
 
-    /* BODY */
+    /* FIX STICKY BLINK / TRANSPARENT */
+    .coa-table thead th::before {
+        content: "";
+
+        position: absolute;
+        inset: 0;
+
+        z-index: -1;
+
+        background: linear-gradient(to bottom,
+                #f8fafc,
+                #e9eef5);
+    }
+
+    /* =========================================================
+   TABLE BODY
+========================================================= */
     .coa-table tbody td {
+        position: relative;
+
+        padding: 7px 10px;
+
+        vertical-align: middle;
+
+        background: #fff;
+
         border-bottom: 1px solid #edf2f7;
         border-right: 1px solid #f1f5f9;
 
-        padding: 5px 10px;
-
-        vertical-align: middle;
-        background: #fff;
-
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
-    /* ZEBRA */
     .coa-table tbody tr:nth-child(even) td {
         background: #fafcff;
     }
 
-    /* HOVER */
     .coa-table tbody tr:hover td {
         background: #edf6ff !important;
     }
 
-    /* ROOT HEADER */
+    /* =========================================================
+   TREE LEVEL
+========================================================= */
     .coa-row.level-0 td {
         background: #e8eef5 !important;
         font-weight: 700;
     }
 
-    /* SUB HEADER */
     .coa-row.level-1 td {
         background: #f8fafc;
         font-weight: 600;
     }
 
-    /* CODE */
+    /* =========================================================
+   TREE
+========================================================= */
     .coa-code-cell {
         font-family: Consolas, monospace;
-        font-size: 12px;
-        color: #111827;
     }
 
-    /* TREE WRAP */
     .coa-code-wrap {
         display: flex;
         align-items: center;
         gap: 5px;
     }
 
-    /* TREE */
     .tree-lines {
         display: flex;
     }
 
     .tree-lines .v-line {
-        width: 16px;
-        border-left: 1px solid #cbd5e1;
         position: relative;
+
+        width: 16px;
+
+        border-left: 1px solid #cbd5e1;
     }
 
     .tree-lines .v-line:last-child::after {
         content: "";
+
         position: absolute;
         top: 50%;
         left: 0;
+
         width: 9px;
+
         border-top: 1px solid #cbd5e1;
     }
 
-    /* TOGGLE */
     .coa-toggle-btn {
         width: 16px;
         height: 16px;
-
-        border: 1px solid #cbd5e1;
-        background: #fff;
-
-        border-radius: 2px;
 
         display: flex;
         align-items: center;
         justify-content: center;
 
-        cursor: pointer;
         padding: 0;
+
+        border: 1px solid #cbd5e1;
+        border-radius: 3px;
+
+        background: #fff;
+
+        cursor: pointer;
     }
 
     .coa-toggle-btn i {
         font-size: 9px;
     }
 
-    /* LEAF */
     .coa-leaf-dot {
         width: 5px;
         height: 5px;
-        border-radius: 50%;
+
+        border-radius: 999px;
+
         background: #94a3b8;
     }
 
-    /* NAME */
-    .coa-name-text {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    /* BADGE */
+    /* =========================================================
+   BADGE
+========================================================= */
     .coa-type-badge,
     .coa-balance-badge,
     .coa-status {
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 600;
-    }
-
-    /* ACTION */
-    .coa-action-group {
-        display: flex;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
-        gap: 4px;
+
+        padding: 4px 8px;
+
+        border-radius: 8px;
+
+        font-size: 10px;
+        font-weight: 700;
     }
 
-    .coa-icon-btn {
-        width: 24px;
-        height: 24px;
-
-        border: 1px solid #d1d5db;
-        background: #fff;
-
-        border-radius: 4px;
-
-        cursor: pointer;
-        transition: .2s;
+    /* TYPE */
+    .type-asset {
+        background: rgba(59, 130, 246, .12);
+        color: #2563eb;
     }
 
-    .coa-icon-btn:hover {
-        background: #f3f4f6;
+    .type-liability {
+        background: rgba(239, 68, 68, .12);
+        color: #dc2626;
     }
 
-    .coa-icon-btn.danger:hover {
-        background: #fee2e2;
+    .type-equity {
+        background: rgba(139, 92, 246, .12);
+        color: #7c3aed;
     }
 
-    /* MOBILE */
-    @media (max-width: 768px) {
-
-        .coa-table {
-            min-width: 920px;
-        }
-
-        .coa-table thead th {
-            font-size: 10px;
-            padding: 6px;
-        }
-
-        .coa-table tbody td {
-            font-size: 10px;
-            padding: 5px 6px;
-        }
-
+    .type-revenue {
+        background: rgba(34, 197, 94, .12);
+        color: #16a34a;
     }
 
-    /* =====================================================
-   STATUS
-===================================================== */
-    .coa-status {
-        font-size: 11px;
-        padding: 3px 8px;
-        border-radius: 6px;
+    .type-expense {
+        background: rgba(249, 115, 22, .12);
+        color: #ea580c;
     }
 
+    /* BALANCE */
+    .coa-balance-badge.debit {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .12);
+        border: 1px solid rgba(59, 130, 246, .2);
+    }
+
+    .coa-balance-badge.credit {
+        color: #dc2626;
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .2);
+    }
+
+    /* STATUS */
     .coa-status.active {
-        background: #dcfce7;
         color: #166534;
+        background: #dcfce7;
     }
 
     .coa-status.inactive {
-        background: #fee2e2;
         color: #991b1b;
+        background: #fee2e2;
     }
 
-    /* =====================================================
-   ACTIONS
-===================================================== */
+    /* =========================================================
+   ACTION BUTTON
+========================================================= */
     .coa-action-group {
         display: flex;
+        justify-content: center;
         gap: 6px;
-        justify-content: flex-end;
     }
 
     .coa-icon-btn {
         width: 30px;
         height: 30px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
         border-radius: 8px;
-        background: transparent;
         border: none;
+
+        cursor: pointer;
+
+        transition: .2s ease;
     }
 
     .coa-icon-btn:hover {
-        background: #f3f4f6;
+        transform: translateY(-2px);
     }
 
-    .coa-icon-btn.danger:hover {
-        background: #fee2e2;
+    .coa-icon-btn.primary {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .12);
+        border: 1px solid rgba(59, 130, 246, .2);
     }
 
-    /* =====================================================
-   MODAL (ONLY ONE CLEAN VERSION)
-===================================================== */
+    .coa-icon-btn.view {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .12);
+        border: 1px solid rgba(59, 130, 246, .2);
+    }
+
+    .coa-icon-btn.success {
+        color: #16a34a;
+        background: rgba(34, 197, 94, .12);
+        border: 1px solid rgba(34, 197, 94, .2);
+    }
+
+    .coa-icon-btn.danger {
+        color: #dc2626;
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .2);
+    }
+
+    .coa-icon-btn.warning {
+        color: #000000;
+        background: #f0e2a8;
+        border: 1px solid #facc15;
+    }
+
+    .btn-warning-soft {
+        color: #1f2937;
+
+        background: #f0e2a8;
+        border: 1px solid #facc15;
+
+        box-shadow: 0 2px 6px rgba(250, 204, 21, .25);
+    }
+
+    .btn-warning-soft:hover {
+        background: #eab308;
+    }
+
+
+
+
+    .coa-status.info {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .12);
+        border: 1px solid rgba(59, 130, 246, .2);
+    }
+
+    .coa-status.active {
+        color: #16a34a;
+        background: rgba(34, 197, 94, .12);
+        border: 1px solid rgba(34, 197, 94, .2);
+    }
+
+    .coa-status.inactive {
+        color: #dc2626;
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .2);
+    }
+
+    .coa-status.danger {
+        color: #dc2626;
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .2);
+    }
+
+    .coa-status.warning {
+        color: #A88700;
+        background: #f0e2a8;
+        border: 1px solid #FFDA46;
+    }
+
+    /* =========================================================
+   MODAL
+========================================================= */
     .coa-modal {
         position: fixed;
         inset: 0;
+
         display: none;
+
         z-index: 99999;
     }
 
@@ -678,38 +782,45 @@
     .coa-modal-overlay {
         position: absolute;
         inset: 0;
+
         background: rgba(0, 0, 0, .55);
         backdrop-filter: blur(4px);
     }
 
     .coa-modal-box {
         position: relative;
+
         width: 520px;
         max-width: 95%;
-        background: #fff;
-        border-radius: 16px;
-        padding: 18px;
 
         display: flex;
         flex-direction: column;
         gap: 12px;
 
-        animation: modalShow .18s ease forwards;
+        padding: 18px;
+
+        background: #fff;
+
+        border-radius: 18px;
+
+        animation: coaModal .2s ease;
     }
 
-    @keyframes modalShow {
+    @keyframes coaModal {
         from {
-            transform: scale(.95);
             opacity: 0;
+            transform: scale(.96);
         }
 
         to {
-            transform: scale(1);
             opacity: 1;
+            transform: scale(1);
         }
     }
 
-    /* FORM */
+    /* =========================================================
+   FORM
+========================================================= */
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -719,7 +830,7 @@
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 5px;
     }
 
     .form-group.full {
@@ -728,468 +839,286 @@
 
     .form-group label {
         font-size: 12px;
-        color: #6b7280;
+        color: var(--coa-text-soft);
     }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
         width: 100%;
-        padding: 10px;
-        border: 1px solid #e5e7eb;
+
+        padding: 10px 12px;
+
+        border: 1px solid var(--coa-border);
         border-radius: 10px;
+
         font-size: 13px;
-        box-sizing: border-box;
     }
 
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, .15);
+        outline: none;
+
+        border-color: var(--coa-primary);
+
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
     }
 
-    /* ACTION */
     .modal-actions {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
+
         margin-top: 10px;
     }
 
-    /* MOBILE */
-    @media (max-width:768px) {
-        .coa-stats {
-            grid-template-columns: 1fr;
-        }
+    /* =========================================================
+   PAGINATION
+========================================================= */
+    .coa-pagination {
+        display: flex;
+        justify-content: flex-end;
 
-        .coa-filter form {
-            flex-direction: column;
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
+        margin-top: 15px;
     }
 
-    /* =====================================================
-   MOBILE APP STYLE (ANDROID / IOS FEEL)
-===================================================== */
+    /* =========================================================
+   MOBILE
+========================================================= */
     @media (max-width: 768px) {
 
-        /* PAGE */
         .coa-page {
             padding: 10px;
-            font-size: 11px;
-            background: #f4f6fb;
         }
 
-        /* =====================================================
-       HEADER MOBILE
-    ===================================================== */
         .coa-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 10px;
-            padding: 14px;
-            border-radius: 16px;
         }
 
         .coa-header h2 {
-            font-size: 16px;
-            line-height: 1.3;
-            font-weight: 700;
+            font-size: 18px;
         }
 
-        .coa-header p {
-            font-size: 11px;
-            line-height: 1.5;
-            color: #6b7280;
-        }
-
-        /* ACTION BUTTON */
         .coa-actions {
             width: 100%;
             flex-direction: column;
-            gap: 8px;
         }
 
         .coa-btn {
             width: 100%;
-            justify-content: center;
-            font-size: 11px;
-            padding: 10px 12px;
-            border-radius: 12px;
         }
 
-        .coa-btn i {
-            font-size: 12px;
-        }
-
-        /* =====================================================
-       STATS MOBILE
-    ===================================================== */
         .coa-stats {
             grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        .stat-card {
-            padding: 12px;
-            border-radius: 16px;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .stat-icon {
-            width: 42px;
-            height: 42px;
-            min-width: 42px;
-            border-radius: 12px;
-            font-size: 16px;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: 800;
-            line-height: 1.2;
-        }
-
-        .stat-desc {
-            font-size: 10px;
-            line-height: 1.4;
-            color: #9ca3af;
-            margin-top: 2px;
-        }
-
-        /* =====================================================
-       FILTER MOBILE
-    ===================================================== */
-        .coa-filter {
-            padding: 12px;
-            border-radius: 14px;
         }
 
         .coa-filter form {
             flex-direction: column;
-            gap: 8px;
         }
 
         .coa-search-wrapper,
-        .coa-select,
-        .coa-btn {
+        .coa-select {
             width: 100%;
         }
 
-        .coa-search-input,
-        .coa-select {
-            height: 42px;
-            font-size: 11px;
-            border-radius: 10px;
+        .coa-table {
+            min-width: 920px;
         }
 
-        .coa-search-wrapper i {
-            font-size: 12px;
-        }
-
-        /* =====================================================
-       TABLE MOBILE
-    ===================================================== */
-        .coa-table-card {
-            border-radius: 14px;
-        }
-
-        .coa-table-scroll {
-            overflow-x: auto;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            min-width: 720px;
-        }
-
-        thead th {
+        .coa-table thead th {
             font-size: 10px;
-            padding: 10px;
+            padding: 8px;
         }
 
-        td {
+        .coa-table tbody td {
             font-size: 10px;
-            padding: 10px;
-            white-space: nowrap;
-        }
-
-        /* TREE TEXT */
-        .coa-code-text {
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .coa-name-text {
-            font-size: 10px;
-        }
-
-        /* TYPE BADGE */
-        .coa-type-badge,
-        .coa-balance-badge,
-        .coa-status {
-            font-size: 9px;
-            padding: 3px 7px;
-        }
-
-        /* ACTION BUTTONS */
-        .coa-action-group {
-            gap: 4px;
-        }
-
-        .coa-icon-btn {
-            width: 26px;
-            height: 26px;
-            border-radius: 8px;
-        }
-
-        .coa-icon-btn i {
-            font-size: 11px;
-        }
-
-        /* =====================================================
-       MODAL MOBILE
-    ===================================================== */
-        .coa-modal-box {
-            width: calc(100% - 20px);
-            max-width: 100%;
-            border-radius: 18px;
-            padding: 14px;
-        }
-
-        .coa-modal-header h3 {
-            font-size: 15px;
-        }
-
-        .coa-modal-header small {
-            font-size: 10px;
+            padding: 6px 8px;
         }
 
         .form-grid {
             grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        .form-group.full {
-            grid-column: span 1;
-        }
-
-        .form-group label {
-            font-size: 10px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            font-size: 11px;
-            padding: 10px;
-            border-radius: 10px;
         }
 
         .modal-actions {
             flex-direction: column-reverse;
-            gap: 8px;
         }
 
         .modal-actions .coa-btn {
             width: 100%;
         }
-
-
     }
 
-    /* =====================================================
-   ACCOUNT MODE
-===================================================== */
-
-    .coa-account-mode {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+    <style>.coa-status-list {
+        display: grid;
+        gap: 14px;
         margin-top: 10px;
     }
 
-    .coa-radio-card {
-        position: relative;
-        border: 1px solid #e4e7ec;
+    .swal-status-btn {
+        width: 100%;
+        border: 1px solid #e5e7eb;
         border-radius: 14px;
-        padding: 14px 16px;
+        padding: 18px;
+        text-align: left;
+        background: white;
         cursor: pointer;
-        transition: all .25s ease;
-        background: #fff;
+        transition: .2s;
     }
 
-    .coa-radio-card:hover {
-        border-color: #6366f1;
-        background: #f8faff;
-        transform: translateY(-1px);
+    .swal-status-btn:hover {
+        border-color: #2563eb;
+        transform: translateY(-2px);
     }
 
-    .coa-radio-card input[type="radio"] {
-        position: absolute;
-        top: 18px;
-        left: 16px;
-        transform: scale(1.1);
+    .swal-status-btn.disabled {
+        opacity: .45;
+        cursor: not-allowed;
     }
 
-    .coa-radio-card .radio-content {
+    .swal-status-header {
         display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        padding-left: 28px;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 10px;
     }
 
-    .coa-radio-card .radio-icon {
+    .swal-status-header i {
+        font-size: 24px;
+    }
+
+    .status-desc {
+        font-size: 13px;
+        line-height: 1.7;
+        color: #6b7280;
+    }
+
+    .coa-modal-style {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-modal-header {
+        background: linear-gradient(135deg, #f8fafc, #ffffff);
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 18px;
+    }
+
+    .coa-modal-icon {
         width: 42px;
         height: 42px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        color: #fff;
         font-size: 18px;
-        flex-shrink: 0;
+        box-shadow: 0 8px 20px rgba(79, 70, 229, .25);
     }
 
-    .coa-radio-card .radio-icon.header {
-        background: #eef2ff;
-        color: #4f46e5;
+    .coa-modal-body {
+        background: #f9fafb;
+        padding: 18px;
     }
 
-    .coa-radio-card .radio-icon.postable {
-        background: #ecfdf3;
-        color: #16a34a;
+    .coa-modal-body .form-control,
+    .coa-modal-body .form-select {
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        font-size: 13px;
     }
 
-    .coa-radio-card .radio-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+    .coa-modal-body .form-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #374151;
     }
 
-    .coa-radio-card .radio-info strong {
+    .coa-modal-footer {
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .coa-btn-primary {
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        border: none;
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+DETAIL MODAL
+========================================================= */
+
+    .coa-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .coa-modal-box {
+        max-height: 90vh;
+        overflow: hidden;
+    }
+
+    .coa-modal-body {
+        overflow-y: auto;
+        max-height: calc(90vh - 140px);
+    }
+
+    /* table detail modal */
+    .coa-card .coa-table {
+        min-width: 100% !important;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    .coa-card .coa-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .coa-card .coa-table td:first-child {
+        width: 180px;
+        font-weight: 700;
+        color: #374151;
+        background: #f9fafb;
+    }
+
+    .coa-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .coa-card h4 {
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8fafc;
         font-size: 14px;
         font-weight: 700;
-        color: #111827;
+        a
     }
 
-    .coa-radio-card .radio-info small {
-        font-size: 12px;
-        line-height: 1.5;
-        color: #6b7280;
+    #coaTree {
+        padding: 16px;
+        max-height: 350px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.7;
     }
 
-    /* ACTIVE RADIO */
-    .coa-radio-card:has(input:checked) {
-        border-color: #4f46e5;
-        background: #f5f7ff;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, .08);
-    }
-
-    /* FORM HINT */
-    .form-hint {
-        display: block;
-        margin-top: 6px;
-        font-size: 11px;
-        color: #94a3b8;
-        line-height: 1.5;
-    }
-
-    /* =========================================
-   STATUS BUTTON
-========================================= */
-
-    .coa-icon-btn.success {
-        background: rgba(34, 197, 94, .12);
-        color: #16a34a;
-        border: 1px solid rgba(34, 197, 94, .25);
-    }
-
-    .coa-icon-btn.success:hover {
-        background: #16a34a;
-        color: #fff;
-        transform: translateY(-2px);
-    }
-
-    .coa-icon-btn.danger {
-        background: rgba(239, 68, 68, .12);
-        color: #dc2626;
-        border: 1px solid rgba(239, 68, 68, .25);
-    }
-
-    .coa-icon-btn.danger:hover {
-        background: #dc2626;
-        color: #fff;
-        transform: translateY(-2px);
-    }
-
-    .btn-warning-soft {
-        background: #f0e2a8;
-        /* kuning soft */
-        color: #1f2937;
-        /* teks gelap */
-        border: 1px solid #facc15;
-        border-radius: 8px;
-        width: 30px;
-        height: 30px;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(250, 204, 21, 0.25);
-    }
-
-    /* hover effect */
-    .btn-warning-soft:hover {
-        background: #eab308;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 10px rgba(250, 204, 21, 0.35);
-    }
-
-    /* icon */
-    .btn-warning-soft i {
-        font-size: 12px;
-    }
-
-    /* =========================================
-   VIEW / INFO BUTTON (BLUE SOFT)
-========================================= */
-
-    .coa-icon-btn.view {
-        background: rgba(59, 130, 246, .12);
-        /* blue soft */
-        color: #2563eb;
-        border: 1px solid rgba(59, 130, 246, .25);
-    }
-
-    .coa-icon-btn.view:hover {
-        background: #2563eb;
-        color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
-    }
-
-    /* icon size konsisten */
-    .coa-icon-btn.view i {
-        font-size: 12px;
-    }
-
-    .coa-pagination {
-        margin-top: 15px;
-        display: flex;
-        justify-content: flex-end;
+    .coa-detail-modal {
+        width: 1000px;
+        max-width: 95vw;
     }
 </style>

@@ -72,22 +72,103 @@
         </div>
 
         {{-- FILTER --}}
-        <div class="coa-filter">
-            <form method="GET" action="{{ route('management.accounting_periode.index') }}">
-                <div class="coa-search-wrapper">
-                    <i class="bx bx-search"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" class="coa-search-input"
-                        placeholder="Cari code / name...">
+        <div class="coa-filter"
+            style="
+        background:#fff;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        padding:14px 16px;
+        margin-bottom:16px;
+    ">
+
+            <form method="GET" action="{{ route('management.accounting_periode.index') }}"
+                style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            width:100%;
+        ">
+
+                {{-- SEARCH --}}
+                <div class="coa-search-wrapper"
+                    style="
+                position:relative;
+                flex:1;
+            ">
+
+                    <i class="bx bx-search"
+                        style="
+                    position:absolute;
+                    left:14px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    color:#9ca3af;
+                    font-size:14px;
+                "></i>
+
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari code / name..."
+                        class="coa-search-input"
+                        style="
+                    width:100%;
+                    height:42px;
+                    border:1px solid #d1d5db;
+                    border-radius:12px;
+                    padding:0 14px 0 40px;
+                    font-size:13px;
+                    background:#fff;
+                ">
                 </div>
 
-                <select class="coa-select" name="status">
+                {{-- STATUS --}}
+                <select name="status" class="coa-select"
+                    style="
+                width:180px;
+                height:42px;
+                border:1px solid #d1d5db;
+                border-radius:12px;
+                padding:0 12px;
+                font-size:13px;
+                background:#fff;
+                flex-shrink:0;
+            ">
+
                     <option value="">Semua Status</option>
-                    <option value="OPEN" {{ request('status') == 'OPEN' ? 'selected' : '' }}>OPEN</option>
-                    <option value="CLOSED" {{ request('status') == 'CLOSED' ? 'selected' : '' }}>CLOSED</option>
-                    <option value="LOCKED" {{ request('status') == 'LOCKED' ? 'selected' : '' }}>LOCKED</option>
+
+                    <option value="OPEN" {{ request('status') == 'OPEN' ? 'selected' : '' }}>
+                        OPEN
+                    </option>
+
+                    <option value="CLOSED" {{ request('status') == 'CLOSED' ? 'selected' : '' }}>
+                        CLOSED
+                    </option>
+
+                    <option value="LOCKED" {{ request('status') == 'LOCKED' ? 'selected' : '' }}>
+                        LOCKED
+                    </option>
+
                 </select>
 
-                <button type="submit" class="coa-btn light">Filter</button>
+                {{-- BUTTON --}}
+                <button type="submit" class="coa-btn light"
+                    style="
+                height:42px;
+                padding:0 18px;
+                border-radius:12px;
+                border:1px solid #d1d5db;
+                background:#fff;
+                font-size:13px;
+                font-weight:600;
+                display:flex;
+                align-items:center;
+                gap:6px;
+                flex-shrink:0;
+            ">
+
+                    <i class="bx bx-filter-alt"></i>
+                    Filter
+
+                </button>
+
             </form>
         </div>
 
@@ -140,16 +221,23 @@
                                 <td style="text-align:center;">{{ $p->end_date->format('Y-m-d') }}</td>
 
                                 {{-- STATUS --}}
-                                <td>
+                                <td style="text-align:center;">
                                     <span
                                         class="coa-status
-                                    {{ $p->status === 'OPEN' ? 'active' : 'inactive' }}">
+                                        @if ($p->status === 'OPEN') active
+                                        @elseif($p->status === 'CLOSED')
+                                            warning
+                                        @elseif($p->status === 'LOCKED')
+                                            inactive
+                                        @elseif($p->status === 'ARCHIVED')
+                                            info @endif
+                                    ">
                                         {{ $p->status }}
                                     </span>
                                 </td>
 
                                 {{-- IS CURRENT --}}
-                                <td>
+                                <td style="text-align:center;">
                                     @if ($p->is_current)
                                         <span class="coa-status active">YES</span>
                                     @else
@@ -158,7 +246,7 @@
                                 </td>
 
                                 {{-- TRANSACTION --}}
-                                <td>
+                                <td style="text-align:center;">
                                     @if ($p->allow_transaction)
                                         <span class="coa-status active">YES</span>
                                     @else
@@ -167,7 +255,7 @@
                                 </td>
 
                                 {{-- EDIT --}}
-                                <td>
+                                <td style="text-align:center;">
                                     @if ($p->allow_edit)
                                         <span class="coa-status active">YES</span>
                                     @else
@@ -179,16 +267,40 @@
                                 <td>
                                     <div class="coa-action-group">
 
-                                        <button class="coa-icon-btn view">
+                                        <button class="coa-icon-btn view view-btn" data-id="{{ $p->id }}"
+                                            data-fiscal-code="{{ $p->fiscalYear->code ?? '-' }}"
+                                            data-fiscal-name="{{ $p->fiscalYear->name ?? '-' }}"
+                                            data-code="{{ $p->code }}" data-name="{{ $p->name }}"
+                                            data-year="{{ $p->year }}" data-month="{{ $p->month }}"
+                                            data-start_date="{{ \Carbon\Carbon::parse($p->start_date)->format('Y-m-d') }}"
+                                            data-end_date="{{ \Carbon\Carbon::parse($p->end_date)->format('Y-m-d') }}"
+                                            data-organization_name="{{ $p->organization->name ?? '-' }}"
+                                            data-status="{{ $p->status }}" data-current="{{ $p->is_current }}"
+                                            data-closed="{{ $p->is_closed }}" data-closed_at="{{ $p->closed_at }}"
+                                            data-closed_by_name="{{ $p->closedBy->name ?? '-' }}"
+                                            data-locked_at="{{ $p->locked_at }}"
+                                            data-locked_by_name="{{ $p->lockedBy->name ?? '-' }}"
+                                            data-transaction="{{ $p->allow_transaction }}"
+                                            data-edit="{{ $p->allow_edit }}" data-notes="{{ $p->notes }}"
+                                            data-created_at="{{ $p->created_at }}"
+                                            data-updated_at="{{ $p->updated_at }}">
                                             <i class="bx bx-show"></i>
                                         </button>
-
-                                        <button class="coa-icon-btn">
+                                        <button class="btn-warning-soft edit-btn" data-id="{{ $p->id }}"
+                                            data-code="{{ $p->code }}" data-name="{{ $p->name }}"
+                                            data-status="{{ $p->status }}" data-current="{{ $p->is_current }}"
+                                            data-transaction="{{ $p->allow_transaction }}"
+                                            data-edit="{{ $p->allow_edit }}" data-notes="{{ $p->notes }}">
                                             <i class="bx bx-edit"></i>
                                         </button>
 
-                                        <button class="coa-icon-btn danger">
-                                            <i class="bx bx-trash"></i>
+                                        <button class="coa-icon-btn {{ $p->status_class }}" title="{{ $p->status }}"
+                                            onclick="changePeriodStatus(
+                                             {{ $p->id }},
+                                            '{{ $p->status }}',
+                                            '{{ \Carbon\Carbon::parse($p->start_date)->format('F Y') }}'
+                                        )">
+                                            <i class="bx {{ $p->status_icon }}"></i>
                                         </button>
 
                                     </div>
@@ -214,427 +326,161 @@
 
     </div>
 
-    {{-- ===================================================== --}}
-    {{-- MODAL PERIODE --}}
-    {{-- ===================================================== --}}
-    <div class="coa-modal" id="periodModal">
-        <div class="coa-modal-overlay" onclick="closeModal()"></div>
+    @include('backend.accounting.accounting_periode.modal_tambah_periode')
+    @include('backend.accounting.accounting_periode.modal_tambah_fiscal_year')
+    @include('backend.accounting.accounting_periode.modal_edit_period')
 
-        <div class="coa-modal-box">
 
-            <div class="coa-modal-header">
-                <div>
-                    <h3>Tambah Accounting Period</h3>
-                    <small>Membuat periode akuntansi baru untuk sistem ERP</small>
-                </div>
-            </div>
+    <div class="modal fade" id="viewPeriodModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
 
-            <form id="periodForm" method="POST" action="{{ route('accounting.periods.store') }}"
-                class="coa-modal-form">
-                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-show"></i>
+                        Detail Accounting Period
+                    </h5>
 
-                <div class="form-grid">
-
-                    {{-- YEAR --}}
-                    <div class="form-group">
-                        <label>Year</label>
-                        <select name="year" required>
-                            <option value="">-- Select Year --</option>
-                            @foreach ($years as $year)
-                                <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
-                                    {{ $year }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- MONTH --}}
-                    <div class="form-group">
-                        <label>Month</label>
-                        <select name="month" required>
-                            <option value="">-- Select Month --</option>
-                            @foreach ($months as $num => $name)
-                                <option value="{{ $num }}" {{ $num == $currentMonth ? 'selected' : '' }}>
-                                    {{ $name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- ORGANIZATION --}}
-                    <div class="form-group full">
-                        <label>Organization</label>
-                        <select name="organization_id" required>
-                            <option value="">-- Select Organization --</option>
-                            @foreach ($organizations as $org)
-                                <option value="{{ $org->id }}">
-                                    {{ $org->code }} - {{ $org->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- STATUS --}}
-                    <div class="form-group full">
-                        <label>Status</label>
-                        <select disabled>
-                            <option>OPEN (System Default)</option>
-                        </select>
-                    </div>
-
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="button" class="coa-btn light compact" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="coa-btn primary compact" id="saveBtn">
-                        <span id="btnText">
-                            <i class="bx bx-check"></i> Save Period
-                        </span>
+                <div class="modal-body">
 
-                        <span id="btnLoader" style="display:none;">
-                            <i class="bx bx-loader-alt bx-spin"></i> Saving...
-                        </span>
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered table-sm">
+
+                            <tbody>
+
+                                {{-- <tr>
+                                    <th style="width:200px;">ID</th>
+                                    <td id="view_id"></td>
+                                </tr> --}}
+
+                                <tr>
+                                    <th>Fiscal Code</th>
+                                    <td id="view_fiscal_year_code"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Fiscal Name</th>
+                                    <td id="view_fiscal_year_name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Periode Code</th>
+                                    <td id="view_code"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Name</th>
+                                    <td id="view_name"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Year</th>
+                                    <td id="view_year"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Month</th>
+                                    <td id="view_month"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Start Date</th>
+                                    <td id="view_start_date"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>End Date</th>
+                                    <td id="view_end_date"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Organization ID</th>
+                                    <td id="view_organization_id"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Status</th>
+                                    <td id="view_status"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Is Current</th>
+                                    <td id="view_is_current"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Is Closed</th>
+                                    <td id="view_is_closed"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Closed At</th>
+                                    <td id="view_closed_at"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Closed By</th>
+                                    <td id="view_closed_by"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Locked At</th>
+                                    <td id="view_locked_at"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Locked By</th>
+                                    <td id="view_locked_by"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Allow Transaction</th>
+                                    <td id="view_allow_transaction"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Allow Edit</th>
+                                    <td id="view_allow_edit"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Notes</th>
+                                    <td id="view_notes"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Created At</th>
+                                    <td id="view_created_at"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Updated At</th>
+                                    <td id="view_updated_at"></td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-light" data-bs-dismiss="modal">
+                        Close
                     </button>
                 </div>
 
-            </form>
-
+            </div>
         </div>
     </div>
 
-    {{-- ===================================================== --}}
-    {{-- MODAL CREATE FISCAL YEAR --}}
-    {{-- ===================================================== --}}
 
-    <div class="coa-modal" id="fiscalModal">
-
-        {{-- OVERLAY --}}
-        <div class="coa-modal-overlay" onclick="closeFiscalModal()"></div>
-
-        {{-- MODAL BOX --}}
-        <div class="coa-modal-box">
-
-            {{-- ===================================================== --}}
-            {{-- HEADER (MODERN ERP IMPROVED) --}}
-            {{-- ===================================================== --}}
-            <div class="coa-modal-header">
-
-                <div style="display:flex; align-items:center; gap:14px;">
-
-                    {{-- ICON --}}
-                    <div
-                        style="
-                    width:52px;
-                    height:52px;
-                    border-radius:16px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    background:linear-gradient(135deg,#4f46e5,#06b6d4);
-                    color:#fff;
-                    font-size:22px;
-                    box-shadow:0 12px 28px rgba(79,70,229,.25);
-                    flex-shrink:0;
-                ">
-                        <i class="bi bi-calendar2-range"></i>
-                    </div>
-
-                    {{-- TEXT --}}
-                    <div>
-
-                        <h3 style="margin:0; font-weight:800; letter-spacing:.2px;">
-                            Tambah Fiscal Year
-                        </h3>
-
-                        <small style="color:#6b7280; display:flex; align-items:center; gap:6px;">
-                            <i class="bi bi-info-circle"></i>
-                            Membuat tahun fiskal untuk sistem akuntansi ERP
-                        </small>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {{-- ===================================================== --}}
-            {{-- FORM --}}
-            {{-- ===================================================== --}}
-            <form id="fiscalForm" method="POST" action="{{ route('accounting.fiscal.store') }}"
-                class="coa-modal-form">
-
-                @csrf
-
-                <div class="form-grid">
-
-                    {{-- YEAR --}}
-                    <div class="form-group full">
-                        <label>Year</label>
-                        <select name="year" required>
-                            <option value="">-- Select Year --</option>
-                            @foreach ($years as $year)
-                                <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>
-                                    {{ $year }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- START DATE --}}
-                    <div class="form-group">
-                        <label>Start Date</label>
-                        <input type="date" name="start_date" required>
-                    </div>
-
-                    {{-- END DATE --}}
-                    <div class="form-group">
-                        <label>End Date</label>
-                        <input type="date" name="end_date" required>
-                    </div>
-
-                    {{-- ORGANIZATION --}}
-                    <div class="form-group full">
-                        <label>Organization</label>
-                        <select name="organization_id" required>
-                            <option value="">-- Select Organization --</option>
-                            @foreach ($organizations as $org)
-                                <option value="{{ $org->id }}">
-                                    {{ $org->code }} - {{ $org->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- NOTES --}}
-                    <div class="form-group full">
-                        <label>Notes</label>
-                        <textarea name="notes" rows="3" placeholder="Optional notes..."></textarea>
-                    </div>
-
-                    {{-- STATUS --}}
-                    <div class="form-group full">
-                        <label>Status</label>
-
-                        <div class="coa-readonly-field"
-                            style="
-                        background: rgba(34,197,94,.10);
-                        border: 1px solid rgba(34,197,94,.20);
-                        color:#16a34a;
-                        font-weight:400;
-                    ">
-                            <i class="bi bi-check-circle-fill"></i>
-                            OPEN (System Default)
-                        </div>
-
-                        <input type="hidden" name="status" value="OPEN">
-                    </div>
-
-                </div>
-
-                {{-- ACTION --}}
-                <div class="modal-actions">
-                    <button type="button" class="coa-btn light compact" onclick="closeFiscalModal()">
-                        Cancel
-                    </button>
-                    <button type="submit" class="coa-btn primary compact" id="saveFiscalBtn">
-                        <i class="bi bi-check-lg"></i>
-                        <span id="fiscalBtnText">
-                            Save Fiscal
-                        </span>
-                        <span id="fiscalBtnLoader" style="display:none;">
-                            <i class="bx bx-loader-alt bx-spin"></i> Saving...
-                        </span>
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-
-    @push('scripts')
-        <script>
-            // =====================================================
-            // MODAL CONTROL
-            // =====================================================
-            function openFiscalModal() {
-                document.getElementById('fiscalModal').classList.add('active');
-            }
-
-            function closeFiscalModal() {
-                document.getElementById('fiscalModal').classList.remove('active');
-            }
-
-            function openModal() {
-                document.getElementById('periodModal').classList.add('active');
-            }
-
-            function closeModal() {
-                document.getElementById('periodModal').classList.remove('active');
-            }
-
-            // =====================================================
-            // MAIN SCRIPT
-            // =====================================================
-            document.addEventListener('DOMContentLoaded', function() {
-
-                // =====================================================
-                // PERIOD FORM (existing)
-                // =====================================================
-                const periodForm = document.getElementById('periodForm');
-
-                if (periodForm) {
-
-                    periodForm.addEventListener('submit', async function(e) {
-                        e.preventDefault();
-
-                        const formData = new FormData(periodForm);
-
-                        const btn = document.getElementById('saveBtn');
-                        const btnText = document.getElementById('btnText');
-                        const btnLoader = document.getElementById('btnLoader');
-
-                        // loading
-                        btn.disabled = true;
-                        btnText.style.display = 'none';
-                        btnLoader.style.display = 'inline-block';
-
-                        try {
-
-                            const response = await fetch(periodForm.action, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                }
-                            });
-
-                            const text = await response.text();
-
-                            let data;
-                            try {
-                                data = JSON.parse(text);
-                            } catch (err) {
-                                console.error("Invalid JSON:", text);
-                                throw new Error("Server returned invalid response");
-                            }
-
-                            if (!response.ok) {
-                                throw new Error(data.message || 'Request failed');
-                            }
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-
-                            closeModal();
-                            periodForm.reset();
-
-                            setTimeout(() => location.reload(), 800);
-
-                        } catch (err) {
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Failed',
-                                text: err.message
-                            });
-
-                        } finally {
-
-                            btn.disabled = false;
-                            btnText.style.display = 'inline-block';
-                            btnLoader.style.display = 'none';
-                        }
-                    });
-                }
-
-                // =====================================================
-                // FISCAL FORM (NEW CLEAN VERSION)
-                // =====================================================
-                const fiscalForm = document.getElementById('fiscalForm');
-
-                if (fiscalForm) {
-
-                    const btn = document.getElementById('saveFiscalBtn');
-                    const btnText = document.getElementById('fiscalBtnText');
-                    const btnLoader = document.getElementById('fiscalBtnLoader');
-
-                    fiscalForm.addEventListener('submit', async function(e) {
-                        e.preventDefault();
-
-                        const formData = new FormData(fiscalForm);
-
-                        // loading
-                        btn.disabled = true;
-                        btnText.style.display = 'none';
-                        btnLoader.style.display = 'inline-block';
-
-                        try {
-
-                            const response = await fetch(fiscalForm.action, {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json',
-                                }
-                            });
-
-                            const text = await response.text();
-
-                            let data;
-                            try {
-                                data = JSON.parse(text);
-                            } catch (err) {
-                                console.error("Invalid JSON:", text);
-                                throw new Error("Server returned invalid response");
-                            }
-
-                            if (!response.ok) {
-                                throw new Error(data.message || 'Failed to create fiscal year');
-                            }
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message || 'Fiscal Year created successfully',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-
-                            closeFiscalModal();
-                            fiscalForm.reset();
-
-                            setTimeout(() => location.reload(), 800);
-
-                        } catch (err) {
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Failed',
-                                text: err.message
-                            });
-
-                        } finally {
-
-                            btn.disabled = false;
-                            btnText.style.display = 'inline-block';
-                            btnLoader.style.display = 'none';
-                        }
-                    });
-                }
-
-            });
-        </script>
-    @endpush
+    @include('backend.accounting.accounting_periode.script_accounting_periode')
 
     @include('backend.accounting.style_accounting')
 @endsection

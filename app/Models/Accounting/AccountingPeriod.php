@@ -5,7 +5,10 @@ namespace App\Models\Accounting;
 use App\Models\Organization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Accounting\IplBillingPeriod;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AccountingPeriod extends Model
 {
@@ -162,5 +165,51 @@ class AccountingPeriod extends Model
     public function isMonth(int $year, int $month): bool
     {
         return $this->year === $year && $this->month === $month;
+    }
+
+    public function closedBy()
+    {
+        return $this->belongsTo(User::class, 'closed_by');
+    }
+
+    public function lockedBy()
+    {
+        return $this->belongsTo(User::class, 'locked_by');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | IPL BILLING PERIODS
+    |--------------------------------------------------------------------------
+    */
+
+    public function iplBillingPeriods(): HasMany
+    {
+        return $this->hasMany(
+            IplBillingPeriod::class,
+            'accounting_period_id'
+        );
+    }
+
+    public function getStatusClassAttribute(): string
+    {
+        return match (strtoupper($this->status)) {
+            'OPEN' => 'success',
+            'CLOSED' => 'warning',
+            'LOCKED' => 'danger',
+            'ARCHIVED' => 'primary',
+            default => 'secondary',
+        };
+    }
+
+    public function getStatusIconAttribute(): string
+    {
+        return match (strtoupper($this->status)) {
+            'OPEN' => 'bx-up-arrow-alt',
+            'CLOSED' => 'bx-down-arrow-alt',
+            'LOCKED' => 'bx-lock-alt',
+            'ARCHIVED' => 'bx-file',
+            default => 'bx-question-mark',
+        };
     }
 }

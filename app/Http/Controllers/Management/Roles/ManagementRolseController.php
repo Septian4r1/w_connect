@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
+use App\Models\UserToken;
 
 class ManagementRolseController extends Controller
 {
@@ -366,7 +367,7 @@ class ManagementRolseController extends Controller
                     'warga_id'          => $warga->id,
                     'name'              => $warga->nama,
                     'email'             => $validated['email'],
-                    'password'          => bcrypt('default_password'),
+                    'password'          => bcrypt('ManagementCitraSwarnaRiverside_Rw016'),
                     'email_verified_at' => now()
                 ]);
             } else {
@@ -507,19 +508,78 @@ class ManagementRolseController extends Controller
             'status' => 'required',
         ]);
 
-        $data = PengurusWilayah::findOrFail($id);
+        DB::beginTransaction();
 
-        $data->update([
-            'user_id' => $request->user_id,
-            'role_id' => $request->role_id,
-            'organization_id' => $request->organization_id,
-            'rw_id' => $request->rw_id,
-            'rt_id' => $request->rt_id,
-            'status' => $request->status,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-        ]);
+        try {
 
-        return redirect()->back()->with('success', 'Data berhasil diupdate');
+            $data = PengurusWilayah::findOrFail($id);
+
+            /*
+        |--------------------------------------------------------------------------
+        | UPDATE DATA PENGURUS
+        |--------------------------------------------------------------------------
+        */
+            $data->update([
+                'user_id' => $request->user_id,
+                'role_id' => $request->role_id,
+                'organization_id' => $request->organization_id,
+                'rw_id' => $request->rw_id,
+                'rt_id' => $request->rt_id,
+                'status' => $request->status,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
+
+            /*
+        |--------------------------------------------------------------------------
+        | AMBIL USER
+        |--------------------------------------------------------------------------
+        */
+            $user = User::findOrFail($request->user_id);
+
+            /*
+        |--------------------------------------------------------------------------
+        | AMBIL ROLE
+        |--------------------------------------------------------------------------
+        */
+            $role = Role::findOrFail($request->role_id);
+
+            /*
+        |--------------------------------------------------------------------------
+        | UPDATE ROLE USER
+        |--------------------------------------------------------------------------
+        */
+            $user->syncRoles([$role->name]);
+
+            /*
+        |--------------------------------------------------------------------------
+        | FORCE LOGOUT USER
+        |--------------------------------------------------------------------------
+        */
+            UserToken::where('user_id', $user->id)
+                ->delete();
+            /*
+        |--------------------------------------------------------------------------
+        | CLEAR CACHE SPATIE
+        |--------------------------------------------------------------------------
+        */
+            app()[\Spatie\Permission\PermissionRegistrar::class]
+                ->forgetCachedPermissions();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil diupdate. User otomatis logout.'
+            ]);
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

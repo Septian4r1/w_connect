@@ -317,8 +317,8 @@
                 @csrf
 
                 <div class="form-group">
-                    <label>NIK KTP</label>
-                    <input type="text" name="nik" placeholder="Contoh: 2164********" required>
+                    <label>Nama Lengkap</label>
+                    <input type="text" name="nama_lengkap" placeholder="Contoh: Nama Lengkap" required>
                 </div>
 
                 <button class="btn-login" type="submit">Reset Password</button>

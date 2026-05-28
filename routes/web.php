@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Accounting\AccountingPeriodController;
+use App\Http\Controllers\Accounting\IplBillingPeriodController;
 use App\Http\Controllers\Accounting\ManagementAccountingController;
+use App\Http\Controllers\Accounting\ManagementFundingAmountController;
 use App\Http\Controllers\Accounting\ManagementFundingTypesController;
 use Illuminate\Support\Facades\Route;
 
@@ -259,10 +261,10 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
     });
 
     /*
-        |----------------------------------------------------------------------
-        | USER MANAGEMENT
-        |----------------------------------------------------------------------
-        */
+    |----------------------------------------------------------------------
+    | USER MANAGEMENT
+    |----------------------------------------------------------------------
+    */
     Route::prefix('/')->group(function () {
 
         /*------------------------------------------------------------------------ MANAGEMENT MENU ------------------------------------------------------------------------------- */
@@ -285,8 +287,8 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         /*------------------------------------------------------------------------ ROLES ------------------------------------------------------------------------------ */
         Route::get('/roles', [ManagementRolseController::class, 'index'])->middleware('permission:aksesuser.view')->name('management.roles.index');
         Route::post('/roles/akses/store', [ManagementRolseController::class, 'AksesStore'])->middleware('permission:aksesuser.create')->name('management.roles_akses.store');
-        Route::delete('/pengurus-wilayah/delete/{id}',[ManagementRolseController::class, 'DeleteAkses'])->middleware('permission:aksesuser.delete')->name('management.pengurus_wilayah.delete');
-        Route::post('/pengurus-wilayah/toggle-status/{id}',[ManagementRolseController::class, 'toggleStatus'])->middleware('permission:aksesuser.update')->name('management.pengurus_wilayah.toggle');
+        Route::delete('/pengurus-wilayah/delete/{id}', [ManagementRolseController::class, 'DeleteAkses'])->middleware('permission:aksesuser.delete')->name('management.pengurus_wilayah.delete');
+        Route::post('/pengurus-wilayah/toggle-status/{id}', [ManagementRolseController::class, 'toggleStatus'])->middleware('permission:aksesuser.update')->name('management.pengurus_wilayah.toggle');
         Route::put('/management/roles_akses/{id}', [ManagementRolseController::class, 'updateUserAkses'])->middleware('permission:aksesuser.update')->name('management.roles_akses.update');
 
         Route::post('/roles/create', [ManagementRolseController::class, 'store'])->middleware('permission:daftarstrukture.create')->name('management.roles.store');
@@ -302,6 +304,8 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::put('/management/block/{id}', [StruktureManagementController::class, 'updateBlock'])->middleware('permission:wilayahblock.update')->name('management.block.update');
         /*------------------------------------------------------------------------END WILAYAH ------------------------------------------------------------------------------- */
     });
+
+
     /*
     |----------------------------------------------------------------------
     | WARGA
@@ -335,9 +339,10 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::put('/management/rumah/{id}', [ManagementRumahDanKK::class, 'update'])->middleware('permission:keluarga.update')->name('management.rumah.update');
         Route::delete('/management/rumah/{id}', [ManagementRumahDanKK::class, 'destroy'])->middleware('permission:keluarga.delete')->name('management.rumah.destroy');
 
-
         Route::get('/mutasi-warga', fn() => app(UnderConstructionController::class)->index('Mutasi Warga'))->middleware('permission:warga.update')->name('management.mutasi.index');
     });
+
+
     /*
     |----------------------------------------------------------------------
     | KEUANGAN
@@ -373,19 +378,46 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::get('/fund-account/{fundId}/coas', [ManagementFundingTypesController::class, 'getCoas'])->middleware('permission:fundingaccount.view')->name('management.funding-types.coas');
         Route::delete('/funding-type/delete/account/{fundTypeId}/{organizationId}', [ManagementFundingTypesController::class, 'destroyAccount'])->middleware('permission:fundingaccount.delete')->name('management.funding-account.destroy');
         Route::get('/funding-account-link/{id}/edit', [ManagementFundingTypesController::class, 'editAccountMapping'])->middleware('permission:fundingaccount.edit')->name('management.funding-account.edit');
-        Route::put('/funding-account-link/{id}/update',[ManagementFundingTypesController::class, 'updateAccountMapping'])->middleware('permission:fundingaccount.update')->name('management.funding-account.update');
+        Route::put('/funding-account-link/{id}/update', [ManagementFundingTypesController::class, 'updateAccountMapping'])->middleware('permission:fundingaccount.update')->name('management.funding-account.update');
+
+          /* FUNDING AMOUNTS */
+        Route::get('/funding-amount/view', [ManagementFundingAmountController::class, 'index'])->middleware('permission:fundingamount.view')->name('management.funding-amount.index');
+        Route::post('/funding-amount/store', [ManagementFundingAmountController::class, 'store'])->middleware('permission:fundingamount.store')->name('management.funding-amount.store');
+
     });
 
+
+    /*
+    |----------------------------------------------------------------------
+    | ACCOUNTING PERIODE
+    |----------------------------------------------------------------------
+    */
     Route::prefix('/accounting_periode')->group(function () {
         /* ACCOUNTS _PERIODE */
         Route::get('/view', [AccountingPeriodController::class, 'index'])->middleware('permission:accountingperiode.view')->name('management.accounting_periode.index');
         Route::post('/store', [AccountingPeriodController::class, 'store'])->middleware('permission:accountingperiode.store')->name('accounting.periods.store');
-        Route::post('/{id}/close', [AccountingPeriodController::class, 'close'])->middleware('permission:accountingperiode.close')->name('accounting.periods.close');
-        Route::post('/{id}/lock', [AccountingPeriodController::class, 'lock'])->middleware('permission:accountingperiode.lock')->name('accounting.periods.lock');
-        Route::post('/{id}/current', [AccountingPeriodController::class, 'setCurrent'])->middleware('permission:accountingperiode.current')->name('accounting.periods.current');});
+        Route::post('/periods/{period}/change-status',[AccountingPeriodController::class, 'changeStatus'])->middleware(['permission:accountingperiode.toggle','ajax'])->name('accounting.period.change-status');
+        Route::put('/periods/{id}/update-setting',[AccountingPeriodController::class, 'updateSetting'])->middleware(['permission:accountingperiode.update','ajax'])->name('management.accounting_periode.update_setting');
 
-          /* FISCAL _PERIODE */
+
+        /* FISCAL _PERIODE */
         Route::post('/Fiscalstore', [AccountingPeriodController::class, 'FiscalStore'])->middleware('permission:accountinfiscal.store')->name('accounting.fiscal.store');
+    });
+
+
+    /*
+    |----------------------------------------------------------------------
+    | ACCOUNTING PERIODE
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('/billingPeriode')->group(function () {
+        /* ACCOUNTS _PERIODE */
+        Route::get('/view', [IplBillingPeriodController::class, 'index'])->middleware('permission:iplbillingperiode.view')->name('management.iplbillingperiode.index');
+
+    });
+
+
+
 
     /*
     |----------------------------------------------------------------------
@@ -397,18 +429,21 @@ Route::prefix('management')->middleware(['check.device', 'prevent.back'])->group
         Route::get('/surat-keterangan', fn() => app(UnderConstructionController::class)->index('Surat Keterangan'))->middleware('permission:surat.view')->name('management.surat_keterangan.index');
         Route::get('/arsip-surat', fn() => app(UnderConstructionController::class)->index('Arsip Surat'))->middleware('permission:surat.view')->name('management.arsip_surat.index');
     });
+
+
     /*
     |----------------------------------------------------------------------
     | LOGOUT
     |----------------------------------------------------------------------
     */
     Route::post('/logout', [LoginManagementController::class, 'logout_management'])->name('management.logout');
+
+
     /*
     |--------------------------------------------------------------------------
     | PROFILE / SECURITY ACTION
     |--------------------------------------------------------------------------
     */
-
     Route::prefix('/')->group(function () {
         // halaman ganti password management
         Route::get('/change-password', [ManagementSettingPasswordController::class, 'index'])->name('management.change_password');

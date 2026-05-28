@@ -161,20 +161,57 @@
         {{-- ===================================================== --}}
         <div class="coa-filter">
 
-            <form method="GET" class="coa-filter-form">
+            <form method="GET" class="coa-filter-form"
+                style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        ">
 
                 {{-- SEARCH --}}
-                <div class="coa-search-wrapper">
+                <div class="coa-search-wrapper"
+                    style="
+                flex:1;
+                min-width:280px;
+                position:relative;
+            ">
 
-                    <i class="bi bi-search"></i>
+                    <i class="bi bi-search"
+                        style="
+                    position:absolute;
+                    left:12px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    color:#9ca3af;
+                    font-size:13px;
+                "></i>
 
                     <input type="text" name="search" class="coa-search-input"
-                        placeholder="Search code or account name..." value="{{ request('search') }}">
+                        placeholder="Search code or account name..." value="{{ request('search') }}"
+                        style="
+                    width:100%;
+                    height:42px;
+                    padding:0 14px 0 38px;
+                    border:1px solid #dbe2ea;
+                    border-radius:12px;
+                    font-size:13px;
+                    background:#fff;
+                ">
 
                 </div>
 
                 {{-- TYPE --}}
-                <select name="type" class="coa-select">
+                <select name="type" class="coa-select"
+                    style="
+                width:160px;
+                height:42px;
+                border:1px solid #dbe2ea;
+                border-radius:12px;
+                padding:0 12px;
+                font-size:13px;
+                background:#fff;
+            ">
 
                     <option value="">
                         All Type
@@ -203,7 +240,16 @@
                 </select>
 
                 {{-- STATUS --}}
-                <select name="status" class="coa-select">
+                <select name="status" class="coa-select"
+                    style="
+                width:160px;
+                height:42px;
+                border:1px solid #dbe2ea;
+                border-radius:12px;
+                padding:0 12px;
+                font-size:13px;
+                background:#fff;
+            ">
 
                     <option value="">
                         All Status
@@ -219,8 +265,17 @@
 
                 </select>
 
-                {{-- FILTER BUTTON --}}
-                <button type="submit" class="coa-btn primary compact">
+                {{-- FILTER --}}
+                <button type="submit" class="coa-btn primary compact"
+                    style="
+                height:42px;
+                padding:0 16px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                gap:6px;
+                white-space:nowrap;
+            ">
 
                     <i class="bi bi-funnel"></i>
                     <span>Filter</span>
@@ -228,7 +283,17 @@
                 </button>
 
                 {{-- RESET --}}
-                <a href="{{ url()->current() }}" class="coa-btn light compact">
+                <a href="{{ url()->current() }}" class="coa-btn light compact"
+                    style="
+                height:42px;
+                padding:0 16px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                gap:6px;
+                white-space:nowrap;
+                text-decoration:none;
+            ">
 
                     <i class="bi bi-arrow-clockwise"></i>
                     <span>Reset</span>
@@ -344,7 +409,7 @@
 
         <div class="coa-modal-overlay"></div>
 
-        <div class="coa-modal-box" style="max-width: 1000px;">
+        <div class="coa-modal-box coa-detail-modal">
 
             {{-- HEADER --}}
             <div class="coa-modal-header">
@@ -422,7 +487,7 @@
                         </table>
 
                     </div>
-                    <br><br>
+
 
                     {{-- ===================================== --}}
                     {{-- HIERARCHY --}}

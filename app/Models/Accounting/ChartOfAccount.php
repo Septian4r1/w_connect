@@ -15,6 +15,7 @@ class ChartOfAccount extends Model
     | TABLE
     |--------------------------------------------------------------------------
     */
+
     protected $table = 'chart_of_accounts';
 
     /*
@@ -22,19 +23,21 @@ class ChartOfAccount extends Model
     | FILLABLE
     |--------------------------------------------------------------------------
     */
+
     protected $fillable = [
         'parent_id',
         'parent_path',
-        'level',
 
         'code',
         'name',
 
+        'level',
+
         'type',
         'normal_balance',
 
-        'currency',
         'opening_balance',
+        'currency',
 
         'is_header',
         'is_postable',
@@ -49,15 +52,17 @@ class ChartOfAccount extends Model
     | CASTS
     |--------------------------------------------------------------------------
     */
+
     protected $casts = [
+
         'opening_balance' => 'decimal:2',
 
-        'is_header'   => 'boolean',
-        'is_postable' => 'boolean',
-        'is_active'   => 'boolean',
+        'is_header'       => 'boolean',
+        'is_postable'     => 'boolean',
+        'is_active'       => 'boolean',
 
-        'level'       => 'integer',
-        'sort_order'  => 'integer',
+        'level'           => 'integer',
+        'sort_order'      => 'integer',
     ];
 
     /*
@@ -65,15 +70,19 @@ class ChartOfAccount extends Model
     | APPENDS
     |--------------------------------------------------------------------------
     */
+
     protected $appends = [
         'label',
+        'is_root',
+        'has_children',
     ];
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: PARENT
+    | RELATION : PARENT
     |--------------------------------------------------------------------------
     */
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(
@@ -84,9 +93,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: CHILDREN
+    | RELATION : CHILDREN
     |--------------------------------------------------------------------------
     */
+
     public function children(): HasMany
     {
         return $this->hasMany(
@@ -99,24 +109,22 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: CHILDREN RECURSIVE
+    | RELATION : CHILDREN RECURSIVE
     |--------------------------------------------------------------------------
     */
+
     public function childrenRecursive(): HasMany
     {
         return $this->children()
-            ->with([
-                'childrenRecursive'
-            ]);
+            ->with('childrenRecursive');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: FUND ACCOUNT LINKS
-    |--------------------------------------------------------------------------
-    | 1 COA bisa dipakai banyak fund type
+    | RELATION : FUND ACCOUNT LINKS
     |--------------------------------------------------------------------------
     */
+
     public function fundAccountLinks(): HasMany
     {
         return $this->hasMany(
@@ -127,9 +135,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: ACTIVE FUND LINKS
+    | RELATION : ACTIVE FUND LINKS
     |--------------------------------------------------------------------------
     */
+
     public function activeFundLinks(): HasMany
     {
         return $this->fundAccountLinks()
@@ -138,11 +147,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION: FUND LINKS WITH RELATIONS
-    |--------------------------------------------------------------------------
-    | Anti N+1
+    | RELATION : FULL FUND LINKS
     |--------------------------------------------------------------------------
     */
+
     public function fundLinksFull(): HasMany
     {
         return $this->fundAccountLinks()
@@ -155,9 +163,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | SCOPE: ACTIVE
+    | SCOPE : ACTIVE
     |--------------------------------------------------------------------------
     */
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
@@ -165,9 +174,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | SCOPE: POSTABLE
+    | SCOPE : POSTABLE
     |--------------------------------------------------------------------------
     */
+
     public function scopePostable(Builder $query): Builder
     {
         return $query->where('is_postable', true);
@@ -175,9 +185,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | SCOPE: HEADER
+    | SCOPE : HEADER
     |--------------------------------------------------------------------------
     */
+
     public function scopeHeader(Builder $query): Builder
     {
         return $query->where('is_header', true);
@@ -185,9 +196,36 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESSOR: LABEL
+    | SCOPE : ROOT
     |--------------------------------------------------------------------------
     */
+
+    public function scopeRoot(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPE : TREE
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeTree(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->orderBy('code')
+            ->with('childrenRecursive');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSOR : LABEL
+    |--------------------------------------------------------------------------
+    */
+
     public function getLabelAttribute(): string
     {
         return "{$this->code} - {$this->name}";
@@ -195,9 +233,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESSOR: FULL PATH
+    | ACCESSOR : FULL PATH
     |--------------------------------------------------------------------------
     */
+
     public function getFullPathAttribute(): string
     {
         return trim(
@@ -208,9 +247,10 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | HELPER: IS ROOT
+    | ACCESSOR : IS ROOT
     |--------------------------------------------------------------------------
     */
+
     public function getIsRootAttribute(): bool
     {
         return is_null($this->parent_id);
@@ -218,11 +258,56 @@ class ChartOfAccount extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | HELPER: HAS CHILDREN
+    | ACCESSOR : HAS CHILDREN
     |--------------------------------------------------------------------------
     */
+
     public function getHasChildrenAttribute(): bool
     {
         return $this->children()->exists();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER : IS DEBIT NORMAL
+    |--------------------------------------------------------------------------
+    */
+
+    public function isDebitNormal(): bool
+    {
+        return $this->normal_balance === 'debit';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER : IS CREDIT NORMAL
+    |--------------------------------------------------------------------------
+    */
+
+    public function isCreditNormal(): bool
+    {
+        return $this->normal_balance === 'credit';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER : IS POSTABLE
+    |--------------------------------------------------------------------------
+    */
+
+    public function isPostable(): bool
+    {
+        return $this->is_postable === true;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER : IS HEADER
+    |--------------------------------------------------------------------------
+    */
+
+    public function isHeader(): bool
+    {
+        return $this->is_header === true;
     }
 }

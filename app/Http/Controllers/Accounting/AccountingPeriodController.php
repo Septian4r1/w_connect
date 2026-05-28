@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Accounting\AccountingPeriod;
+use Illuminate\Support\Facades\DB;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Accounting\AccountingService;
@@ -39,7 +40,12 @@ class AccountingPeriodController extends Controller
         // BASE QUERY (NO N+1 SAFE)
         // =========================
         $query = AccountingPeriod::query()
-            ->with(['organization:id,code,name']);
+            ->with([
+                'organization:id,code,name',
+                'fiscalYear:id,code,name',
+                'closedBy:id,name',
+                'lockedBy:id,name',
+            ]);
         // ✅ hanya field penting (lebih cepat)
 
         // =========================
@@ -210,86 +216,132 @@ class AccountingPeriodController extends Controller
         }
     }
 
-    /*
-    |---------------------------------------------------
-    | SET CURRENT PERIOD (ERP CONTROL RULE)
-    |---------------------------------------------------
-    | Hanya 1 period aktif per organisasi
-    */
-    public function setCurrent(int $id)
+    public function changeStatus(Request $request, AccountingPeriod $period)
     {
-        $period = AccountingPeriod::findOrFail($id);
+        try {
 
-        // 🚨 SAFETY CHECK
-        if ($period->isClosed()) {
-            return back()->with('error', 'Cannot set closed period as current');
+            $request->validate([
+                'status' => 'required|in:OPEN,CLOSED,LOCKED,ARCHIVED'
+            ]);
+
+            $updated = $this->accounting->changePeriodStatus(
+                $period->id,
+                $request->status
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Accounting period status updated successfully',
+                'data' => [
+                    'id' => $updated->id,
+                    'status' => $updated->status,
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first()
+            ], 422);
+        } catch (\Exception $e) {
+
+            \Log::error('ACCOUNTING PERIOD STATUS ERROR', [
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        // 🚨 BUG FIX: avoid null organization mass update issue
-        $query = AccountingPeriod::query();
-
-        if ($period->organization_id) {
-            $query->where('organization_id', $period->organization_id);
-        } else {
-            $query->whereNull('organization_id');
-        }
-
-        $query->update(['is_current' => false]);
-
-        $period->update([
-            'is_current' => true,
-        ]);
-
-        return back()->with('success', 'Current period updated successfully');
     }
 
-    /*
-    |---------------------------------------------------
-    | CLOSE PERIOD (IFRS STYLE CLOSING)
-    |---------------------------------------------------
-    | Lock semua transaksi agar tidak bisa diubah
-    */
-    public function close(int $id)
+    public function updateSetting(Request $request, string $id)
     {
-        $period = AccountingPeriod::findOrFail($id);
+        $request->validate([
 
-        // 🚨 RULE: hanya period OPEN yang bisa ditutup
-        if (!$period->isOpen()) {
-            return back()->with('error', 'Only OPEN period can be closed');
-        }
+            'status' => 'required|in:OPEN,CLOSED,LOCKED,ARCHIVED',
 
-        $period->update([
-            'status' => 'CLOSED',
-            'is_closed' => true,
-            'is_current' => false,
+            'is_current' => 'required|boolean',
 
-            'closed_at' => now(),
-            'closed_by' => Auth::id(),
+            'allow_transaction' => 'required|boolean',
+
+            'allow_edit' => 'required|boolean',
+
+            'notes' => 'nullable|string',
         ]);
 
-        return back()->with('success', 'Period closed successfully');
-    }
-
-    /*
-    |---------------------------------------------------
-    | LOCK PERIOD (ADVANCED ERP CONTROL)
-    |---------------------------------------------------
-    | Setelah audit → tidak bisa diubah sama sekali
-    */
-    public function lock(int $id)
-    {
         $period = AccountingPeriod::findOrFail($id);
 
-        if (!$period->isClosed()) {
-            return back()->with('error', 'Period must be CLOSED before LOCKED');
+        DB::beginTransaction();
+
+        try {
+
+            // =========================
+            // HANDLE CURRENT PERIOD
+            // =========================
+
+            if ($request->is_current) {
+
+                AccountingPeriod::where('organization_id', $period->organization_id)
+                    ->where('id', '!=', $period->id)
+                    ->update([
+                        'is_current' => 0
+                    ]);
+            }
+
+            // =========================
+            // STATUS LOGIC
+            // =========================
+
+            $isClosed = false;
+            $closedAt = null;
+            $closedBy = null;
+
+            if ($request->status === 'CLOSED') {
+
+                $isClosed = true;
+
+                $closedAt = now();
+
+                $closedBy = Auth::id();
+            }
+
+            // =========================
+            // UPDATE
+            // =========================
+
+            $period->update([
+
+                'status' => $request->status,
+
+                'is_current' => (bool) $request->is_current,
+                'allow_transaction' => (bool) $request->allow_transaction,
+                'allow_edit' => (bool) $request->allow_edit,
+
+                'notes' => $request->notes,
+
+                'is_closed' => $isClosed,
+                'closed_at' => $closedAt,
+                'closed_by' => $closedBy,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Accounting period updated',
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
-
-        $period->update([
-            'status' => 'LOCKED',
-            'locked_at' => now(),
-            'locked_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', 'Period locked successfully');
     }
 }

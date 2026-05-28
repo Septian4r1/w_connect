@@ -607,5 +607,72 @@
                 $modal.find('button[type="submit"]').show();
             }
         }
+
+        // ===========================
+        // UPDATE PENGURUS (AJAX)
+        // ===========================
+        $(document).on('submit', '#formEditPengurus', function(e) {
+
+            e.preventDefault();
+
+            const form = $(this);
+
+            const btn = form.find('button[type="submit"]');
+
+            btn.prop('disabled', true);
+
+            showLoading('Mengupdate data pengurus...');
+
+            $.ajax({
+
+                url: form.attr('action'),
+
+                type: 'POST',
+
+                data: form.serialize(),
+
+                success: function(res) {
+
+                    btn.prop('disabled', false);
+
+                    if (!res || res.status !== 'success') {
+
+                        showError(res?.message || 'Gagal update data');
+                        return;
+                    }
+
+                    // tutup modal
+                    $('#modalEditPengurus').modal('hide');
+
+                    // success swal
+                    showSuccess(res.message);
+
+                    // reload table
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1200);
+                },
+
+                error: function(xhr) {
+
+                    btn.prop('disabled', false);
+
+                    let response = xhr.responseJSON || {};
+
+                    // validation
+                    if (xhr.status === 422 && response.errors) {
+
+                        let firstError = Object.values(response.errors)[0]?.[0];
+
+                        showError(firstError || 'Validasi gagal');
+
+                        return;
+                    }
+
+                    // server error
+                    showError(response.message || 'Terjadi kesalahan server');
+                }
+            });
+        });
     </script>
 @endpush

@@ -5,6 +5,7 @@ namespace App\Models\Accounting;
 use App\Models\FundAccountLink;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Accounting\FundTypeAmount;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -108,5 +109,38 @@ class FundType extends Model
             'coa_id'
         )->wherePivot('role', 'expense')
             ->wherePivot('is_active', 1);
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| FUND TYPE AMOUNTS
+|--------------------------------------------------------------------------
+|
+| 1 FundType -> banyak nominal IPL
+| per organization
+|
+*/
+
+    public function fundTypeAmounts(): HasMany
+    {
+        return $this->hasMany(
+            FundTypeAmount::class,
+            'fund_type_id'
+        );
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| ACTIVE FUND TYPE AMOUNTS
+|--------------------------------------------------------------------------
+*/
+
+    public function activeFundTypeAmounts(): HasMany
+    {
+        return $this->fundTypeAmounts()
+            ->where(
+                'is_active',
+                true
+            );
     }
 }

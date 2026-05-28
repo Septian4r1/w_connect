@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+use App\Models\Accounting\FundTypeAmount;
+use App\Models\Accounting\InvoiceIPL;
+use App\Models\Accounting\IplBillingPeriod;
 use App\Models\AccountingPeriod;
 
 class Organization extends Model
@@ -75,6 +79,91 @@ class Organization extends Model
     {
         return $this->hasMany(
             PengurusWilayah::class,
+            'organization_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | BLOCKS
+    |--------------------------------------------------------------------------
+    */
+
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(
+            Block::class,
+            'organization_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNTING PERIODS
+    |--------------------------------------------------------------------------
+    */
+
+    public function accountingPeriods(): HasMany
+    {
+        return $this->hasMany(
+            AccountingPeriod::class,
+            'organization_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | IPL BILLING PERIODS
+    |--------------------------------------------------------------------------
+    */
+
+    public function iplBillingPeriods(): HasMany
+    {
+        return $this->hasMany(
+            IplBillingPeriod::class,
+            'organization_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FUND TYPE AMOUNTS
+    |--------------------------------------------------------------------------
+    */
+
+    public function fundTypeAmounts(): HasMany
+    {
+        return $this->hasMany(
+            FundTypeAmount::class,
+            'organization_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVE FUND TYPE AMOUNTS
+    |--------------------------------------------------------------------------
+    */
+
+    public function activeFundTypeAmounts(): HasMany
+    {
+        return $this->fundTypeAmounts()
+            ->where(
+                'is_active',
+                true
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVOICES
+    |--------------------------------------------------------------------------
+    */
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(
+            InvoiceIPL::class,
             'organization_id'
         );
     }
@@ -192,19 +281,5 @@ class Organization extends Model
     public function fullName(): string
     {
         return "{$this->code} - {$this->name}";
-    }
-
-    /*
-|--------------------------------------------------------------------------
-| ACCOUNTING PERIODS
-|--------------------------------------------------------------------------
-*/
-
-    public function accountingPeriods(): HasMany
-    {
-        return $this->hasMany(
-            AccountingPeriod::class,
-            'organization_id'
-        );
     }
 }

@@ -4,7 +4,11 @@ namespace App\Services\Accounting;
 
 use App\Models\Accounting\AccountingPeriod;
 use App\Models\Accounting\FiscalYear;
+use Illuminate\Support\Facades\DB;
 use App\Models\Organization;
+use App\Services\Billing\IplBillingPeriodService;
+use App\Services\Accounting\OpenNextPeriodService;
+use App\Events\Accounting\AccountingPeriodClosed;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -251,5 +255,172 @@ class PeriodService
             'locked' => $locked,
             'active_rate' => $total > 0 ? round(($open / $total) * 100, 2) : 0,
         ];
+    }
+
+    /**
+     * CHANGE PERIOD STATUS (ERP WORKFLOW)
+     */
+    public function changeStatus(int $id, string $status)
+    {
+        return DB::transaction(function () use ($id, $status) {
+
+            // =========================
+            // LOCK ROW (ANTI RACE CONDITION)
+            // =========================
+            $period = AccountingPeriod::where('id', $id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $status = strtoupper($status);
+
+            if (!in_array($status, ['OPEN', 'CLOSED', 'LOCKED', 'ARCHIVED'])) {
+                throw new \Exception('Invalid accounting period status');
+            }
+
+            // =========================
+            // GUARD: NO DOUBLE UPDATE
+            // =========================
+            if ($period->status === $status) {
+                return $period;
+            }
+
+        // =========================
+        // USER CONTEXT (FIX TYPE SAFE)
+        // =========================
+
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+
+            if (!$user) {
+                throw new \Exception("Unauthorized");
+            }
+
+            // cache role check biar clean
+            $isSuperAdmin = $user->hasRole('super_admin');
+
+            // =========================
+            // RULE ENGINE (IMMUTABLE STATE)
+            // =========================
+
+            // LOCKED → hanya super admin
+            if ($period->status === 'LOCKED' && !$isSuperAdmin) {
+                throw new \Exception("This period is locked. Only super admin can modify it.");
+            }
+
+            // CLOSED → tidak bisa reopen kecuali super admin
+            if (
+                $period->status === 'CLOSED'
+                && $status === 'OPEN'
+                && !$isSuperAdmin
+            ) {
+                throw new \Exception("Closed period cannot be reopened except super admin.");
+            }
+
+            // =========================
+            // DEFAULT STATE
+            // =========================
+            $data = [
+                'status' => $status,
+                'allow_transaction' => false,
+                'allow_edit' => false,
+                'is_current' => false,
+            ];
+
+            // =========================
+            // OPEN
+            // =========================
+            if ($status === 'OPEN') {
+
+                AccountingPeriod::where('organization_id', $period->organization_id)
+                    ->update(['is_current' => false]);
+
+                $data = array_merge($data, [
+                    'allow_transaction' => true,
+                    'allow_edit' => true,
+                    'is_current' => true,
+                    'is_closed' => false,
+                    'closed_at' => null,
+                    'closed_by' => null,
+                    'locked_at' => null,
+                    'locked_by' => null,
+                ]);
+            }
+
+            // =========================
+            // CLOSED
+            // =========================
+            if ($status === 'CLOSED') {
+
+                $data['is_closed'] = true;
+                $data['closed_at'] = now();
+                $data['closed_by'] = $user->id;
+            }
+
+            // =========================
+            // LOCKED
+            // =========================
+            if ($status === 'LOCKED') {
+
+                $data['is_closed'] = true;
+                $data['closed_at'] = $period->closed_at ?? now();
+                $data['closed_by'] = $period->closed_by ?? $user->id;
+                $data['locked_at'] = now();
+                $data['locked_by'] = $user->id;
+            }
+
+            // =========================
+            // ARCHIVED
+            // =========================
+            if ($status === 'ARCHIVED') {
+
+                $data['is_closed'] = true;
+                $data['allow_transaction'] = false;
+                $data['allow_edit'] = false;
+            }
+
+            // =========================
+            // UPDATE
+            // =========================
+            $period->update($data);
+
+
+            // =========================
+            // EVENT LAYER (CLOSED ONLY)
+            // =========================
+            if ($status === 'CLOSED') {
+
+                // =========================
+                // OPEN NEXT PERIOD
+                // =========================
+                $nextPeriod = app(OpenNextPeriodService::class)
+                    ->handle($period);
+
+
+                // =========================
+                // AUTO GENERATE IPL BILLING PERIOD
+                // =========================
+                if ($nextPeriod) {
+
+                    app(IplBillingPeriodService::class)
+                        ->generateFromAccountingPeriod($nextPeriod);
+                }
+
+                // =========================
+                // DISPATCH ERP EVENT
+                // =========================
+                event(new AccountingPeriodClosed(
+                    period: $period,
+                    closedBy: Auth::id(),
+                    closedAt: now(),
+                    source: 'manual',
+                    context: [
+                        'organization_id' => $period->organization_id,
+                        'period_code' => $period->code,
+                        'next_period_id' => $nextPeriod?->id,
+                    ]
+                ));
+            }
+            return $period;
+        });
     }
 }

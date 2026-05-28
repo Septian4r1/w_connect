@@ -39,4 +39,9 @@ class AccountingService
     {
         return $this->period->getStats();
     }
+
+    public function changePeriodStatus(int $period, string $status)
+    {
+        return $this->period->changeStatus($period, $status);
+    }
 }

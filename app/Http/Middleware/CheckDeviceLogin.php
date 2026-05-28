@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\UserToken;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CheckDeviceLogin
 {
@@ -19,6 +20,12 @@ class CheckDeviceLogin
         $token = $request->session()->get('login_token');
 
         if (!$token) {
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             return redirect()->route('showlogin_management')
                 ->with('error', 'Token tidak ditemukan');
         }
@@ -29,6 +36,12 @@ class CheckDeviceLogin
         $session = UserToken::where('token', $token)->first();
 
         if (!$session) {
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             return redirect()->route('showlogin_management')
                 ->with('error', 'Session tidak valid');
         }
@@ -36,9 +49,17 @@ class CheckDeviceLogin
         /**
          * 3️⃣ Cek expired token
          */
-        if ($session->expires_at && Carbon::now()->greaterThan($session->expires_at)) {
+        if (
+            $session->expires_at &&
+            Carbon::now()->greaterThan($session->expires_at)
+        ) {
 
             $session->delete();
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return redirect()->route('showlogin_management')
                 ->with('error', 'Session sudah expired');
