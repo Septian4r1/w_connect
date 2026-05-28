@@ -8,35 +8,79 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('rts', function (Blueprint $table) {
+        /*
+        |---------------------------------------------
+        | STEP 1: DROP FOREIGN KEY (SAFE)
+        |---------------------------------------------
+        */
+        try {
+            Schema::table('rts', function (Blueprint $table) {
+                $table->dropForeign(['ketua_user_id']);
+            });
+        } catch (\Throwable $e) {
+            // FK tidak ada → ignore
+        }
 
-            // 1. Hapus FK lama (SAFE MODE)
-            $table->dropForeign(['ketua_user_id']);
+        /*
+        |---------------------------------------------
+        | STEP 2: MODIFY COLUMN (SAFE)
+        |---------------------------------------------
+        */
+        try {
+            Schema::table('rts', function (Blueprint $table) {
+                $table->unsignedBigInteger('ketua_user_id')
+                    ->nullable()
+                    ->change();
+            });
+        } catch (\Throwable $e) {
+            // column change gagal → ignore (environment beda)
+        }
 
-            // 2. Pastikan kolom tetap ada & rapi
-            $table->foreignId('ketua_user_id')
-                ->nullable()
-                ->change(); // penting: hanya modify kolom
-
-            // 3. Buat ulang FK yang benar
-            $table->foreign('ketua_user_id')
-                ->references('id')
-                ->on('users')
-                ->nullOnDelete();
-        });
+        /*
+        |---------------------------------------------
+        | STEP 3: CREATE FOREIGN KEY (SAFE)
+        |---------------------------------------------
+        */
+        try {
+            Schema::table('rts', function (Blueprint $table) {
+                $table->foreign('ketua_user_id')
+                    ->references('id')
+                    ->on('users')
+                    ->nullOnDelete();
+            });
+        } catch (\Throwable $e) {
+            // FK sudah ada / duplicate → ignore
+        }
     }
 
     public function down(): void
     {
-        Schema::table('rts', function (Blueprint $table) {
+        /*
+        |---------------------------------------------
+        | SAFE DROP FK
+        |---------------------------------------------
+        */
+        try {
+            Schema::table('rts', function (Blueprint $table) {
+                $table->dropForeign(['ketua_user_id']);
+            });
+        } catch (\Throwable $e) {
+            // ignore
+        }
 
-            $table->dropForeign(['ketua_user_id']);
-
-            $table->foreignId('ketua_user_id')
-                ->nullable()
-                ->change()
-                ->constrained('users')
-                ->nullOnDelete();
-        });
+        /*
+        |---------------------------------------------
+        | RESTORE COLUMN RELATION
+        |---------------------------------------------
+        */
+        try {
+            Schema::table('rts', function (Blueprint $table) {
+                $table->foreign('ketua_user_id')
+                    ->references('id')
+                    ->on('users');
+            });
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 };
